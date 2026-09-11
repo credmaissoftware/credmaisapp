@@ -1,0 +1,2207 @@
+import { useState, useMemo, useCallback, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { fetchAll } from "@/lib/fetchAll";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import VoiceRecorder from "@/components/VoiceRecorder";
+import EditClienteModal from "@/components/cliente-detalhe/modals/EditClienteModal";
+import EditAddressModal from "@/components/cliente-detalhe/modals/EditAddressModal";
+import NovoEmprestimoModal from "@/components/cliente-detalhe/modals/NovoEmprestimoModal";
+import EditContratoModal from "@/components/cliente-detalhe/modals/EditContratoModal";
+import EditParcelaModal from "@/components/cliente-detalhe/modals/EditParcelaModal";
+import PagamentoModal from "@/components/cliente-detalhe/modals/PagamentoModal";
+import PagamentoDistribuidoModal from "@/components/cliente-detalhe/modals/PagamentoDistribuidoModal";
+import RenegociarModal, { type RenegotiationPayload } from "@/components/cliente-detalhe/modals/RenegociarModal";
+import { LOAN_MODES, fmt, FREQ, INPUT } from "@/components/cliente-detalhe/constants";
+import { interestOnlyAmount } from "@/lib/interestOnly";
+import { useToast } from "@/hooks/use-toast";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useMultiTableRealtime } from "@/hooks/useRealtimeSubscription";
+
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import {
+  ArrowLeft, User, Phone, Mail, MapPin, FileText, DollarSign,
+  CheckCircle, AlertTriangle, Clock, Edit, Trash2, Plus, Send, Copy,
+  MessageSquare, Star, Ban, RotateCcw, Download, TrendingUp,
+  Calendar, Receipt, Activity, Search, X, Percent, Wallet, Printer, Camera,
+  Wrench, Repeat, PhoneCall, StickyNote,
+  Info, UploadCloud, File as FileIcon, ImageIcon, ShieldCheck, Sparkles, ChevronRight, MoreHorizontal,
+  ChevronDown, Layers3,
+} from "lucide-react";
+import EmptyState from "@/components/EmptyState";
+import ErrorState from "@/components/feedback/ErrorState";
+import { formatBR } from "@/lib/dateUtils";
+import { useConfirm } from "@/components/ConfirmProvider";
+import { calculateLoan, generateInstallmentSchedule, LOAN_MODE_LABEL, type LoanMode, type Frequency, type DailyMode } from "@/lib/loanMath";
+import { getSignedUploadUrl } from "@/lib/storage";
+import ClientToolsPanel, { type ToolGroup } from "@/components/clients/ClientToolsPanel";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { computeLateFeeBreakdown, DEFAULT_DAILY_LATE_RATE, outstandingDue } from "@/lib/lateFee";
+import { accumulatedPaymentTotal, portalInstallmentAmount } from "@/lib/portalAmounts";
+import { friendlyError } from "@/lib/friendlyError";
+import { buildPendingSchedule, createContractAtomically } from "@/lib/contractPersistence";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { getPreferredPhone, resolveClientPhones } from "@/lib/phone";
+
+
+
+const ClienteDetalhe = () => {
+  const confirm = useConfirm();
+  const { id } = useParams();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const qc = useQueryClient();
+
+  const [activeTab, setActiveTab] = useState<"contratos" | "parcelas">("contratos");
+  const [docsOpen, setDocsOpen] = useState(false);
+  const [histOpen, setHistOpen] = useState(false);
+  const [showInfo, setShowInfo] = useState(false);
+  const [expandedContracts, setExpandedContracts] = useState<Set<string>>(new Set());
+  const toggleContract = (cid: string) => setExpandedContracts(prev => {
+    const n = new Set(prev);
+    if (n.has(cid)) n.delete(cid);
+    else n.add(cid);
+    return n;
+  });
+
+
+  const [historyFilter, setHistoryFilter] = useState<"all" | "contract" | "payment" | "profit" | "note" | "contact">("all");
+  const [editMode, setEditMode] = useState(false);
+  const [editData, setEditData] = useState<any>({});
+  const [editAddressMode, setEditAddressMode] = useState(false);
+  const [addrData, setAddrData] = useState<any>({});
+  const [newLoanMode, setNewLoanMode] = useState(false);
+  const [partialPayModal, setPartialPayModal] = useState<any>(null);
+  const [partialAmount, setPartialAmount] = useState("");
+  const [payMethod, setPayMethod] = useState<string>("pix");
+  const [payFeeDiscount, setPayFeeDiscount] = useState(0);
+  const [payReceiptFile, setPayReceiptFile] = useState<File | null>(null);
+  const [payUploading, setPayUploading] = useState(false);
+  const [distributedPayOpen, setDistributedPayOpen] = useState(false);
+  const [loanCapital, setLoanCapital] = useState("");
+  const [loanInstallments, setLoanInstallments] = useState("");
+  const [loanFreq, setLoanFreq] = useState("monthly");
+  const [loanStartDate, setLoanStartDate] = useState(new Date().toISOString().split("T")[0]);
+  const [loanStart, setLoanStart] = useState(new Date().toISOString().split("T")[0]);
+  const [loanInterestRate, setLoanInterestRate] = useState("10");
+  const [loanDailyFee, setLoanDailyFee] = useState(String(DEFAULT_DAILY_LATE_RATE));
+  const [loanLateFee, setLoanLateFee] = useState("0");
+  const [loanMode, setLoanMode] = useState<LoanMode>("installments");
+  const [loanGracePeriods, setLoanGracePeriods] = useState("2");
+  const [loanGraceDays, setLoanGraceDays] = useState("0");
+  const [loanPaymentMethod, setLoanPaymentMethod] = useState("pix");
+  const [loanEarlyDiscount, setLoanEarlyDiscount] = useState("0");
+  const [loanMaxInterestCap, setLoanMaxInterestCap] = useState("");
+  const [loanNotes, setLoanNotes] = useState("");
+  const [loanDocuments, setLoanDocuments] = useState<File[]>([]);
+  const [loanLoading, setLoanLoading] = useState(false);
+  const [loanValueMode, setLoanValueMode] = useState<"rate" | "installment">("rate");
+  const [loanInstallmentValue, setLoanInstallmentValue] = useState("");
+  const [loanDailyMode, setLoanDailyMode] = useState<DailyMode>("mon-fri");
+  const [loanFirstDueAuto, setLoanFirstDueAuto] = useState(true);
+  const [loanCustomDates, setLoanCustomDates] = useState<string[]>([]);
+  const [showMoreActions, setShowMoreActions] = useState(false);
+  const [editContract, setEditContract] = useState<any>(null);
+  const [editContractForm, setEditContractForm] = useState<any>({});
+  const [editContractRegen, setEditContractRegen] = useState(false);
+  const [editContractSaving, setEditContractSaving] = useState(false);
+  const [editInst, setEditInst] = useState<any>(null);
+  const [editInstForm, setEditInstForm] = useState<{ amount: string; due_date: string }>({ amount: "", due_date: "" });
+  const [editInstSaving, setEditInstSaving] = useState(false);
+  const [renegotiating, setRenegotiating] = useState<any>(null);
+
+  const inv = useCallback((key: string) => qc.invalidateQueries({ queryKey: [key, id] }), [qc, id]);
+  const invAll = useCallback(() => {
+    ["client-detail", "client-contracts", "client-installments", "client-transactions", "client-profits"].forEach(k => inv(k));
+    qc.invalidateQueries({ queryKey: ["dashboard-data"] });
+    qc.invalidateQueries({ queryKey: ["cobrancas-installments"] });
+  }, [inv, qc]);
+
+  useMultiTableRealtime(
+    ["clients", "contracts", "contract_installments", "transactions", "profits"],
+    [
+      ["client-detail", id || ""],
+      ["client-contracts", id || ""],
+      ["client-installments", id || ""],
+      ["client-transactions", id || ""],
+      ["client-profits", id || ""],
+    ],
+  );
+
+  const { data: client, isLoading, error: clientError, refetch: refetchClient } = useQuery({
+    queryKey: ["client-detail", id],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("clients").select("*").eq("id", id!).single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!id && !!user,
+    staleTime: 30_000,
+  });
+
+  const { data: contractSettings } = useQuery({
+    queryKey: ["client-contract-settings", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("settings")
+        .select("company_name, company_cnpj, company_address, company_phone")
+        .eq("user_id", user!.id).maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+    staleTime: 5 * 60_000,
+  });
+
+  const { data: contracts = [] } = useQuery({
+    queryKey: ["client-contracts", id],
+    queryFn: async () => {
+      return fetchAll((from, to) => supabase.from("contracts").select("*")
+        .eq("client_id", id!).order("created_at", { ascending: false }).range(from, to));
+    },
+    enabled: !!id && !!user,
+    staleTime: 30_000,
+  });
+
+  // Sincroniza os padrões do modal "Novo Empréstimo" com o último contrato do
+  // cliente, para que empréstimos subsequentes herdem taxa, frequência, multas
+  // e condições avançadas do histórico — evitando divergência com o wizard.
+  useEffect(() => {
+    if (!newLoanMode) return;
+    const last = (contracts as any[])[0];
+    if (!last) return;
+    if (last.loan_mode) setLoanMode(last.loan_mode as LoanMode);
+    if (last.frequency) setLoanFreq(last.frequency);
+    if (last.interest_rate != null) setLoanInterestRate(String(last.interest_rate));
+    if (last.num_installments) setLoanInstallments(String(last.num_installments));
+    if (last.daily_interest_percent != null) setLoanDailyFee(String(last.daily_interest_percent));
+    if (last.late_fee_percent != null) setLoanLateFee(String(last.late_fee_percent));
+    if (last.grace_periods) setLoanGracePeriods(String(last.grace_periods));
+    if (last.grace_days != null) setLoanGraceDays(String(last.grace_days));
+    if (last.payment_method) setLoanPaymentMethod(last.payment_method);
+    if (last.early_payment_discount_percent != null) setLoanEarlyDiscount(String(last.early_payment_discount_percent));
+    if (last.max_interest_cap_percent != null) setLoanMaxInterestCap(String(last.max_interest_cap_percent));
+    // valueMode segue o padrão do wizard: "installment" quando o modo é parcelas.
+    setLoanValueMode(last.loan_mode === "installments" ? "installment" : "rate");
+
+  }, [newLoanMode]);
+
+
+
+  const { data: installments = [] } = useQuery({
+    queryKey: ["client-installments", id],
+    queryFn: async () => {
+      const data = await fetchAll((from, to) => supabase.from("contract_installments")
+        .select("*, contracts(capital, frequency, daily_interest_percent, max_interest_cap_percent)")
+        .eq("client_id", id!).order("due_date").range(from, to));
+      const now = new Date();
+      return (data || []).map((i: any) => i.status === "pending" && new Date(i.due_date) < now ? { ...i, status: "overdue" } : i);
+    },
+    enabled: !!id && !!user,
+    staleTime: 30_000,
+  });
+
+  const { data: transactions = [] } = useQuery({
+    queryKey: ["client-transactions", id],
+    queryFn: async () => {
+      return fetchAll((from, to) => supabase.from("transactions").select("*")
+        .eq("client_id", id!).eq("user_id", user!.id)
+        .order("date", { ascending: false }).range(from, to));
+    },
+    enabled: !!id && !!user,
+    staleTime: 30_000,
+  });
+
+  const { data: profits = [] } = useQuery({
+    queryKey: ["client-profits", id],
+    queryFn: async () => {
+      return fetchAll((from, to) => supabase.from("profits").select("*")
+        .eq("client_id", id!).order("date", { ascending: false }).range(from, to));
+    },
+    enabled: !!id && !!user,
+    staleTime: 30_000,
+  });
+
+  const kpis = useMemo(() => {
+    const activeContracts = contracts.filter((c: any) => c.status === "active" || c.status === "overdue");
+    const returnedPrincipal = new Map<string, number>();
+    for (const installment of installments as any[]) {
+      if (installment.status !== "paid") continue;
+      const contract = activeContracts.find((c: any) => c.id === installment.contract_id);
+      if (!contract) continue;
+      const fallback = Number(contract.capital || 0) / (Number(contract.num_installments) || 1);
+      returnedPrincipal.set(
+        contract.id,
+        (returnedPrincipal.get(contract.id) || 0) + Number(installment.paid_principal ?? fallback),
+      );
+    }
+    const totalCapital = activeContracts.reduce((s: number, c: any) =>
+      s + Math.max(0, Number(c.capital || 0) - (returnedPrincipal.get(c.id) || 0)), 0);
+    const lifetimeCapital = contracts.reduce((s: number, c: any) => s + Number(c.capital || 0), 0);
+    const totalAmount = contracts.reduce((s: number, c: any) => s + Number(c.total_amount || 0), 0);
+    const paidInst = installments.filter((i: any) => i.status === "paid");
+    const overdueInst = installments.filter((i: any) => i.status === "overdue");
+    const pendingInst = installments.filter((i: any) => i.status === "pending");
+    const totalPaid = paidInst.reduce((s: number, i: any) => s + Number(i.paid_amount || i.amount || 0), 0);
+    const balanceOf = (i: any) => {
+      const contract = contracts.find((c: any) => c.id === i.contract_id) as any;
+      return portalInstallmentAmount({
+        ...i,
+        daily_interest_percent: contract?.daily_interest_percent,
+        max_interest_cap_percent: contract?.max_interest_cap_percent,
+      });
+    };
+    const totalOverdue = overdueInst.reduce((s: number, i: any) => s + balanceOf(i), 0);
+    const totalPending = pendingInst.reduce((s: number, i: any) => s + balanceOf(i), 0);
+    const totalProfit = profits.reduce((s: number, p: any) => s + Number(p.amount || 0), 0);
+    const ltvPct = totalAmount > 0 ? Math.round((totalPaid / totalAmount) * 100) : 0;
+    const ticketMedio = contracts.length > 0 ? lifetimeCapital / contracts.length : 0;
+    const totalDueInst = paidInst.length + overdueInst.length;
+    const latePayRate = totalDueInst > 0 ? Math.round((overdueInst.length / totalDueInst) * 100) : 0;
+    const nextDueInst = pendingInst
+      .slice()
+      .sort((a: any, b: any) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())[0];
+    return { totalCapital, lifetimeCapital, totalAmount, totalPaid, totalOverdue, totalPending, totalProfit, remaining: totalPending + totalOverdue, paidInst, overdueInst, pendingInst, ltvPct, ticketMedio, latePayRate, nextDueInst, activeContracts };
+  }, [contracts, installments, profits]);
+
+  // ===== Documentos & Anexos (Storage) =====
+  const docsFolder = id ? `client-docs/${id}` : "";
+  const { data: clientDocs = [] } = useQuery({
+    queryKey: ["client-docs", id],
+    enabled: !!id,
+    queryFn: async () => {
+      const { data, error } = await supabase.storage.from("uploads").list(docsFolder, {
+        limit: 100, sortBy: { column: "created_at", order: "desc" },
+      });
+      if (error) return [];
+      return (data || []).filter((f: any) => f.name && !f.name.startsWith("."));
+    },
+  });
+  const [docUploading, setDocUploading] = useState(false);
+  const uploadDoc = async (file: File) => {
+    if (!file || !id) return;
+    setDocUploading(true);
+    try {
+      const ext = file.name.split(".").pop() || "bin";
+      const path = `${docsFolder}/${Date.now()}-${file.name.replace(/[^a-z0-9.-]/gi, "_")}`;
+      const { error } = await supabase.storage.from("uploads").upload(path, file, {
+        upsert: false, contentType: file.type,
+      });
+      if (error) throw error;
+      toast({ title: "Documento anexado" });
+      inv("client-docs");
+    } catch (e: any) {
+      toast({ title: "Falha ao anexar", description: e.message, variant: "destructive" });
+    } finally { setDocUploading(false); }
+  };
+  const deleteDoc = async (name: string) => {
+    if (!confirm("Remover este documento?")) return;
+    const { error } = await supabase.storage.from("uploads").remove([`${docsFolder}/${name}`]);
+    if (error) return toast({ title: "Erro", description: error.message, variant: "destructive" });
+    toast({ title: "Documento removido" });
+    inv("client-docs");
+  };
+  const signedUrl = async (name: string) => {
+    const { data } = await supabase.storage.from("uploads").createSignedUrl(`${docsFolder}/${name}`, 60 * 10);
+    if (data?.signedUrl) window.open(data.signedUrl, "_blank");
+  };
+
+
+  const groupedInstallments = useMemo(() => {
+    const groups: Record<string, any[]> = {};
+    installments.forEach((inst: any) => {
+      const cid = inst.contract_id || "no-contract";
+      if (!groups[cid]) groups[cid] = [];
+      groups[cid].push(inst);
+    });
+    // Ordena cada grupo por número da parcela
+    Object.values(groups).forEach((arr) => arr.sort((a: any, b: any) => (a.installment_number ?? 0) - (b.installment_number ?? 0)));
+    // Ordena os grupos por data de criação do contrato (mais recente primeiro)
+    const order = new Map(contracts.map((c: any, idx: number) => [c.id, idx]));
+    const sorted: Record<string, any[]> = {};
+    Object.keys(groups)
+      .sort((a, b) => (order.get(a) ?? 999) - (order.get(b) ?? 999))
+      .forEach((k) => { sorted[k] = groups[k]; });
+    return sorted;
+  }, [installments, contracts]);
+
+  const loanCalc = useMemo(() => {
+    const cap = parseFloat(loanCapital) || 0;
+    const rate = parseFloat(loanInterestRate) || 0;
+    const n = parseInt(loanInstallments) || 0;
+    const grace = parseInt(loanGracePeriods) || 0;
+    const instVal = parseFloat(loanInstallmentValue) || 0;
+    if (!cap) return null;
+    const r = calculateLoan({
+      capital: cap, rate, periods: n,
+      frequency: loanFreq as any, loanMode,
+      gracePeriods: loanMode === "grace" ? grace : 0,
+      valueMode: loanMode === "installments" ? loanValueMode : "rate",
+      installmentValue: instVal,
+    });
+    if (!r) return null;
+    return {
+      installmentAmount: r.installmentAmount,
+      total: r.totalAmount,
+      totalInterest: r.totalInterest,
+      schedule: r.schedule,
+      numInstallments: r.numInstallments,
+      derivedRate: r.derivedRate,
+    };
+  }, [loanCapital, loanInterestRate, loanInstallments, loanFreq, loanMode, loanGracePeriods, loanValueMode, loanInstallmentValue]);
+
+  // Actions
+  const startEdit = () => {
+    const phones = resolveClientPhones(client?.phone, client?.whatsapp);
+    setEditData({ name: client?.name || "", phone: phones.phone || "", email: client?.email || "", cpf_cnpj: client?.cpf_cnpj || "", whatsapp: phones.whatsapp || "", birth_date: (client as any)?.birth_date || "" });
+    setEditMode(true);
+  };
+
+  const saveEdit = async () => {
+    // `birth_date` é uma coluna date: string vazia faz o Postgres recusar a
+    // gravação inteira. Campo em branco significa "sem data", não "".
+    const phones = resolveClientPhones(editData.phone, editData.whatsapp);
+    const payload = { ...editData, ...phones, birth_date: editData.birth_date || null };
+    const { error } = await supabase.from("clients").update(payload).eq("id", id!);
+    if (error) { toast({ ...friendlyError(error, "Não foi possível salvar o cliente."), variant: "destructive" }); return; }
+    toast({ title: "Cliente atualizado!" }); setEditMode(false); inv("client-detail");
+  };
+
+  const startEditAddress = () => {
+    const a = (client?.address as any) || {};
+    setAddrData({ cep: a.cep || "", street: a.street || "", number: a.number || "", neighborhood: a.neighborhood || "", city: a.city || "", state: a.state || "" });
+    setEditAddressMode(true);
+  };
+
+  const buscarCep = async () => {
+    const raw = (addrData.cep || "").replace(/\D/g, "");
+    if (raw.length !== 8) return;
+    try {
+      const res = await fetch(`https://viacep.com.br/ws/${raw}/json/`);
+      const data = await res.json();
+      if (!data.erro) setAddrData((prev: any) => ({ ...prev, street: data.logradouro || "", neighborhood: data.bairro || "", city: data.localidade || "", state: data.uf || "" }));
+    } catch {}
+  };
+
+  const saveAddress = async () => {
+    const { error } = await supabase.from("clients").update({ address: addrData }).eq("id", id!);
+    if (error) {
+      toast({ ...friendlyError(error, "Não foi possível salvar o endereço."), variant: "destructive" });
+      return;
+    }
+    toast({ title: "Endereço atualizado!" }); setEditAddressMode(false); inv("client-detail");
+  };
+
+  // M3: usa o mesmo gerador do NovoCliente (loanMath) para não divergir. Antes
+  // esta tela usava quinzenal = 14 dias e diária = dias corridos; agora fica
+  // quinzenal = 15 dias e diária = dias úteis (mon-fri), igual à criação padrão.
+  const generateDueDates = (start: string, freq: string, count: number, periodsAhead?: number) => {
+    // freq pode vir como "daily_mon-fri" | "daily_mon-sat" | "daily_mon-sun"
+    let baseFreq: Frequency = "monthly" as Frequency;
+    let dailyMode: "mon-fri" | "mon-sat" | "mon-sun" = "mon-fri";
+    if (freq?.startsWith("daily")) {
+      baseFreq = "daily" as Frequency;
+      const suffix = freq.split("_")[1];
+      if (suffix === "mon-sat" || suffix === "mon-sun" || suffix === "mon-fri") dailyMode = suffix;
+    } else {
+      baseFreq = (freq || "monthly") as Frequency;
+    }
+    return generateInstallmentSchedule({
+      startDate: start,
+      frequency: baseFreq,
+      count,
+      periodsAhead,
+      dailyMode,
+    });
+  };
+
+  const handleCreateLoan = async ({ signatureRequired }: { signatureRequired: boolean }) => {
+    if (!user || !loanCalc) return;
+    setLoanLoading(true);
+    try {
+      const nInput = parseInt(loanInstallments) || 0;
+      const nReal = loanCalc.numInstallments;
+      const periodsAhead = loanMode === "bullet" ? nInput : undefined;
+      const effectiveRate = loanMode === "installments" && loanValueMode === "installment"
+        ? (loanCalc.derivedRate ?? parseFloat(loanInterestRate) ?? 0)
+        : parseFloat(loanInterestRate);
+      const contractPayload = {
+        capital: parseFloat(loanCapital),
+        interest_rate: effectiveRate, num_installments: nReal,
+        installment_amount: loanCalc.installmentAmount, frequency: loanFreq,
+        start_date: new Date(loanStartDate + "T12:00:00").toISOString(),
+        late_fee_percent: 0, daily_interest_percent: parseFloat(loanDailyFee) || DEFAULT_DAILY_LATE_RATE,
+        total_amount: loanCalc.total, total_interest: loanCalc.totalInterest,
+        status: signatureRequired ? "pending_signature" : "active",
+        signature_status: signatureRequired ? "pending" : "not_required",
+        loan_mode: loanMode,
+        grace_periods: loanMode === "grace" ? (parseInt(loanGracePeriods) || 0) : 0,
+        grace_days: parseInt(loanGraceDays) || 0,
+        payment_method: loanPaymentMethod,
+        early_payment_discount_percent: parseFloat(loanEarlyDiscount) || 0,
+        max_interest_cap_percent: loanMaxInterestCap ? parseFloat(loanMaxInterestCap) : null,
+        notes: loanNotes || null,
+      };
+
+      const dueDates = generateInstallmentSchedule({
+        startDate: loanStartDate,
+        firstDueDate: loanFirstDueAuto ? undefined : loanStart,
+        frequency: loanFreq as Frequency,
+        count: nReal,
+        periodsAhead,
+        dailyMode: loanDailyMode,
+        customDates: loanFreq === "custom" ? loanCustomDates : undefined,
+      });
+      const createdContract = await createContractAtomically(supabase as any, {
+        clientId: id!,
+        contract: contractPayload,
+        installments: dueDates.map((dd, i) => ({
+          installment_number: i + 1,
+          amount: loanCalc.schedule[i] ?? loanCalc.installmentAmount,
+          due_date: dd,
+        })),
+      });
+
+      const uploadedDocuments: Array<{ name: string; path: string; type: string; size: number; uploaded_at: string }> = [];
+      const failedDocuments: string[] = [];
+      for (const file of loanDocuments) {
+        const safeName = file.name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9._-]/g, "-").slice(-120);
+        const path = `${user.id}/clients/${id}/contracts/${createdContract.contract_id}/${Date.now()}-${crypto.randomUUID()}-${safeName}`;
+        const { error: uploadError } = await supabase.storage.from("uploads").upload(path, file, { contentType: file.type || undefined, upsert: false });
+        if (uploadError) {
+          failedDocuments.push(file.name);
+          continue;
+        }
+        uploadedDocuments.push({ name: file.name, path, type: file.type, size: file.size, uploaded_at: new Date().toISOString() });
+      }
+      if (uploadedDocuments.length > 0) {
+        const { error: attachmentError } = await supabase.from("contracts")
+          .update({ attachments: uploadedDocuments as any })
+          .eq("id", createdContract.contract_id)
+          .eq("user_id", user.id);
+        if (attachmentError) throw attachmentError;
+      }
+
+      toast({
+        title: "Empréstimo criado!",
+        description: failedDocuments.length
+          ? `${nReal} parcela(s) gerada(s). ${failedDocuments.length} documento(s) não puderam ser anexados.`
+          : `${nReal} parcela(s) gerada(s). ${uploadedDocuments.length} documento(s) anexado(s).`,
+        variant: failedDocuments.length ? "destructive" : "default",
+      });
+      setNewLoanMode(false); setLoanCapital(""); setLoanInstallments(""); setLoanNotes(""); setLoanDocuments([]);
+      invAll();
+    } catch (err: any) {
+      toast({ title: "Erro", description: err.message, variant: "destructive" });
+    } finally { setLoanLoading(false); }
+  };
+
+  const handleRenegotiate = async (payload: RenegotiationPayload) => {
+    if (!user || !renegotiating) return;
+    const old = renegotiating;
+    try {
+      const contractPayload = {
+        capital: payload.totalCapital,
+        interest_rate: payload.interestRate,
+        num_installments: payload.numInstallments,
+        installment_amount: payload.installmentAmount,
+        frequency: payload.frequency,
+        start_date: new Date(payload.startDate + "T12:00:00").toISOString(),
+        late_fee_percent: payload.lateFeePercent,
+        daily_interest_percent: payload.dailyInterestPercent,
+        total_amount: payload.totalAmount,
+        total_interest: payload.totalInterest,
+        status: "active",
+        loan_mode: "installments",
+        notes: payload.notes || null,
+      };
+
+      const dueDates = generateDueDates(payload.startDate, payload.frequency, payload.numInstallments);
+      const { error } = await (supabase as any).rpc("renegotiate_contract_atomically", {
+        _old_contract_id: old.id,
+        _contract: contractPayload,
+        _installments: dueDates.map((dd, i) => ({
+          installment_number: i + 1,
+          amount: payload.schedule[i] ?? payload.installmentAmount,
+          due_date: dd,
+        })),
+        _new_cash_disbursed: payload.addCapital,
+        _reason: payload.notes || null,
+      });
+      if (error) throw error;
+
+      toast({ title: "Contrato renegociado!", description: `${payload.numInstallments}x de R$ ${payload.installmentAmount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}` });
+      setRenegotiating(null);
+      invAll();
+    } catch (err: any) {
+      toast({ ...friendlyError(err, "Não foi possível concluir a renegociação."), variant: "destructive" });
+    }
+  };
+
+
+
+  const openEditContract = (c: any) => {
+    setEditContract(c);
+    const raw = c.frequency || "monthly";
+    const isDaily = raw.startsWith("daily");
+    const baseFreq = isDaily ? "daily" : raw;
+    const dailyMode = isDaily ? (raw.split("_")[1] || "mon-fri") : "mon-fri";
+    setEditContractForm({
+      capital: String(c.capital ?? ""),
+      interest_rate: String(c.interest_rate ?? ""),
+      num_installments: String(c.num_installments ?? ""),
+      installment_amount: String(c.installment_amount ?? ""),
+      frequency: baseFreq,
+      daily_mode: dailyMode,
+      start_date: c.start_date ? new Date(c.start_date).toISOString().split("T")[0] : "",
+      late_fee_percent: String(c.late_fee_percent ?? "0"),
+      daily_interest_percent: String(c.daily_interest_percent ?? "0"),
+      notes: c.notes || "",
+    });
+    setEditContractRegen(false);
+  };
+
+  const handleSaveContract = async () => {
+    if (!editContract || !user) return;
+    setEditContractSaving(true);
+    try {
+      const f = editContractForm;
+      const n = parseInt(f.num_installments);
+      const cap = parseFloat(f.capital);
+      const rate = parseFloat(f.interest_rate);
+      const instAmt = parseFloat(f.installment_amount);
+      const totalAmount = instAmt * n;
+      const totalInterest = totalAmount - cap;
+
+      if (!Number.isInteger(n) || n <= 0 || !Number.isFinite(cap) || cap <= 0 || !Number.isFinite(instAmt) || instAmt <= 0) {
+        throw new Error("Revise capital, quantidade e valor das parcelas.");
+      }
+
+      const freqValue = f.frequency === "daily" ? `daily_${f.daily_mode || "mon-fri"}` : f.frequency;
+
+      const startDate = new Date(f.start_date + "T12:00:00");
+      const lateFee = parseFloat(f.late_fee_percent);
+      const dailyInterest = parseFloat(f.daily_interest_percent);
+      if (!Number.isFinite(rate) || !Number.isFinite(lateFee) || !Number.isFinite(dailyInterest) || Number.isNaN(startDate.getTime())) {
+        throw new Error("Revise os valores financeiros e a data de início.");
+      }
+
+      let newInst: Array<Record<string, unknown>> = [];
+      if (editContractRegen) {
+        const existing = installments.filter((i: any) => i.contract_id === editContract.id);
+        const paid = existing.filter((i: any) => i.status === "paid");
+        const paidNumbers = new Set(paid.map((i: any) => Number(i.installment_number)));
+        if (paid.length > n || [...paidNumbers].some((number) => number < 1 || number > n)) {
+          throw new Error("A nova quantidade nÃ£o pode excluir parcelas que jÃ¡ foram pagas.");
+        }
+
+        const dueDates = generateDueDates(f.start_date, freqValue, n);
+        newInst = buildPendingSchedule({
+          dueDates,
+          paidInstallmentNumbers: paidNumbers,
+          amount: instAmt,
+          userId: user.id,
+          contractId: editContract.id,
+          clientId: id!,
+        });
+      }
+
+      const { error } = await (supabase as any).rpc("update_contract_atomically", {
+        _contract_id: editContract.id,
+        _contract: {
+        capital: cap,
+        interest_rate: rate,
+        num_installments: n,
+        installment_amount: instAmt,
+        frequency: freqValue,
+        start_date: startDate.toISOString(),
+        late_fee_percent: lateFee,
+        daily_interest_percent: dailyInterest,
+        total_amount: totalAmount,
+        total_interest: totalInterest,
+        notes: f.notes || null,
+        },
+        _regenerate: editContractRegen,
+        _installments: newInst.map(({ user_id: _userId, contract_id: _contractId, client_id: _clientId, status: _status, ...installment }) => installment),
+      });
+      if (error) throw error;
+
+      /*
+        // Apaga apenas parcelas não pagas e regera mantendo as pagas
+        const existing = installments.filter((i: any) => i.contract_id === editContract.id);
+        const paid = existing.filter((i: any) => i.status === "paid");
+        const paidNumbers = new Set(paid.map((i: any) => Number(i.installment_number)));
+        if (paid.length > n || [...paidNumbers].some((number) => number < 1 || number > n)) {
+          throw new Error("A nova quantidade não pode excluir parcelas que já foram pagas.");
+        }
+
+      }
+
+      */
+
+      toast({ title: "Contrato atualizado!", description: editContractRegen ? "Parcelas pendentes regeneradas." : undefined });
+      setEditContract(null);
+      invAll();
+    } catch (err: any) {
+      toast({ title: "Erro ao salvar", description: err.message, variant: "destructive" });
+    } finally {
+      setEditContractSaving(false);
+    }
+  };
+
+  const handleDeleteContract = async (contractId: string) => {
+    const ok = await confirm({
+      title: "Excluir Empréstimo?",
+      description: "Isso apagará o contrato, todas as parcelas e movimentações ligadas a ele. Esta ação não pode ser desfeita.",
+      confirmLabel: "Excluir",
+      cancelLabel: "Voltar",
+      variant: "destructive"
+    });
+    if (!ok) return;
+
+    try {
+      // Deleta parcelas primeiro (FK)
+      const { error } = await (supabase as any).rpc("delete_contract_atomically", {
+        _contract_id: contractId,
+      });
+      if (error) throw error;
+      // Deleta transações ligadas ao contrato
+      // Deleta o contrato
+      toast({ title: "Empréstimo excluído com sucesso!" });
+      invAll();
+    } catch (err: any) {
+      toast({ title: "Erro ao excluir", description: err.message, variant: "destructive" });
+    }
+  };
+
+  const openEditInst = (inst: any) => {
+    setEditInst(inst);
+    setEditInstForm({
+      amount: String(inst.amount ?? ""),
+      due_date: inst.due_date ? new Date(inst.due_date).toISOString().split("T")[0] : "",
+    });
+  };
+
+  const handleSaveInst = async () => {
+    if (!editInst) return;
+    setEditInstSaving(true);
+    try {
+      const amt = parseFloat(editInstForm.amount);
+      const dd = editInstForm.due_date ? new Date(editInstForm.due_date + "T12:00:00").toISOString() : editInst.due_date;
+      if (isNaN(amt) || amt <= 0) throw new Error("Valor inválido");
+      const { error } = await supabase.from("contract_installments").update({ amount: amt, due_date: dd }).eq("id", editInst.id);
+      if (error) throw error;
+      toast({ title: "Parcela atualizada!" });
+      setEditInst(null);
+      invAll();
+    } catch (err: any) {
+      toast({ title: "Erro", description: err.message, variant: "destructive" });
+    } finally {
+      setEditInstSaving(false);
+    }
+  };
+
+
+  const patchInstallment = (instId: string, patch: any) => {
+    const key = ["client-installments", id];
+    const prev = qc.getQueryData<any[]>(key);
+    qc.setQueryData<any[]>(key, (old) =>
+      (old || []).map((i: any) => (i.id === instId ? { ...i, ...patch, _optimistic: true } : i))
+    );
+    return prev;
+  };
+
+  const uploadReceipt = async (file: File): Promise<string | null> => {
+    if (!user) return null;
+    const ext = file.name.split(".").pop() || "bin";
+    const path = `${user.id}/receipts/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+    const { error } = await supabase.storage.from("uploads").upload(path, file, { upsert: false });
+    if (error) {
+      toast({ ...friendlyError(error, "Não foi possível enviar o comprovante."), variant: "destructive" });
+      return null;
+    }
+    return await getSignedUploadUrl(path);
+  };
+
+  const payFull = async (instId: string, amount: number, method: string = "pix", receiptUrl: string | null = null, announce = true): Promise<boolean> => {
+    if (!user) return false;
+    const patch: any = { status: "paid", paid_at: new Date().toISOString(), paid_amount: amount, payment_method: method };
+    if (receiptUrl) patch.receipt_url = receiptUrl;
+    const snapshot = patchInstallment(instId, patch);
+    if (announce) toast({ title: "Parcela quitada!" });
+    // RPC atômico: parcela + lucro (juros reais) + caixa (só dinheiro novo) +
+    // conclusão do contrato, tudo numa transação no servidor.
+    const { error } = await supabase.rpc("pay_installment", {
+      _installment_id: instId,
+      _paid_total: amount,
+      _mark_paid: true,
+      _method: method,
+      _receipt_url: receiptUrl,
+    });
+    if (error) {
+      qc.setQueryData(["client-installments", id], snapshot);
+      toast({ ...friendlyError(error, "Não foi possível quitar a parcela."), variant: "destructive" });
+      return false;
+    }
+    invAll();
+    return true;
+  };
+
+  const handlePartialPay = async () => {
+    if (!partialPayModal || !user) return;
+    const val = parseFloat(partialAmount);
+    if (!val || val <= 0) { toast({ title: "Valor inválido", variant: "destructive" }); return; }
+    const alreadyPaid = Number(partialPayModal.paid_amount || 0);
+    const contract: any = (contracts as any[]).find((c: any) => c.id === partialPayModal.contract_id);
+    const paymentInput = {
+      ...partialPayModal,
+      daily_interest_percent: contract?.daily_interest_percent,
+      max_interest_cap_percent: contract?.max_interest_cap_percent,
+    };
+    const remainingDue = portalInstallmentAmount(paymentInput);
+    const adjustedDue = Math.max(0, Math.round((remainingDue - payFeeDiscount) * 100) / 100);
+    if (val > adjustedDue + 0.005) {
+      toast({ title: "Valor acima do saldo", description: `O saldo com desconto é R$ ${fmt(adjustedDue)}.`, variant: "destructive" });
+      return;
+    }
+    setPayUploading(true);
+    let receiptUrl: string | null = null;
+    if (payReceiptFile) {
+      receiptUrl = await uploadReceipt(payReceiptFile);
+      if (!receiptUrl) { setPayUploading(false); return; }
+    }
+    if (val + 0.005 >= adjustedDue) {
+      await payFull(partialPayModal.id, accumulatedPaymentTotal(paymentInput, adjustedDue), payMethod, receiptUrl);
+    } else {
+      const patch: any = { paid_amount: alreadyPaid + val, payment_method: payMethod };
+      if (receiptUrl) patch.receipt_url = receiptUrl;
+      const snapshot = patchInstallment(partialPayModal.id, patch);
+      toast({ title: `R$ ${fmt(val)} registrado!` });
+      // RPC atômico (parcial: não quita, lança só o dinheiro novo no caixa).
+      const { error } = await supabase.rpc("pay_installment", {
+        _installment_id: partialPayModal.id,
+        _paid_total: alreadyPaid + val,
+        _mark_paid: false,
+        _method: payMethod,
+        _receipt_url: receiptUrl,
+      });
+      if (error) {
+        qc.setQueryData(["client-installments", id], snapshot);
+        toast({ ...friendlyError(error, "Não foi possível registrar o pagamento."), variant: "destructive" });
+      } else {
+        invAll();
+      }
+    }
+    setPayUploading(false);
+    setPartialPayModal(null);
+    setPayReceiptFile(null);
+    setPayMethod("pix");
+    setPayFeeDiscount(0);
+  };
+
+  const handleInterestRenewal = async (nextDueDate: string) => {
+    if (!partialPayModal || !user || !nextDueDate) return;
+    setPayUploading(true);
+    try {
+      let receiptUrl: string | null = null;
+      if (payReceiptFile) {
+        receiptUrl = await uploadReceipt(payReceiptFile);
+        if (!receiptUrl) return;
+      }
+      const { data: renewed, error } = await (supabase as any).rpc("renew_installment_interest", {
+        _installment_id: partialPayModal.id,
+        _next_due_date: nextDueDate,
+        _method: payMethod,
+        _origin: "detalhe_cliente",
+      });
+      let received = Number(renewed?.amount || partialAmount || 0);
+      if (error) {
+        // Compatibilidade para bancos que ainda estejam com a versão antiga da RPC.
+        // A chamada acima é transacional: em caso de erro nada foi gravado, então
+        // podemos concluir a renovação pelas tabelas protegidas por RLS.
+        const contract: any = (contracts as any[]).find((c: any) => c.id === partialPayModal.contract_id);
+        received = Number(partialAmount) || interestOnlyAmount(partialPayModal, contract, Number(partialPayModal.late_fee || 0));
+        if (!(received > 0)) throw error;
+
+        const previousDueDate = partialPayModal.due_date;
+        const installmentPatch: any = {
+          due_date: nextDueDate,
+          late_fee: 0,
+          paid_amount: 0,
+          paid_at: null,
+          status: "pending",
+          payment_method: payMethod,
+        };
+        if (receiptUrl) installmentPatch.receipt_url = receiptUrl;
+        const { error: updateError } = await supabase.from("contract_installments")
+          .update(installmentPatch).eq("id", partialPayModal.id).eq("user_id", user.id);
+        if (updateError) throw error;
+
+        const periodInterest = Math.max(0, received - Number(partialPayModal.late_fee || 0));
+        const { error: transactionError } = await supabase.from("transactions").insert({
+          user_id: user.id,
+          amount: received,
+          type: "payment",
+          category: "interest_renewal",
+          description: "Renovação por pagamento somente dos juros (detalhe do cliente)",
+          client_id: partialPayModal.client_id,
+          contract_id: partialPayModal.contract_id,
+          installment_id: partialPayModal.id,
+          principal_amount: 0,
+          interest_amount: periodInterest,
+          fee_amount: Math.max(0, Number(partialPayModal.late_fee || 0)),
+        });
+        const { error: profitError } = transactionError ? { error: null } : await supabase.from("profits").insert({
+          user_id: user.id,
+          amount: received,
+          description: `Juros de renovação · parcela #${partialPayModal.installment_number || "-"}`,
+          client_id: partialPayModal.client_id,
+          installment_id: null,
+        });
+        if (transactionError || profitError) {
+          await supabase.from("contract_installments").update({ due_date: previousDueDate }).eq("id", partialPayModal.id).eq("user_id", user.id);
+          throw transactionError || profitError;
+        }
+      } else if (receiptUrl) {
+        await supabase.from("contract_installments").update({ receipt_url: receiptUrl })
+          .eq("id", partialPayModal.id).eq("user_id", user.id);
+      }
+      toast({
+        title: "Juros recebidos e vencimento renovado",
+        description: `Recebido R$ ${fmt(received)}. Novo vencimento: ${formatBR(nextDueDate)}.`,
+      });
+      setPartialPayModal(null);
+      setPartialAmount("");
+      setPayReceiptFile(null);
+      setPayMethod("pix");
+      setPayFeeDiscount(0);
+      invAll();
+    } catch (error: any) {
+      toast({ ...friendlyError(error, "Não foi possível renovar o vencimento."), variant: "destructive" });
+    } finally {
+      setPayUploading(false);
+    }
+  };
+
+  const handleDistributedPayment = async (amount: number, method: string) => {
+    if (!user || !id) return;
+    setPayUploading(true);
+    try {
+      const { data, error } = await (supabase as any).rpc("pay_client_balance", {
+        _client_id: id,
+        _amount: amount,
+        _method: method,
+        _receipt_url: null,
+      });
+      if (error) throw error;
+      const paid = Number(data?.paid_installments || 0);
+      const partial = Number(data?.partial_installments || 0);
+      toast({
+        title: "Pagamento distribuído!",
+        description: `${paid} parcela(s) quitada(s)${partial ? " e saldo aplicado parcialmente na próxima" : ""}.`,
+      });
+      setDistributedPayOpen(false);
+      invAll();
+    } catch (error: any) {
+      toast({ ...friendlyError(error, "Não foi possível distribuir o pagamento."), variant: "destructive" });
+    } finally {
+      setPayUploading(false);
+    }
+  };
+
+  const reversePayment = async (instId: string) => {
+    if (!(await confirm("Estornar pagamento?"))) return;
+    const snapshot = patchInstallment(instId, { status: "pending", paid_at: null, paid_amount: null });
+    toast({ title: "Estornado!" });
+    // RPC atômico: reverte a parcela E remove o lucro/caixa lançados por ela
+    // (vinculados por installment_id), reabrindo o contrato se estava concluído.
+    const { error } = await supabase.rpc("reverse_installment_payment", { _installment_id: instId });
+    if (error) {
+      qc.setQueryData(["client-installments", id], snapshot);
+      toast({ ...friendlyError(error, "Não foi possível estornar o pagamento."), variant: "destructive" });
+      return;
+    }
+    invAll();
+  };
+
+  const getPhone = () => (client?.whatsapp || client?.phone || "").replace(/\D/g, "");
+
+  const sendBilling = (inst: any) => {
+    const phone = getPhone();
+    if (!phone) { toast({ title: "Sem telefone", variant: "destructive" }); return; }
+    const msg = encodeURIComponent(`Olá ${client?.name}, sua parcela #${inst.installment_number} de R$ ${fmt(Number(inst.amount))} venceu em ${formatBR(inst.due_date)}. Regularize o pagamento.`);
+    window.open(`https://wa.me/${phone}?text=${msg}`, "_blank");
+  };
+
+  const sendPortalLink = () => {
+    const phone = getPhone();
+    if (!phone) { toast({ title: "Sem telefone", variant: "destructive" }); return; }
+    const portalUrl = `${window.location.origin}/portal-cliente?o=${user!.id}`;
+    const msg = encodeURIComponent(`Olá ${client?.name}, aqui está o link para o seu portal do cliente: ${portalUrl}\n\nLá você pode conferir suas parcelas, gerar PIX para pagamento e ver seu saldo devedor.\n\nPara acessar, informe somente o seu CPF.`);
+    window.open(`https://wa.me/${phone}?text=${msg}`, "_blank");
+  };
+
+  const sendAllOverdue = () => {
+    if (!kpis.overdueInst.length) { toast({ title: "Sem parcelas atrasadas" }); return; }
+    const phone = getPhone();
+    if (!phone) { toast({ title: "Sem telefone", variant: "destructive" }); return; }
+    const total = kpis.overdueInst.reduce((s: number, i: any) => {
+      const contract: any = (contracts as any[]).find((c: any) => c.id === i.contract_id);
+      return s + portalInstallmentAmount({
+        ...i,
+        daily_interest_percent: contract?.daily_interest_percent,
+        max_interest_cap_percent: contract?.max_interest_cap_percent,
+      });
+    }, 0);
+    const msg = encodeURIComponent(`Olá ${client?.name}, você possui ${kpis.overdueInst.length} parcela(s) em atraso, total R$ ${fmt(total)}. Entre em contato para regularizar.`);
+    window.open(`https://wa.me/${phone}?text=${msg}`, "_blank");
+  };
+
+  const payAllPending = async () => {
+    const unpaid = installments.filter((i: any) => i.status !== "paid");
+    if (!unpaid.length) { toast({ title: "Todas pagas!" }); return; }
+    if (!(await confirm(`Quitar ${unpaid.length} parcela(s)?`))) return;
+    let completed = 0;
+    for (const inst of unpaid) {
+      const contract: any = (contracts as any[]).find((c: any) => c.id === inst.contract_id);
+      const paymentInput = {
+        ...inst,
+        daily_interest_percent: contract?.daily_interest_percent,
+        max_interest_cap_percent: contract?.max_interest_cap_percent,
+      };
+      if (await payFull(inst.id, accumulatedPaymentTotal(paymentInput, portalInstallmentAmount(paymentInput)), "pix", null, false)) completed += 1;
+    }
+    if (completed === unpaid.length) {
+      toast({ title: `${completed} parcela(s) quitada(s)!` });
+    } else {
+      toast({
+        title: "Quitação concluída parcialmente",
+        description: `${completed} de ${unpaid.length} parcela(s) foram quitadas. Tente novamente nas restantes.`,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const copyClientInfo = () => {
+    navigator.clipboard.writeText(`Nome: ${client?.name}\nCPF: ${client?.cpf_cnpj || "—"}\nTel: ${client?.phone || "—"}\nWhatsApp: ${client?.whatsapp || "—"}\nEmail: ${client?.email || "—"}`);
+    toast({ title: "Copiado!" });
+  };
+
+  const exportSummary = () => {
+    navigator.clipboard.writeText([
+      `=== ${client?.name} ===`, `CPF: ${client?.cpf_cnpj || "—"}`,
+      `Capital: R$ ${fmt(kpis.totalCapital)}`, `Recebido: R$ ${fmt(kpis.totalPaid)}`,
+      `Atraso: R$ ${fmt(kpis.totalOverdue)}`, `Restante: R$ ${fmt(kpis.remaining)}`,
+    ].join("\n"));
+    toast({ title: "Resumo copiado!" });
+  };
+
+  const generatePDF = () => {
+    const doc = new jsPDF();
+    const now = new Date();
+    doc.setFillColor(20, 20, 25); doc.rect(0, 0, 210, 38, "F");
+    doc.setTextColor(255, 255, 255); doc.setFontSize(18); doc.setFont("helvetica", "bold");
+    doc.text("EXTRATO DO CLIENTE", 14, 16);
+    doc.setFontSize(9); doc.setFont("helvetica", "normal");
+    doc.text(`Emitido em ${now.toLocaleDateString("pt-BR")} às ${now.toLocaleTimeString("pt-BR")}`, 14, 24);
+    doc.text(`Cliente: ${client?.name || "—"}  |  CPF/CNPJ: ${client?.cpf_cnpj || "—"}`, 14, 31);
+
+    let y = 46;
+    doc.setTextColor(40, 40, 40); doc.setFontSize(12); doc.setFont("helvetica", "bold");
+    doc.text("Resumo Financeiro", 14, y); y += 2;
+
+    autoTable(doc, {
+      startY: y,
+      head: [["Descrição", "Valor"]],
+      body: [
+        ["Capital Emprestado", `R$ ${fmt(kpis.totalCapital)}`],
+        ["Total Recebido", `R$ ${fmt(kpis.totalPaid)}`],
+        ["Total em Atraso", `R$ ${fmt(kpis.totalOverdue)}`],
+        ["Saldo Restante", `R$ ${fmt(kpis.remaining)}`],
+        ["Lucro Gerado", `R$ ${fmt(kpis.totalProfit)}`],
+      ],
+      theme: "grid",
+      headStyles: { fillColor: [20, 20, 25], fontSize: 9 },
+      bodyStyles: { fontSize: 8.5 },
+      columnStyles: { 0: { cellWidth: 100 }, 1: { cellWidth: 82, halign: "right" } },
+      margin: { left: 14, right: 14 },
+    });
+    y = (doc as any).lastAutoTable.finalY + 10;
+
+    if (installments.length > 0) {
+      if (y > 230) { doc.addPage(); y = 20; }
+      doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.text("Parcelas", 14, y); y += 2;
+      autoTable(doc, {
+        startY: y,
+        head: [["Nº", "Valor", "Vencimento", "Status"]],
+        body: installments.map((i: any) => [String(i.installment_number), `R$ ${fmt(Number(i.amount))}`, formatBR(i.due_date), i.status === "paid" ? "Pago" : i.status === "overdue" ? "Atrasada" : "Pendente"]),
+        theme: "grid", headStyles: { fillColor: [20, 20, 25], fontSize: 8 }, bodyStyles: { fontSize: 7.5 }, margin: { left: 14, right: 14 },
+        didParseCell: (data: any) => { if (data.section === "body" && data.column.index === 3) { if (data.cell.raw === "Atrasada") data.cell.styles.textColor = [220, 50, 50]; else if (data.cell.raw === "Pago") data.cell.styles.textColor = [34, 139, 34]; } },
+      });
+    }
+
+    const pages = doc.getNumberOfPages();
+    for (let p = 1; p <= pages; p++) { doc.setPage(p); doc.setFontSize(7); doc.setTextColor(140); doc.text(`Página ${p}/${pages}`, 105, 290, { align: "center" }); }
+    doc.save(`extrato_${(client?.name || "cliente").replace(/\s+/g, "_")}.pdf`);
+    toast({ title: "PDF gerado!" });
+  };
+
+  const buildContractPDF = (c: any) => {
+    const doc = new jsPDF();
+    const now = new Date();
+    const cInsts = installments.filter((i: any) => i.contract_id === c.id);
+    const totalContract = Number(c.total_amount || Number(c.installment_amount) * Number(c.num_installments));
+    const creditorName = contractSettings?.company_name || "CREDOR";
+
+    doc.setFillColor(20, 20, 25); doc.rect(0, 0, 210, 38, "F");
+    doc.setTextColor(255, 255, 255); doc.setFontSize(18); doc.setFont("helvetica", "bold");
+    doc.text("CONTRATO DE EMPRÉSTIMO PESSOAL", 14, 16);
+    doc.setFontSize(9); doc.setFont("helvetica", "normal");
+    doc.text("Instrumento particular de confissão de dívida", 14, 24);
+    doc.text(`Contrato #${String(c.id).slice(0, 8)}  |  Início: ${formatBR(c.start_date)}`, 14, 31);
+
+    let y = 46;
+    doc.setTextColor(40, 40, 40); doc.setFontSize(12); doc.setFont("helvetica", "bold");
+    doc.text("Identificação das Partes", 14, y); y += 2;
+    autoTable(doc, {
+      startY: y,
+      body: [
+        ["Credor", creditorName],
+        ["CNPJ/CPF do credor", contractSettings?.company_cnpj || "—"],
+        ["Endereço do credor", contractSettings?.company_address || "—"],
+        ["Devedor(a)", client?.name || "—"],
+        ["CPF/CNPJ do devedor", client?.cpf_cnpj || "—"],
+        ["Contato", client?.phone || client?.whatsapp || client?.email || "—"],
+      ],
+      theme: "grid", bodyStyles: { fontSize: 9 },
+      columnStyles: { 0: { cellWidth: 50, fontStyle: "bold" }, 1: { cellWidth: 132 } },
+      margin: { left: 14, right: 14 },
+    });
+    y = (doc as any).lastAutoTable.finalY + 8;
+
+    doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.text("Condições Contratadas", 14, y); y += 2;
+    autoTable(doc, {
+      startY: y,
+      body: [
+        ["Capital emprestado", `R$ ${fmt(Number(c.capital))}`],
+        ["Modalidade", LOAN_MODE_LABEL[(c.loan_mode || "installments") as LoanMode] || c.loan_mode],
+        ["Frequência", FREQ[c.frequency] || c.frequency],
+        ["Parcelas", `${c.num_installments}x R$ ${fmt(Number(c.installment_amount))}`],
+        ["Taxa contratada", `${Number(c.interest_rate || 0)}% por ${String(FREQ[c.frequency] || c.frequency || "período").toLowerCase()}`],
+        ["Custo financeiro total", `R$ ${fmt(Number(c.total_interest || Math.max(0, totalContract - Number(c.capital))))}`],
+        ["Total a pagar", `R$ ${fmt(totalContract)}`],
+        ["Encargo diário por atraso", `${Number(c.daily_interest_percent || 0)}%`],
+        ["Limite dos encargos", Number(c.max_interest_cap_percent || 0) > 0 ? `${Number(c.max_interest_cap_percent)}% da parcela` : "Sem limite adicional informado"],
+        ["Forma de pagamento", String(c.payment_method || "Não informada").toUpperCase()],
+      ],
+      theme: "grid", bodyStyles: { fontSize: 9 },
+      columnStyles: { 0: { cellWidth: 70, fontStyle: "bold" }, 1: { cellWidth: 112, halign: "right" } },
+      margin: { left: 14, right: 14 },
+    });
+    y = (doc as any).lastAutoTable.finalY + 8;
+
+    if (cInsts.length > 0) {
+      if (y > 220) { doc.addPage(); y = 20; }
+      doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.text("Cronograma de Pagamentos", 14, y); y += 2;
+      autoTable(doc, {
+        startY: y,
+        head: [["Parcela", "Vencimento", "Valor"]],
+        body: cInsts.map((i: any) => [
+          String(i.installment_number),
+          formatBR(i.due_date),
+          `R$ ${fmt(Number(i.amount))}`,
+        ]),
+        theme: "grid", headStyles: { fillColor: [20, 20, 25], fontSize: 9 }, bodyStyles: { fontSize: 8.5 },
+        margin: { left: 14, right: 14 },
+      });
+      y = (doc as any).lastAutoTable.finalY + 8;
+    }
+
+    if (y > 205) { doc.addPage(); y = 20; }
+    doc.setTextColor(40); doc.setFontSize(11); doc.setFont("helvetica", "bold"); doc.text("Cláusulas Gerais", 14, y); y += 7;
+    doc.setFontSize(8.5); doc.setFont("helvetica", "normal");
+    const clauses = [
+      "1. O devedor declara ter recebido o capital informado e compromete-se a pagar as parcelas nas datas do cronograma.",
+      `2. No atraso, incidirão os encargos contratados de ${Number(c.daily_interest_percent || 0)}% ao dia, observado o limite indicado neste documento.`,
+      `3. A quitação antecipada é permitida com redução proporcional dos encargos futuros${Number(c.early_payment_discount_percent || 0) > 0 ? ` e desconto adicional de ${Number(c.early_payment_discount_percent)}%` : ""}.`,
+      "4. Pagamentos devem ser comprovados por recibo, comprovante bancário ou registro no portal do cliente.",
+      "5. A tolerância de uma parte não representa renúncia, novação ou alteração das condições pactuadas.",
+      "6. As partes admitem comunicações e assinatura por meios eletrônicos, respeitada a legislação aplicável.",
+      "7. Eventuais controvérsias serão submetidas ao foro legalmente competente, preservadas as normas de proteção ao consumidor.",
+    ];
+    for (const clause of clauses) {
+      const lines = doc.splitTextToSize(clause, 182);
+      if (y + lines.length * 4.2 > 265) { doc.addPage(); y = 20; }
+      doc.text(lines, 14, y); y += lines.length * 4.2 + 2;
+    }
+
+    if (y > 225) { doc.addPage(); y = 25; }
+    y += 8; doc.setFontSize(9); doc.text(`${creditorName} (Credor)`, 52, y, { align: "center" }); doc.text(`${client?.name || "Devedor(a)"}`, 158, y, { align: "center" });
+    y += 15; doc.line(20, y, 84, y); doc.line(126, y, 190, y);
+    y += 5; doc.setFontSize(7.5); doc.text("Assinatura do credor", 52, y, { align: "center" }); doc.text("Assinatura do devedor", 158, y, { align: "center" });
+    y += 20; doc.line(20, y, 84, y); doc.line(126, y, 190, y);
+    y += 5; doc.text("Testemunha 1 · Nome e CPF", 52, y, { align: "center" }); doc.text("Testemunha 2 · Nome e CPF", 158, y, { align: "center" });
+
+    const pages = doc.getNumberOfPages();
+    for (let p = 1; p <= pages; p++) { doc.setPage(p); doc.setFontSize(7); doc.setTextColor(140); doc.text(`Página ${p}/${pages}`, 105, 290, { align: "center" }); }
+
+    return { doc, fileName: `contrato_${(client?.name || "cliente").replace(/\s+/g, "_")}_${String(c.id).slice(0, 6)}.pdf` };
+  };
+
+  const exportContractPDF = (c: any) => {
+    const { doc, fileName } = buildContractPDF(c);
+    doc.save(fileName);
+    toast({ title: "PDF do contrato gerado!" });
+  };
+
+  const sendContractWhatsApp = async (c: any) => {
+    const phone = getPhone();
+    if (!phone) { toast({ title: "Cliente sem telefone", variant: "destructive" }); return; }
+    const { doc, fileName } = buildContractPDF(c);
+    const blob = doc.output("blob");
+    const file = new File([blob], fileName, { type: "application/pdf" });
+
+    const nav: any = navigator;
+    const canShareFile = typeof nav.canShare === "function" && nav.canShare({ files: [file] });
+    const totalContract = Number(c.total_amount || Number(c.installment_amount) * Number(c.num_installments));
+    const msgText = `Olá ${client?.name || ""}, segue o contrato:\n\n• Capital: R$ ${fmt(Number(c.capital))}\n• Parcelas: ${c.num_installments}x R$ ${fmt(Number(c.installment_amount))}\n• Total: R$ ${fmt(totalContract)}\n• Início: ${formatBR(c.start_date)}\n\nPDF em anexo.`;
+
+    if (canShareFile) {
+      try {
+        await nav.share({ files: [file], title: "Contrato", text: msgText });
+        toast({ title: "Contrato compartilhado!" });
+        return;
+      } catch (e: any) {
+        if (e?.name === "AbortError") return;
+      }
+    }
+
+    // Fallback: baixa o PDF e abre o WhatsApp para o usuário anexar manualmente
+    doc.save(fileName);
+    const msg = encodeURIComponent(`${msgText}\n\n(O PDF foi baixado no seu dispositivo — anexe-o na conversa)`);
+    window.open(`https://wa.me/55${phone}?text=${msg}`, "_blank");
+    toast({ title: "PDF baixado", description: "Anexe-o no WhatsApp que abriu." });
+  };
+
+  const toggleStatus = async () => {
+    const s = client?.status === "Ativo" ? "Inativo" : "Ativo";
+    const key = ["client-detail", id];
+    const prev = qc.getQueryData<any>(key);
+    qc.setQueryData(key, (old: any) => (old ? { ...old, status: s } : old));
+    toast({ title: `Status: ${s}` });
+    const { error } = await supabase.from("clients").update({ status: s }).eq("id", id!);
+    if (error) {
+      qc.setQueryData(key, prev);
+      toast({ title: "Erro ao atualizar status", variant: "destructive" });
+    }
+  };
+
+  const updateScore = async (delta: number) => {
+    const ns = Math.max(0, Math.min(100, (client?.credit_score || 0) + delta));
+    const key = ["client-detail", id];
+    const prev = qc.getQueryData<any>(key);
+    qc.setQueryData(key, (old: any) => (old ? { ...old, credit_score: ns } : old));
+    toast({ title: `Score: ${ns}` });
+    const { error } = await supabase.from("clients").update({ credit_score: ns }).eq("id", id!);
+    if (error) {
+      qc.setQueryData(key, prev);
+      toast({ title: "Erro ao atualizar score", variant: "destructive" });
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!(await confirm("Excluir este cliente e todos os dados?"))) return;
+    const { error } = await supabase.rpc("delete_client_cascade", { _client_id: id! });
+    if (error) { toast({ ...friendlyError(error, "Não foi possível excluir o cliente."), variant: "destructive" }); return; }
+    toast({ title: "Cliente excluído!" }); navigate("/clientes");
+  };
+
+  // --- Novas ações úteis ---
+
+  const duplicateLastLoan = async () => {
+    if (!user) return;
+    const last = contracts[0];
+    if (!last) { toast({ title: "Nenhum empréstimo anterior", variant: "destructive" }); return; }
+    if (!(await confirm(`Duplicar último empréstimo de R$ ${fmt(Number(last.capital))} (${last.num_installments}x)?`))) return;
+    try {
+      const today = new Date().toISOString().split("T")[0];
+      const contractPayload = {
+        capital: last.capital, interest_rate: last.interest_rate,
+        num_installments: last.num_installments, installment_amount: last.installment_amount,
+        frequency: last.frequency, start_date: new Date(today + "T12:00:00").toISOString(),
+        late_fee_percent: last.late_fee_percent, daily_interest_percent: last.daily_interest_percent,
+        total_amount: last.total_amount, total_interest: last.total_interest, status: "active",
+        loan_mode: last.loan_mode, grace_periods: last.grace_periods,
+        notes: `Renovação de contrato anterior (${formatBR(last.start_date)})`,
+      };
+      const dueDates = generateDueDates(today, last.frequency, last.num_installments);
+      await createContractAtomically(supabase as any, {
+        clientId: id!,
+        contract: contractPayload,
+        installments: dueDates.map((dd, i) => ({
+          installment_number: i + 1,
+          amount: Number(last.installment_amount),
+          due_date: dd,
+        })),
+      });
+      toast({ title: "Empréstimo duplicado!" });
+      invAll();
+    } catch (err: any) {
+      toast({ title: "Erro", description: err.message, variant: "destructive" });
+    }
+  };
+
+  const markContact = async () => {
+    if (!user) return;
+    const { error } = await supabase.from("transactions").insert({
+      user_id: user.id, amount: 0, type: "contact",
+      description: `Contato realizado com ${client?.name}`,
+      client_id: id,
+    });
+    if (error) {
+      toast({ ...friendlyError(error, "Não foi possível registrar o contato."), variant: "destructive" });
+      return;
+    }
+    toast({ title: "Contato registrado!" });
+    invAll();
+  };
+
+  const quickNote = async () => {
+    if (!user) return;
+    const text = window.prompt("Anotação rápida (aparece no histórico):");
+    if (!text || !text.trim()) return;
+    const { error } = await supabase.from("transactions").insert({
+      user_id: user.id, amount: 0, type: "note",
+      description: `📝 ${text.trim()}`,
+      client_id: id,
+    });
+    if (error) {
+      toast({ ...friendlyError(error, "Não foi possível salvar a anotação."), variant: "destructive" });
+      return;
+    }
+    toast({ title: "Anotação salva!" });
+    invAll();
+  };
+
+
+
+  if (isLoading) return (
+    <div className="max-w-4xl mx-auto space-y-6">
+      <Skeleton className="h-8 w-48" />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">{[1,2,3,4].map(i => <Skeleton key={i} className="h-24 rounded-xl" />)}</div>
+      <Skeleton className="h-96 rounded-xl" />
+    </div>
+  );
+
+  if (clientError) return <ErrorState error={clientError} onRetry={() => refetchClient()} />;
+
+  if (!client) return (
+    <div className="text-center py-16"><User size={48} className="mx-auto text-muted-foreground/20 mb-4" /><p className="text-muted-foreground">Cliente não encontrado</p></div>
+  );
+
+  const address = client.address as any;
+
+  const tabs = [
+    { key: "contratos" as const, label: "Contratos", Icon: FileText },
+    { key: "parcelas" as const, label: "Parcelas", Icon: Receipt },
+  ];
+
+
+
+
+
+
+  const toolGroups: ToolGroup[] = [
+    {
+      label: "Contrato",
+      actions: [
+        { icon: Plus, label: "Novo Empréstimo", description: "Wizard completo com todas as opções", action: () => navigate(`/clientes/novo?clientId=${id}`) },
+        { icon: Repeat, label: "Duplicar Último", description: "Renovação rápida com os mesmos valores", action: duplicateLastLoan, disabled: contracts.length === 0 },
+        { icon: Layers3, label: "Distribuir Pagamento", description: "Quita as antigas e abate o restante na próxima", action: () => setDistributedPayOpen(true), disabled: kpis.pendingInst.length + kpis.overdueInst.length === 0 },
+        { icon: CheckCircle, label: "Quitar Todas", description: "Marca todas as parcelas pendentes como pagas", action: payAllPending },
+        { icon: Edit, label: "Editar Cliente", description: "Nome, telefone, CPF, email", action: startEdit },
+      ],
+    },
+    {
+      label: "Cobrança",
+      actions: [
+        { icon: Send, label: "Cobrar Atrasadas", description: `${kpis.overdueInst.length} parcela(s) em atraso via WhatsApp`, action: sendAllOverdue, disabled: kpis.overdueInst.length === 0 },
+        { icon: MessageSquare, label: "Enviar Portal", description: "Link do portal do cliente via WhatsApp", action: sendPortalLink },
+        { icon: PhoneCall, label: "Marcar Contato", description: "Registra um contato realizado no histórico", action: markContact },
+        { icon: StickyNote, label: "Anotação Rápida", description: "Adiciona uma nota no histórico do cliente", action: quickNote },
+      ],
+    },
+    {
+      label: "Documentos",
+      actions: [
+        { icon: Printer, label: "Gerar PDF", description: "Extrato completo do cliente em PDF", action: generatePDF },
+        { icon: Download, label: "Exportar Resumo", description: "Copia resumo financeiro para a área de transferência", action: exportSummary },
+        { icon: Copy, label: "Copiar Dados", description: "Nome, CPF, telefone e email", action: copyClientInfo },
+      ],
+    },
+    {
+      label: "Score & Status",
+      actions: [
+        { icon: Star, label: "Score +5", description: "Aumenta o score de crédito", action: () => updateScore(5) },
+        { icon: TrendingUp, label: "Score -5", description: "Reduz o score de crédito", action: () => updateScore(-5) },
+        { icon: Ban, label: client.status === "Ativo" ? "Inativar Cliente" : "Reativar Cliente", description: client.status === "Ativo" ? "Suspende novas operações" : "Volta a aceitar operações", action: toggleStatus },
+        { icon: Trash2, label: "Excluir Cliente", description: "Remove cliente e todos os dados — irreversível", action: handleDelete, destructive: true },
+      ],
+    },
+  ];
+
+
+  const daysAsClient = client.created_at ? Math.max(1, Math.floor((Date.now() - new Date(client.created_at).getTime()) / 86400000)) : 0;
+  const clientSince = client.created_at ? new Date(client.created_at).toLocaleDateString("pt-BR", { month: "short", year: "numeric" }).toUpperCase() : "—";
+  const riskLabel = (client.credit_score || 0) >= 75 ? "Baixo Risco" : (client.credit_score || 0) >= 50 ? "Risco Moderado" : (client.credit_score || 0) >= 25 ? "Risco Elevado" : "Risco Alto";
+
+  return (
+    <div className="mx-auto max-w-6xl space-y-6 pb-24" style={{ fontFamily: "'Manrope', 'Inter', sans-serif" }}>
+      {/* ===== Banner Navy + Ações Rápidas + KPIs (padrão CRM) ===== */}
+      <header className="space-y-5">
+        <div className="overflow-hidden rounded-2xl border border-white/[.08] bg-card/65 shadow-[0_18px_50px_-36px_rgba(0,0,0,.9)]">
+
+          {/* Voltar / Cliente desde */}
+          <div className="flex items-center justify-between border-b border-white/[.06] px-5 py-3 md:px-6">
+            <button onClick={() => navigate("/clientes")} className="rounded-lg border border-white/10 bg-white/[.035] p-2 text-foreground transition-colors hover:bg-white/[.07]" aria-label="Voltar">
+              <ArrowLeft size={16} />
+            </button>
+            <div className="flex items-center gap-2 rounded-lg border border-white/[.08] bg-white/[.025] px-3 py-1.5 text-[11px] font-semibold text-muted-foreground">
+              <Calendar size={12} className="opacity-80" />
+              <span className="opacity-75">Cliente desde</span>
+              <span className="font-bold">{clientSince.toLowerCase()}</span>
+            </div>
+          </div>
+
+          {/* Conteúdo principal do banner */}
+          <div className="flex flex-col gap-4 px-5 py-5 md:flex-row md:items-center md:px-6">
+            {/* Avatar circular */}
+            <div className="relative shrink-0 mx-auto md:mx-0">
+              <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-2xl border border-primary/15 bg-primary/10 text-3xl font-extrabold text-primary md:h-24 md:w-24 md:text-4xl"
+                   style={{ fontFamily: "'Sora','Space Grotesk',sans-serif" }}>
+                {client.avatar_url ? <img src={client.avatar_url} alt="" className="w-full h-full object-cover" /> : client.name?.charAt(0)?.toUpperCase()}
+              </div>
+              <label className="absolute -bottom-1 -right-1 flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg bg-primary text-primary-foreground ring-2 ring-card" title="Trocar foto">
+                <Camera size={12} className="text-primary-foreground" />
+                <input type="file" accept="image/*" onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (!file || !id) return;
+                  const ext = file.name.split(".").pop();
+                  const path = `${user!.id}/client-avatars/${id}.${ext}`;
+                  const { error: upErr } = await supabase.storage.from("uploads").upload(path, file, { upsert: true });
+                  if (!upErr) {
+                    const url = await getSignedUploadUrl(path);
+                    if (!url) {
+                      toast({ title: "Não foi possível carregar a foto", variant: "destructive" });
+                      return;
+                    }
+                    const { error: updateError } = await supabase.from("clients").update({ avatar_url: url })
+                      .eq("id", id).eq("user_id", user!.id);
+                    if (updateError) {
+                      toast({ title: "Não foi possível salvar a foto", description: updateError.message, variant: "destructive" });
+                      return;
+                    }
+                    inv("client-detail");
+                    toast({ title: "✓ Foto atualizada!" });
+                  } else {
+                    toast({ title: "Erro no upload", description: upErr.message, variant: "destructive" });
+                  }
+                }} className="hidden" />
+              </label>
+            </div>
+
+            {/* Nome + chips */}
+            <div className="min-w-0 flex-1 text-center md:text-left">
+              <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">Ficha do cliente</p>
+              <h1 className="mt-1 truncate text-2xl font-extrabold leading-tight tracking-tight text-foreground md:text-3xl"
+                  style={{ fontFamily: "'Sora','Space Grotesk',sans-serif", letterSpacing: "-0.02em" }}>
+                {client.name}
+              </h1>
+              <div className="flex flex-wrap justify-center md:justify-start items-center gap-1.5 mt-3">
+                <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${client.status === "Ativo" ? "bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-400/25" : "bg-white/5 text-muted-foreground ring-1 ring-white/10"}`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${client.status === "Ativo" ? "bg-emerald-400" : "bg-white/50"}`} />
+                  {client.status}
+                </span>
+                <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ring-1 ${(client.credit_score || 0) >= 75 ? "bg-emerald-500/10 text-emerald-400 ring-emerald-400/25" : (client.credit_score || 0) >= 50 ? "bg-amber-500/10 text-amber-300 ring-amber-400/25" : "bg-rose-500/10 text-rose-400 ring-rose-400/25"}`}>
+                  <ShieldCheck size={11} /> {riskLabel}
+                </span>
+                {client.cpf_cnpj && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-white/[.035] px-2.5 py-1 font-mono text-[10px] font-semibold text-muted-foreground ring-1 ring-white/10">
+                    {client.cpf_cnpj}
+                  </span>
+                )}
+                {kpis.activeContracts.length > 0 && (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider text-sky-200 bg-sky-500/20 ring-1 ring-sky-400/40">
+                    <FileText size={11} /> {kpis.activeContracts.length} ativo{kpis.activeContracts.length > 1 ? "s" : ""}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Ações rápidas */}
+        <div>
+          <p className="text-sm font-bold text-foreground mb-3" style={{ fontFamily: "'Sora','Space Grotesk',sans-serif" }}>Ações rápidas</p>
+          <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-7">
+            {[
+              { Icon: MessageSquare, label: "WhatsApp",   sub: "Enviar mensagem", tint: "bg-emerald-500 text-white",   onClick: () => { const p = getPhone(); if (p) window.open(`https://wa.me/${p}`, "_blank"); }, disabled: !getPhone() },
+              { Icon: Phone,         label: "Ligar",      sub: "Fazer ligação",   tint: "bg-sky-500 text-white",       onClick: () => { const p = getPreferredPhone(client); if (p) window.open(`tel:${p.replace(/\D/g, "")}`, "_self"); }, disabled: !getPreferredPhone(client) },
+              { Icon: Mail,          label: "E-mail",     sub: "Enviar e-mail",   tint: "bg-violet-500 text-white",    onClick: () => { if (client.email) window.open(`mailto:${client.email}`, "_blank"); }, disabled: !client.email },
+              { Icon: Send,          label: "Portal",     sub: "Acessar portal",  tint: "bg-amber-500 text-white",     onClick: sendPortalLink },
+              { Icon: Plus,          label: "Empréstimo", sub: "Novo empréstimo", tint: "bg-primary text-primary-foreground", onClick: () => setNewLoanMode(true) },
+            ].map((a) => (
+              <button
+                key={a.label}
+                onClick={a.onClick}
+                disabled={a.disabled}
+                className="group flex items-center gap-3 rounded-xl border border-border/40 bg-card/55 px-3 py-2.5 text-left transition-colors hover:border-primary/20 hover:bg-card/75 disabled:pointer-events-none disabled:opacity-40"
+              >
+                <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${a.tint}`}>
+                  <a.Icon size={16} />
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-[11px] font-bold uppercase tracking-wider text-foreground leading-none">{a.label}</span>
+                  <span className="block text-[10px] text-muted-foreground truncate mt-0.5">{a.sub}</span>
+                </span>
+              </button>
+            ))}
+            <ClientToolsPanel
+              open={showMoreActions}
+              onOpenChange={setShowMoreActions}
+              groups={toolGroups}
+              trigger={
+                <button className="group flex items-center gap-3 rounded-xl border border-border/40 bg-card/55 px-3 py-2.5 text-left transition-colors hover:border-primary/20 hover:bg-card/75">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted text-foreground">
+                    <Wrench size={16} />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-[11px] font-bold uppercase tracking-wider text-foreground leading-none">Mais</span>
+                    <span className="block text-[10px] text-muted-foreground truncate mt-0.5">Outras ações</span>
+                  </span>
+                </button>
+              }
+            />
+            <button onClick={startEdit} className="group flex items-center gap-3 rounded-xl border border-border/40 bg-card/55 px-3 py-2.5 text-left transition-colors hover:border-primary/20 hover:bg-card/75" title="Editar dados">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted text-foreground">
+                <Edit size={16} />
+              </span>
+              <span className="min-w-0">
+                <span className="block text-[11px] font-bold uppercase tracking-wider text-foreground leading-none">Editar</span>
+                <span className="block text-[10px] text-muted-foreground truncate mt-0.5">Editar cliente</span>
+              </span>
+            </button>
+          </div>
+        </div>
+
+        {/* KPI strip com ícone circular */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {[
+            { label: "Capital ativo",  value: `R$ ${fmt(kpis.totalCapital)}`, sub: `${kpis.activeContracts.length} contrato(s)`, Icon: Wallet,      chip: "bg-primary text-primary-foreground" },
+            { label: "Recebido",       value: `R$ ${fmt(kpis.totalPaid)}`,    sub: `${kpis.ltvPct}% do total`,                    Icon: CheckCircle, chip: "bg-emerald-500 text-white" },
+            { label: "Lucro",          value: `R$ ${fmt(kpis.totalProfit)}`,  sub: `Ticket médio: R$ ${fmt(kpis.ticketMedio)}`,   Icon: TrendingUp,  chip: "bg-amber-500 text-white" },
+            { label: "Próx. vencimento", value: kpis.nextDueInst ? formatBR(kpis.nextDueInst.due_date) : "—", sub: kpis.nextDueInst ? `R$ ${fmt(Number(kpis.nextDueInst.amount))}` : "Sem pendências", Icon: Calendar, chip: kpis.overdueInst.length > 0 ? "bg-rose-500 text-white" : "bg-sky-500 text-white" },
+          ].map(k => (
+            <div key={k.label} className="flex items-center gap-3 rounded-2xl border border-border/40 bg-card/55 p-4 transition-colors hover:border-border">
+              <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${k.chip}`}>
+                <k.Icon size={18} />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground truncate">{k.label}</p>
+                <p className="text-lg md:text-[22px] font-extrabold text-foreground leading-tight tracking-tight tabular-nums truncate"
+                   style={{ fontFamily: "'Sora','Space Grotesk',sans-serif" }}>{k.value}</p>
+                <p className="text-[11px] text-muted-foreground truncate">{k.sub}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </header>
+
+
+
+      {/* ===== MODALS ===== */}
+
+      {editMode && (
+        <EditClienteModal
+          editData={editData}
+          setEditData={setEditData}
+          onClose={() => setEditMode(false)}
+          onSave={saveEdit}
+        />
+      )}
+
+      {editAddressMode && (
+        <EditAddressModal
+          addrData={addrData}
+          setAddrData={setAddrData}
+          onClose={() => setEditAddressMode(false)}
+          onSave={saveAddress}
+          onBuscarCep={buscarCep}
+        />
+      )}
+
+      {newLoanMode && (
+        <NovoEmprestimoModal
+          clientName={client.name}
+          loanMode={loanMode}
+          setLoanMode={setLoanMode}
+          loanGracePeriods={loanGracePeriods}
+          setLoanGracePeriods={setLoanGracePeriods}
+          loanCapital={loanCapital}
+          setLoanCapital={setLoanCapital}
+          loanInstallments={loanInstallments}
+          setLoanInstallments={setLoanInstallments}
+          loanInterestRate={loanInterestRate}
+          setLoanInterestRate={setLoanInterestRate}
+          loanFreq={loanFreq}
+          setLoanFreq={setLoanFreq}
+          loanStartDate={loanStartDate}
+          setLoanStartDate={setLoanStartDate}
+          loanStart={loanStart}
+          setLoanStart={setLoanStart}
+          loanDailyFee={loanDailyFee}
+          setLoanDailyFee={setLoanDailyFee}
+          loanLateFee={loanLateFee}
+          setLoanLateFee={setLoanLateFee}
+          loanNotes={loanNotes}
+          setLoanNotes={setLoanNotes}
+          loanGraceDays={loanGraceDays}
+          setLoanGraceDays={setLoanGraceDays}
+          loanPaymentMethod={loanPaymentMethod}
+          setLoanPaymentMethod={setLoanPaymentMethod}
+          loanEarlyDiscount={loanEarlyDiscount}
+          setLoanEarlyDiscount={setLoanEarlyDiscount}
+          loanMaxInterestCap={loanMaxInterestCap}
+          setLoanMaxInterestCap={setLoanMaxInterestCap}
+          loanValueMode={loanValueMode}
+          setLoanValueMode={setLoanValueMode}
+          loanInstallmentValue={loanInstallmentValue}
+          setLoanInstallmentValue={setLoanInstallmentValue}
+          loanDailyMode={loanDailyMode}
+          setLoanDailyMode={setLoanDailyMode}
+          loanFirstDueAuto={loanFirstDueAuto}
+          setLoanFirstDueAuto={setLoanFirstDueAuto}
+          loanCustomDates={loanCustomDates}
+          setLoanCustomDates={setLoanCustomDates}
+          loanCalc={loanCalc}
+          loanLoading={loanLoading}
+          loanDocuments={loanDocuments}
+          setLoanDocuments={setLoanDocuments}
+          onClose={() => { setNewLoanMode(false); setLoanDocuments([]); }}
+          onSubmit={handleCreateLoan}
+        />
+      )}
+
+      {editContract && (
+        <EditContratoModal
+          form={editContractForm}
+          setForm={setEditContractForm}
+          regen={editContractRegen}
+          setRegen={setEditContractRegen}
+          saving={editContractSaving}
+          onClose={() => setEditContract(null)}
+          onSave={handleSaveContract}
+        />
+      )}
+
+      {editInst && (
+        <EditParcelaModal
+          inst={editInst}
+          form={editInstForm}
+          setForm={setEditInstForm}
+          saving={editInstSaving}
+          onClose={() => setEditInst(null)}
+          onSave={handleSaveInst}
+        />
+      )}
+
+      {partialPayModal && (() => {
+        const c: any = (contracts as any[]).find((ct: any) => ct.id === partialPayModal.contract_id);
+        const remainingDue = portalInstallmentAmount({
+          ...partialPayModal,
+          daily_interest_percent: c?.daily_interest_percent,
+          max_interest_cap_percent: c?.max_interest_cap_percent,
+        });
+        const feeTotal = computeLateFeeBreakdown({
+          ...partialPayModal,
+          daily_interest_percent: c?.daily_interest_percent,
+          max_interest_cap_percent: c?.max_interest_cap_percent,
+        }).total;
+        const interestOnly = interestOnlyAmount(partialPayModal, c, feeTotal);
+        return (
+          <PagamentoModal
+            inst={partialPayModal}
+            amount={partialAmount}
+            setAmount={setPartialAmount}
+            method={payMethod}
+            setMethod={setPayMethod}
+            receiptFile={payReceiptFile}
+            setReceiptFile={setPayReceiptFile}
+            uploading={payUploading}
+            interestOnly={interestOnly}
+            frequency={c?.frequency}
+            remainingDue={remainingDue}
+            feeTotal={feeTotal}
+            onFeeDiscount={setPayFeeDiscount}
+            onClose={() => { setPartialPayModal(null); setPayReceiptFile(null); setPayMethod("pix"); setPayFeeDiscount(0); }}
+            onSubmit={handlePartialPay}
+            onRenewInterest={handleInterestRenewal}
+          />
+        );
+      })()}
+
+      {distributedPayOpen && (
+        <PagamentoDistribuidoModal
+          installments={installments}
+          loading={payUploading}
+          onClose={() => setDistributedPayOpen(false)}
+          onConfirm={handleDistributedPayment}
+        />
+      )}
+
+      {renegotiating && (
+        <RenegociarModal
+          contract={renegotiating}
+          installments={installments.filter((i: any) => i.contract_id === renegotiating.id)}
+          clientName={client?.name || ""}
+          onClose={() => setRenegotiating(null)}
+          onConfirm={handleRenegotiate}
+        />
+      )}
+
+
+
+
+      {/* ===== CONTENT ===== */}
+
+
+
+
+      {/* Alertas críticos (atraso / pendências urgentes) — antes do Resumo */}
+      {(kpis.overdueInst.length > 0 || kpis.pendingInst.length > 0) && (
+        <div className="flex items-center gap-2 flex-wrap">
+          {kpis.overdueInst.length > 0 && (
+            <button onClick={sendAllOverdue} className="flex items-center gap-2 rounded-xl border border-rose-400/30 bg-rose-500/10 px-4 py-2.5 text-xs font-bold text-rose-400 transition-colors hover:bg-rose-500/20">
+              <AlertTriangle size={14} /> {kpis.overdueInst.length} parcela(s) em atraso · Cobrar todas
+            </button>
+          )}
+          {kpis.pendingInst.length > 0 && (
+            <button onClick={payAllPending} className="flex items-center gap-2 rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-2.5 text-xs font-bold text-emerald-400 transition-colors hover:bg-emerald-500/20">
+              <CheckCircle size={14} /> Quitar todas as pendentes
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Section: Informações — colapsável (Contato + Endereço + Estatísticas) */}
+      <section id="sec-resumo" className="scroll-mt-24">
+        <button
+          onClick={() => setShowInfo(v => !v)}
+          className="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-2xl border border-border/60 bg-card/40 hover:bg-card/60 hover:border-border transition-all"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center"><User size={15} /></div>
+            <div className="text-left">
+              <p className="text-sm font-bold text-foreground">Informações & Estatísticas</p>
+              <p className="text-[11px] text-muted-foreground">Contato, endereço e métricas do cliente</p>
+            </div>
+          </div>
+          <div className={`transition-transform ${showInfo ? "rotate-180" : ""}`}>
+            <ChevronDown size={16} className="text-muted-foreground" />
+          </div>
+        </button>
+        {showInfo && (
+        <div className="mt-4 space-y-5">
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          {/* Contato & Endereço (2/3) */}
+          <section className="lg:col-span-2 rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md p-5">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center"><User size={14} /></div>
+                <h3 className="text-sm font-bold text-foreground">Contato & Endereço</h3>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <button onClick={startEdit} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-border/60 text-muted-foreground text-[11px] font-semibold hover:bg-accent hover:text-foreground transition-all">
+                  <Edit size={12} /> Editar dados
+                </button>
+                <button onClick={startEditAddress} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-border/60 text-muted-foreground text-[11px] font-semibold hover:bg-accent hover:text-foreground transition-all">
+                  <MapPin size={12} /> Endereço
+                </button>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {[
+                { Icon: Phone, label: "Telefone", value: getPreferredPhone(client), tint: "text-sky-400 bg-sky-500/10 ring-sky-400/20", onClick: () => { const p = getPreferredPhone(client); if (p) window.open(`tel:${p.replace(/\D/g, "")}`, "_self"); } },
+                { Icon: MessageSquare, label: "WhatsApp", value: client.whatsapp || client.phone, tint: "text-emerald-400 bg-emerald-500/10 ring-emerald-400/20", onClick: () => { const p = getPhone(); if (p) window.open(`https://wa.me/${p}`, "_blank"); } },
+                { Icon: Mail, label: "E-mail", value: client.email, tint: "text-amber-400 bg-amber-500/10 ring-amber-400/20", onClick: () => { if (client.email) window.open(`mailto:${client.email}`, "_blank"); } },
+                { Icon: User, label: "CPF/CNPJ", value: client.cpf_cnpj, tint: "text-violet-400 bg-violet-500/10 ring-violet-400/20", onClick: startEdit },
+                { Icon: MapPin, label: "Cidade", value: address?.city ? `${address.city}/${address.state}` : null, tint: "text-rose-400 bg-rose-500/10 ring-rose-400/20", onClick: startEditAddress },
+                { Icon: Calendar, label: "Cliente desde", value: client.created_at ? formatBR(client.created_at) : null, tint: "text-primary bg-primary/10 ring-primary/20", onClick: () => {} },
+              ].map(item => (
+                <button key={item.label} onClick={item.value ? item.onClick : startEdit}
+                  className="flex items-center gap-3 p-3 rounded-xl border border-border/40 bg-background/30 hover:bg-accent/60 hover:border-border transition-all text-left">
+                  <div className={`w-10 h-10 rounded-xl ring-1 flex items-center justify-center shrink-0 ${item.tint}`}>
+                    <item.Icon size={16} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-[0.14em] font-semibold">{item.label}</p>
+                    <p className="text-sm text-foreground font-semibold truncate">{item.value || <span className="text-muted-foreground/60 italic font-normal">Adicionar</span>}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+            {address?.street && (
+              <p className="text-xs text-muted-foreground mt-4 pt-4 border-t border-border/40 flex items-center gap-1.5">
+                <MapPin size={12} className="text-primary shrink-0" />
+                <span className="truncate">{address.street}{address.number ? `, ${address.number}` : ""}{address.neighborhood ? ` — ${address.neighborhood}` : ""} · {address.city}/{address.state}</span>
+              </p>
+            )}
+          </section>
+
+          {/* Estatísticas do cliente (1/3) */}
+          <section className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md p-5">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center"><Activity size={14} /></div>
+              <h3 className="text-sm font-bold text-foreground">Estatísticas</h3>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { label: "Contratos", value: String(contracts.length), Icon: FileText },
+                { label: "Parcelas pagas", value: `${kpis.paidInst.length}/${kpis.paidInst.length + kpis.overdueInst.length + kpis.pendingInst.length}`, Icon: CheckCircle },
+                { label: "Taxa de atraso", value: `${kpis.latePayRate}%`, Icon: AlertTriangle, tone: kpis.latePayRate > 30 ? "text-rose-400" : kpis.latePayRate > 10 ? "text-amber-300" : "text-emerald-400" },
+                { label: "Ticket médio", value: `R$ ${fmt(kpis.ticketMedio)}`, Icon: DollarSign },
+                { label: "Cliente há", value: `${daysAsClient}d`, Icon: Calendar },
+                { label: "Em atraso", value: String(kpis.overdueInst.length), Icon: AlertTriangle, tone: kpis.overdueInst.length ? "text-rose-400" : "text-foreground" },
+              ].map(s => (
+                <div key={s.label} className="rounded-xl border border-border/60 bg-background/40 p-3">
+                  <div className="flex items-center gap-1.5 text-muted-foreground mb-1">
+                    <s.Icon size={11} />
+                    <span className="text-[9px] uppercase tracking-[0.14em] font-semibold truncate">{s.label}</span>
+                  </div>
+                  <p className={`text-sm font-bold tabular-nums truncate ${s.tone || "text-foreground"}`}>{s.value}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
+        </div>
+        )}
+      </section>
+
+
+
+      {/* Ações rápidas: Documentos e Histórico */}
+      <div className="flex items-center justify-end gap-2">
+        <button
+          onClick={() => setDocsOpen(true)}
+          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold bg-card/60 border border-border/60 text-muted-foreground hover:text-foreground hover:bg-accent/50 hover:border-border transition-all"
+        >
+          <FileIcon size={14} />
+          <span>Documentos</span>
+          {clientDocs.length > 0 && (
+            <span className="text-[10px] font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">{clientDocs.length}</span>
+          )}
+        </button>
+        <button
+          onClick={() => setHistOpen(true)}
+          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold bg-card/60 border border-border/60 text-muted-foreground hover:text-foreground hover:bg-accent/50 hover:border-border transition-all"
+        >
+          <Clock size={14} />
+          <span>Histórico</span>
+        </button>
+      </div>
+
+
+      {/* Modal de Documentos & Anexos */}
+      <Dialog open={docsOpen} onOpenChange={setDocsOpen}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center"><FileIcon size={14} /></div>
+              Documentos & Anexos
+              {clientDocs.length > 0 && <span className="text-[10px] font-bold text-muted-foreground bg-muted px-2 py-0.5 rounded-full">{clientDocs.length}</span>}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <label className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-primary/10 text-primary border border-primary/20 text-xs font-semibold cursor-pointer hover:bg-primary/20 transition-all ${docUploading ? "opacity-60 pointer-events-none" : ""}`}>
+              <UploadCloud size={14} /> {docUploading ? "Enviando..." : "Anexar arquivo"}
+              <input type="file" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadDoc(f); e.currentTarget.value = ""; }} />
+            </label>
+
+            {clientDocs.length === 0 ? (
+              <EmptyState compact icon={FileIcon} title="Nenhum documento anexado" description="RG, comprovante de renda, contrato assinado..." />
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-[60vh] overflow-y-auto pr-1">
+                {clientDocs.map((d: any) => {
+                  const isImg = /\.(png|jpe?g|gif|webp|heic)$/i.test(d.name);
+                  return (
+                    <div key={d.name} className="group relative flex items-center gap-2 px-3 py-2.5 rounded-xl border border-border bg-background/40 hover:border-primary/40 transition-colors">
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${isImg ? "bg-violet-500/10 text-violet-400" : "bg-sky-500/10 text-sky-400"}`}>
+                        {isImg ? <ImageIcon size={14} /> : <FileIcon size={14} />}
+                      </div>
+                      <button onClick={() => signedUrl(d.name)} className="flex-1 min-w-0 text-left">
+                        <p className="text-[11px] text-foreground font-semibold truncate">{d.name.replace(/^\d+-/, "")}</p>
+                        <p className="text-[9px] text-muted-foreground">{d.metadata?.size ? `${Math.round(d.metadata.size / 1024)} KB` : ""}</p>
+                      </button>
+                      <button onClick={() => deleteDoc(d.name)} className="opacity-0 group-hover:opacity-100 p-1 rounded-md hover:bg-destructive/10 text-destructive transition-opacity" title="Remover">
+                        <Trash2 size={12} />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+
+
+
+
+      {/* Section: Contratos */}
+      <section id="sec-contratos" className="scroll-mt-24">{(
+
+
+        <div className="space-y-3">
+          <button
+            onClick={() => navigate(`/clientes/novo?clientId=${id}`)}
+            className="group w-full flex items-center justify-center gap-2.5 px-4 py-3.5 rounded-2xl border border-dashed border-border/70 bg-card/30 text-sm font-semibold text-muted-foreground hover:border-primary/50 hover:bg-primary/5 hover:text-primary transition-all"
+          >
+            <span className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+              <Plus size={14} strokeWidth={2.5} />
+            </span>
+            Novo Empréstimo
+          </button>
+
+          {contracts.length === 0 ? (
+            <EmptyState compact title="Nenhum contrato" description="Clique em Novo Empréstimo para começar." />
+          ) : contracts.map((c: any) => {
+            const cInsts = installments.filter((i: any) => i.contract_id === c.id);
+            const total = cInsts.length;
+            const paid = cInsts.filter((i: any) => i.status === "paid").length;
+            const overdue = cInsts.filter((i: any) => i.status === "overdue").length;
+            const isPaid = total > 0 && paid === total;
+            const status = isPaid
+              ? { label: "Quitado", cls: "bg-emerald-500/15 text-emerald-400 border-emerald-500/25", dot: "bg-emerald-500" }
+              : overdue > 0
+              ? { label: `${overdue} em atraso`, cls: "bg-destructive/15 text-destructive border-destructive/25", dot: "bg-destructive" }
+              : { label: `${paid}/${total} pagas`, cls: "bg-amber-500/15 text-amber-400 border-amber-500/25", dot: "bg-amber-400" };
+            const pct = total > 0 ? Math.round((paid / total) * 100) : 0;
+            const barColor = isPaid ? "bg-emerald-500" : overdue > 0 ? "bg-destructive" : "bg-primary";
+            const isExpanded = expandedContracts.has(c.id);
+            return (
+            <div key={c.id} className={`group relative overflow-hidden rounded-2xl border bg-card/55 transition-colors ${isExpanded ? "border-primary/40" : "border-border/50 hover:border-primary/30"}`}>
+              {/* Faixa lateral de status */}
+              <div className={`absolute left-0 top-0 bottom-0 w-[3px] ${barColor}`} />
+
+              {/* Header clicável — abre/recolhe parcelas */}
+              <button
+                type="button"
+                onClick={() => toggleContract(c.id)}
+                className="w-full text-left p-4 pl-5 hover:bg-accent/20 transition-colors"
+              >
+                {/* Linha superior: valor + status + lucro */}
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="text-xl font-bold text-foreground tracking-tight tabular-nums leading-none">R$ {fmt(Number(c.capital))}</p>
+                      <span className={`inline-flex items-center gap-1.5 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${status.cls}`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${status.dot}`} />
+                        {status.label}
+                      </span>
+                    </div>
+                    <div className="mt-1.5 flex items-center gap-1.5 text-[11px] text-muted-foreground flex-wrap">
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-muted/40 text-foreground/80 font-semibold tabular-nums">{c.num_installments}× R$ {fmt(Number(c.installment_amount))}</span>
+                      <span className="opacity-40">·</span>
+                      <span>{FREQ[c.frequency] || c.frequency}</span>
+                      <span className="opacity-40">·</span>
+                      <span className="tabular-nums">{formatBR(c.start_date)}</span>
+                    </div>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="text-[9px] text-muted-foreground uppercase tracking-widest">Lucro</p>
+                    <p className="text-base font-bold text-primary tabular-nums leading-tight">+R$ {fmt(Number(c.total_interest))}</p>
+                  </div>
+                </div>
+
+                {/* Progresso */}
+                {total > 0 && (
+                  <div className="mt-3 flex items-center gap-3">
+                    <div className="flex-1 h-1 rounded-full bg-muted/50 overflow-hidden">
+                      <div className={`h-full rounded-full ${barColor} transition-all`} style={{ width: `${pct}%` }} />
+                    </div>
+                    <span className="text-[10px] font-semibold text-muted-foreground tabular-nums shrink-0">
+                      {paid}/{total} · {pct}%
+                    </span>
+                  </div>
+                )}
+              </button>
+
+              {/* Barra de ações */}
+              <div className="px-4 pl-5 pb-3 flex items-center gap-1 flex-wrap">
+                {c.status === "active" && !isPaid && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setRenegotiating(c); }}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg hover:bg-amber-500/10 text-amber-400 text-[11px] font-semibold transition-colors"
+                    title="Renegociar contrato"
+                  >
+                    <Repeat size={12} /> Renegociar
+                  </button>
+                )}
+                <button
+                  onClick={(e) => { e.stopPropagation(); sendContractWhatsApp(c); }}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg hover:bg-emerald-500/10 text-emerald-500 text-[11px] font-semibold transition-colors"
+                  title="Enviar detalhes por WhatsApp"
+                >
+                  <MessageSquare size={12} /> Enviar
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); exportContractPDF(c); }}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg hover:bg-accent text-muted-foreground hover:text-foreground text-[11px] font-semibold transition-colors"
+                  title="Exportar PDF"
+                >
+                  <Download size={12} /> PDF
+                </button>
+
+                <div className="ml-auto flex items-center gap-0.5">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); openEditContract(c); }}
+                    className="p-1.5 rounded-lg hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
+                    title="Editar empréstimo"
+                  >
+                    <Edit size={13} />
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleDeleteContract(c.id); }}
+                    className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                    title="Excluir empréstimo"
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); toggleContract(c.id); }}
+                    className="ml-1 inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary text-[11px] font-bold transition-colors"
+                  >
+                    {isExpanded ? "Recolher" : `${total} parcelas`}
+                    <ChevronDown size={12} className={`transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Parcelas inline (expandable) */}
+              {expandedContracts.has(c.id) && (
+                <div className="border-t border-border/40 bg-background/30 p-3 space-y-2">
+                  {cInsts.length === 0 ? (
+                    <p className="text-xs text-muted-foreground text-center py-4">Nenhuma parcela</p>
+                  ) : cInsts.map((inst: any) => {
+                    const isOverdue = inst.status === "overdue";
+                    const isPaid = inst.status === "paid";
+                    const partial = !isPaid && Number(inst.paid_amount || 0) > 0;
+                    const dailyPct = Number(c.daily_interest_percent || 0);
+                    const base = Number(inst.amount || 0);
+                    const paidAmount = Number(inst.paid_amount || 0);
+                    const feeInput = {
+                      amount: base, due_date: inst.due_date, status: inst.status, late_fee: inst.late_fee,
+                      paid_amount: paidAmount,
+                      daily_interest_percent: dailyPct,
+                      max_interest_cap_percent: c.max_interest_cap_percent,
+                    };
+                    const fee = computeLateFeeBreakdown(feeInput);
+                    const feeLive = fee.total;
+                    const daysOverdue = fee.daysLate;
+                    const baseOutstanding = Math.max(0, base - paidAmount);
+                    const totalDue = outstandingDue(feeInput);
+                    return (
+                      <div key={inst.id} className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border transition-colors ${isOverdue ? "bg-destructive/[0.04] border-destructive/20" : isPaid ? "bg-success/[0.04] border-success/15" : "bg-card border-border/60"}`}>
+                        <div className={`w-9 h-9 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 ${isOverdue ? "bg-destructive/10 text-destructive ring-1 ring-destructive/20" : isPaid ? "bg-success/10 text-success ring-1 ring-success/20" : "bg-muted text-muted-foreground"}`}>
+                          {inst.installment_number}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-baseline gap-2 flex-wrap">
+                            <p className="text-sm font-bold text-foreground tabular-nums">R$ {fmt(partial ? baseOutstanding : base)}</p>
+                            {isOverdue && feeLive > 0 && (
+                              <>
+                                <span className="text-[10px] font-medium text-destructive/80 tabular-nums">+ R$ {fmt(feeLive)}</span>
+                                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-destructive tabular-nums">
+                                  <span className="opacity-50">=</span> R$ {fmt(totalDue)}
+                                </span>
+                              </>
+                            )}
+                          </div>
+                          <p className="text-[10px] text-muted-foreground mt-0.5">
+                            {formatBR(inst.due_date)}
+                            {isOverdue && <span className="text-destructive/70 font-medium"> · {daysOverdue}d atraso</span>}
+                            {inst.paid_at && ` · Pago ${formatBR(inst.paid_at)}`}
+                            {partial && ` · Parcial R$ ${fmt(Number(inst.paid_amount))}`}
+                          </p>
+                          {(inst.scheduled_principal != null || inst.paid_principal != null) && (
+                            <p className="mt-1 text-[10px] text-muted-foreground tabular-nums">
+                              Principal R$ {fmt(Number(isPaid ? inst.paid_principal : inst.scheduled_principal) || 0)}
+                              {" · "}Juros R$ {fmt(Number(isPaid ? inst.paid_interest : inst.scheduled_interest) || 0)}
+                              {Number(inst.paid_fees || 0) > 0 && ` · Encargos R$ ${fmt(Number(inst.paid_fees))}`}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-0.5 shrink-0">
+                          {isOverdue && (
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <button className="p-1.5 rounded-lg hover:bg-destructive/10 text-destructive transition-colors" title="Cálculo"><Info size={14} /></button>
+                              </PopoverTrigger>
+                              <PopoverContent align="end" className="w-80 p-0 overflow-hidden">
+                                <div className="bg-destructive/10 border-b border-destructive/20 px-4 py-3">
+                                  <p className="text-[10px] font-bold uppercase tracking-widest text-destructive">Cálculo · Parcela #{inst.installment_number}</p>
+                                  <p className="text-xs text-muted-foreground mt-0.5">{formatBR(inst.due_date)} · {daysOverdue}d atrás</p>
+                                </div>
+                                <div className="p-4 space-y-3 text-xs">
+                                  <div className="flex items-center justify-between text-muted-foreground"><span>Valor original</span><span className="font-mono font-semibold text-foreground">R$ {fmt(base)}</span></div>
+                                  {partial && <div className="flex items-center justify-between text-muted-foreground"><span>Pago parcialmente</span><span className="font-mono font-semibold text-success">- R$ {fmt(paidAmount)}</span></div>}
+                                  <div className="rounded-lg bg-muted/40 border border-border p-3 space-y-1">
+                                    <p className="text-[10px] font-bold uppercase tracking-wider text-foreground">Juros diários compostos</p>
+                                    <p className="font-mono text-[11px] text-muted-foreground">
+                                      R$ {fmt(base)} × (1 + {fee.jurosPct / 100})^{daysOverdue} - R$ {fmt(base)} = <span className="text-destructive font-bold">R$ {fmt(fee.juros)}</span>
+                                    </p>
+                                    {Number(c.max_interest_cap_percent || 0) > 0 && <p className="text-[10px] text-muted-foreground">Teto aplicado: {Number(c.max_interest_cap_percent)}% do valor original.</p>}
+                                  </div>
+                                  <div className="border-t border-border pt-2 flex items-center justify-between"><span className="text-[10px] font-bold uppercase text-foreground">Total</span><span className="font-mono text-sm font-bold text-destructive">R$ {fmt(totalDue)}</span></div>
+                                </div>
+                              </PopoverContent>
+                            </Popover>
+                          )}
+                          <button onClick={() => openEditInst(inst)} className="p-1.5 rounded-lg hover:bg-accent text-muted-foreground" title="Editar"><Edit size={14} /></button>
+                          {isPaid ? (
+                            <button onClick={() => reversePayment(inst.id)} className="p-1.5 rounded-lg hover:bg-accent text-muted-foreground" title="Estornar"><RotateCcw size={14} /></button>
+                          ) : (
+                            <>
+                              <button onClick={() => sendBilling(inst)} className="p-1.5 rounded-lg hover:bg-accent text-muted-foreground" title="Cobrar"><Send size={14} /></button>
+                              <button onClick={() => { setPartialPayModal(inst); setPartialAmount(""); setPayMethod("pix"); setPayReceiptFile(null); setPayFeeDiscount(0); }} className="p-1.5 rounded-lg hover:bg-accent text-muted-foreground" title="Parcial"><Percent size={14} /></button>
+                              <button onClick={() => {
+                                const contract: any = (contracts as any[]).find((c: any) => c.id === inst.contract_id);
+                                setPartialPayModal(inst);
+                                setPayFeeDiscount(0);
+                                setPartialAmount(String(portalInstallmentAmount({ ...inst, daily_interest_percent: contract?.daily_interest_percent, max_interest_cap_percent: contract?.max_interest_cap_percent }).toFixed(2)));
+                                setPayMethod("pix"); setPayReceiptFile(null);
+                              }} className="px-2.5 py-1.5 rounded-lg text-[10px] font-semibold bg-success/10 text-success hover:bg-success/20 transition-colors">Pagar</button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+            );
+          })}
+        </div>
+      )}</section>
+
+
+
+
+      {/* Modal: Histórico (timeline unificada) */}
+      <Dialog open={histOpen} onOpenChange={setHistOpen}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center"><Clock size={14} /></div>
+              Histórico de Atividades
+            </DialogTitle>
+          </DialogHeader>
+          <div className="max-h-[70vh] overflow-y-auto pr-1">{(() => {
+
+        const events: any[] = [];
+        // Contratos criados
+        contracts.forEach((c: any) => events.push({
+          id: `c-${c.id}`, date: c.created_at, type: "contract",
+          title: `Contrato criado · R$ ${fmt(Number(c.capital))}`,
+          subtitle: `${c.num_installments}x · ${FREQ[c.frequency] || c.frequency}`,
+          icon: FileText, color: "text-primary", bg: "bg-primary/10",
+        }));
+        // Pagamentos (parcelas pagas)
+        installments.filter((i: any) => i.status === "paid" && i.paid_at).forEach((i: any) => events.push({
+          id: `i-${i.id}`, date: i.paid_at, type: "payment",
+          title: `Parcela #${i.installment_number} paga`,
+          subtitle: `R$ ${fmt(Number(i.paid_amount || i.amount))}`,
+          icon: CheckCircle, color: "text-success", bg: "bg-success/10",
+        }));
+        // Lucros
+        profits.forEach((p: any) => events.push({
+          id: `p-${p.id}`, date: p.date, type: "profit",
+          title: p.description, subtitle: `+ R$ ${fmt(Number(p.amount))}`,
+          icon: TrendingUp, color: "text-success", bg: "bg-success/10",
+        }));
+        // Transações genéricas restantes (incluindo notas e contatos)
+        transactions.filter((t: any) => t.type !== "payment").forEach((t: any) => {
+          const isNote = t.type === "note";
+          const isContact = t.type === "contact";
+          events.push({
+            id: `t-${t.id}`, date: t.date, type: t.type,
+            title: t.description,
+            subtitle: isNote || isContact ? "" : `R$ ${fmt(Number(t.amount))}`,
+            icon: isNote ? StickyNote : isContact ? PhoneCall : DollarSign,
+            color: isNote ? "text-warning" : isContact ? "text-primary" : "text-muted-foreground",
+            bg: isNote ? "bg-warning/10" : isContact ? "bg-primary/10" : "bg-muted",
+          });
+        });
+        const sorted = events.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        const filters = [
+          { key: "all", label: "Tudo", count: sorted.length },
+          { key: "contract", label: "Contratos", count: sorted.filter(e => e.type === "contract").length },
+          { key: "payment", label: "Pagamentos", count: sorted.filter(e => e.type === "payment").length },
+          { key: "profit", label: "Lucros", count: sorted.filter(e => e.type === "profit").length },
+          { key: "note", label: "Notas", count: sorted.filter(e => e.type === "note").length },
+          { key: "contact", label: "Contatos", count: sorted.filter(e => e.type === "contact").length },
+        ] as const;
+        const filtered = historyFilter === "all" ? sorted : sorted.filter(e => e.type === historyFilter);
+        return (
+          <div className="space-y-4">
+            <div className="flex flex-wrap gap-2">
+              {filters.map(f => (
+                <button key={f.key} onClick={() => setHistoryFilter(f.key as any)}
+                  className={`px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-all ${historyFilter === f.key ? "bg-primary/15 text-primary border-primary/40" : "bg-card/40 text-muted-foreground border-border/40 hover:text-foreground hover:border-border"}`}>
+                  {f.label} <span className="opacity-60 ml-1">{f.count}</span>
+                </button>
+              ))}
+            </div>
+            {filtered.length === 0 ? (
+              <p className="text-center text-sm text-muted-foreground py-12">Nenhum evento nesta categoria</p>
+            ) : (
+              <div className="relative pl-6 space-y-3">
+                <div className="absolute left-2 top-2 bottom-2 w-px bg-border" />
+                {filtered.map(ev => (
+                  <div key={ev.id} className="relative">
+                    <div className={`absolute -left-[18px] top-3 w-3 h-3 rounded-full ${ev.bg} border-2 border-background`} />
+                    <div className="bg-card border border-border rounded-2xl p-3 flex items-start gap-3 hover:border-primary/30 transition-colors">
+                      <div className={`w-8 h-8 rounded-lg ${ev.bg} flex items-center justify-center shrink-0`}>
+                        <ev.icon size={14} className={ev.color} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-foreground truncate">{ev.title}</p>
+                        <p className="text-[10px] text-muted-foreground">
+                          {formatBR(ev.date)} · {new Date(ev.date).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                        </p>
+                      </div>
+                      <p className={`text-sm font-bold ${ev.color} shrink-0`}>{ev.subtitle}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })()}</div>
+        </DialogContent>
+      </Dialog>
+
+    </div>
+  );
+};
+
+export default ClienteDetalhe;

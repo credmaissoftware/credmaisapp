@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="google" content="notranslate" />
+    <title>CredMais App — Empreste com controle e receba em dia</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Manrope:wght@500;600;700;800&amp;family=Instrument+Serif:ital@0;1&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" />
+    <link rel="preload" href="/credmais-cplus-logo.jpg" as="image" type="image/jpeg" fetchpriority="high" />
+    <meta name="description" content="Controle empréstimos, parcelas e cobranças em um só lugar. Cobrança automática no WhatsApp, portal do cliente e relatórios de lucro: receba em dia e reduza o calote.">
+    <meta name="author" content="CredMais App" />
+    <link rel="canonical" href="https://credmaisapp.com.br/" />
+
+    <!-- PWA installable -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#006FEF" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="CredMais" />
+    <meta name="application-name" content="CredMais" />
+    <link rel="icon" href="/favicon.png" type="image/png" sizes="64x64" />
+    <link rel="icon" href="/pwa-192.png" type="image/png" sizes="192x192" />
+    <!-- iOS usa exclusivamente o apple-touch-icon (180x180) como ícone da tela inicial -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://credmaisapp.com.br/" />
+    
+    
+    <meta property="og:image" content="https://credmaisapp.com.br/og-credmais.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="CredMais App — gestão de empréstimos e cobranças">
+
+    <meta name="twitter:card" content="summary_large_image" />
+    
+    
+    <meta name="twitter:image" content="https://credmaisapp.com.br/og-credmais.jpg">
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "CredMais App",
+        "url": "https://credmaisapp.com.br/",
+        "logo": "https://credmaisapp.com.br/favicon.png",
+        "description": "Sistema completo para quem empresta dinheiro: contratos, parcelas, cobrança automática no WhatsApp e controle de lucro em tempo real."
+      }
+    </script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "CredMais App",
+        "url": "https://credmaisapp.com.br/"
+      }
+    </script>
+    <meta property="og:title" content="CredMais App — Empreste com controle e receba em dia">
+  <meta name="twitter:title" content="CredMais App — Empreste com controle e receba em dia">
+  <meta property="og:description" content="Controle empréstimos, parcelas e cobranças em um só lugar. Cobrança automática no WhatsApp, portal do cliente e relatórios de lucro: receba em dia e reduza o calote.">
+  <meta name="twitter:description" content="Controle empréstimos, parcelas e cobranças em um só lugar. Cobrança automática no WhatsApp, portal do cliente e relatórios de lucro: receba em dia e reduza o calote.">
+</head>
+
+  <body>
+    <div id="root"></div>
+    <div id="app-splash" aria-hidden="true" style="position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(ellipse at top,#0a2f80 0%,#020719 62%);transition:opacity .35s ease;font-family:system-ui,-apple-system,sans-serif;color:#f5f7ff;">
+      <div style="position:relative;width:120px;height:120px;display:flex;align-items:center;justify-content:center;margin-bottom:1.1rem;">
+        <div style="position:absolute;inset:-18px;border-radius:50%;background:radial-gradient(circle,rgba(8,119,255,.38),transparent 70%);filter:blur(6px);animation:sj-glow 2.4s ease-in-out infinite;"></div>
+        <img src="/credmais-cplus-logo.jpg" alt="CredMais App" width="120" height="120" style="position:relative;width:120px;height:120px;border-radius:24px;object-fit:cover;filter:drop-shadow(0 18px 40px rgba(8,119,255,.35));animation:sj-pulse 2.4s ease-in-out infinite;" />
+      </div>
+      <div style="font-size:1.05rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;background:linear-gradient(90deg,#64b5ff,#0877ff);-webkit-background-clip:text;background-clip:text;color:transparent;">CredMais App</div>
+      <div style="margin-top:1.25rem;width:28px;height:28px;border:2.5px solid rgba(8,119,255,.18);border-top-color:#0877ff;border-radius:50%;animation:sj-spin .9s linear infinite;"></div>
+      <style>@keyframes sj-spin{to{transform:rotate(360deg)}}@keyframes sj-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}@keyframes sj-glow{0%,100%{opacity:.55}50%{opacity:1}}</style>
+    </div>
+    <script>
+      (function () {
+        var splashRemoved = false;
+        window.__SJ_HIDE_SPLASH__ = function () {
+          if (splashRemoved) return;
+          splashRemoved = true;
+          try { sessionStorage.removeItem("__sj_boot_recovering"); } catch (e) {}
+          var splash = document.getElementById("app-splash");
+          if (!splash) return;
+          splash.style.opacity = "0";
+          setTimeout(function () { splash.remove(); }, 350);
+        };
+
+        window.addEventListener("load", function () {
+          setTimeout(function () {
+            var root = document.getElementById("root");
+            if (root && root.childElementCount > 0) window.__SJ_HIDE_SPLASH__();
+          }, 1200);
+        });
+
+        setTimeout(function () {
+          var root = document.getElementById("root");
+          var splash = document.getElementById("app-splash");
+          if (!splash || (root && root.childElementCount > 0)) return;
+          var alreadyRecovering = false;
+          try { alreadyRecovering = sessionStorage.getItem("__sj_boot_recovering") === "1"; } catch (e) {}
+          if (!alreadyRecovering) {
+            try { sessionStorage.setItem("__sj_boot_recovering", "1"); } catch (e) {}
+            Promise.all([
+              window.caches && caches.keys ? caches.keys().then(function (keys) { return Promise.all(keys.map(function (key) { return caches.delete(key); })); }) : Promise.resolve(),
+              navigator.serviceWorker ? navigator.serviceWorker.getRegistrations().then(function (regs) { return Promise.all(regs.map(function (reg) { return reg.unregister(); })); }) : Promise.resolve()
+            ]).finally(function () { location.reload(); });
+            return;
+          }
+          splash.innerHTML = '<div style="font-size:1rem;font-weight:700;margin-bottom:.5rem;">Não foi possível carregar</div><div style="font-size:.85rem;color:#aab6d3;margin-bottom:1rem;text-align:center;max-width:300px;">Atualize a página para limpar o cache e tentar novamente.</div><button type="button" style="border:0;border-radius:10px;background:#3b6fc4;color:white;font-weight:700;padding:.75rem 1rem;cursor:pointer;">Atualizar</button>';
+          splash.querySelector("button").onclick = function () {
+            Promise.all([
+              window.caches && caches.keys ? caches.keys().then(function (keys) { return Promise.all(keys.map(function (key) { return caches.delete(key); })); }) : Promise.resolve(),
+              navigator.serviceWorker ? navigator.serviceWorker.getRegistrations().then(function (regs) { return Promise.all(regs.map(function (reg) { return reg.unregister(); })); }) : Promise.resolve()
+            ]).finally(function () { location.reload(); });
+          };
+        }, 10000);
+      })();
+    </script>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

@@ -1,0 +1,28 @@
+{
+  "$schema": "https://design-tokens.github.io/community-group/format/",
+  "color": {
+    "primary": { "$value": "#006FEF", "$type": "color", "$description": "Ação principal acessível" },
+    "primaryBright": { "$value": "#168BFF", "$type": "color", "$description": "Hover, foco e glow" },
+    "accent": { "$value": "#FF9D16", "$type": "color", "$description": "Acento laranja restrito" },
+    "surface": { "$value": "#020719", "$type": "color", "$description": "Fundo marinho principal" },
+    "surfaceElevated": { "$value": "#07143D", "$type": "color", "$description": "Cards e overlays tonais" },
+    "textPrimary": { "$value": "#F5F7FF", "$type": "color" },
+    "textMuted": { "$value": "#9CAAD1", "$type": "color" },
+    "border": { "$value": "#173D78", "$type": "color" }
+  },
+  "dimension": {
+    "spacingBase": { "$value": "4px", "$type": "dimension" },
+    "radiusSmall": { "$value": "10px", "$type": "dimension" },
+    "radiusMedium": { "$value": "14px", "$type": "dimension" },
+    "radiusLarge": { "$value": "20px", "$type": "dimension" }
+  },
+  "fontFamily": {
+    "display": { "$value": ["Manrope", "Space Grotesk", "sans-serif"], "$type": "fontFamily" },
+    "body": { "$value": ["Inter", "system-ui", "sans-serif"], "$type": "fontFamily" }
+  },
+  "_meta": {
+    "source": "C:/Users/focussdev/Downloads/WhatsApp Image 2026-08-27 at 19.12.34.jpeg",
+    "capturedAt": "2026-08-31",
+    "confidence": "high for brand colors; medium for inferred interface neutrals"
+  }
+}
