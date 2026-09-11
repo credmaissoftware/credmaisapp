@@ -102,7 +102,6 @@ const Dashboard = () => {
     return (
       <div role="status" aria-label="Carregando painel" className="space-y-6 max-w-[1400px] mx-auto animate-fade-in">
         <div className="relative h-32 overflow-hidden skeleton-shimmer rounded-3xl">
-          <img src="/credinho-mascot-card.png" alt="" aria-hidden="true" className="absolute -right-3 -top-28 h-64 w-48 object-contain opacity-55" />
           <div className="absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-background/70 to-transparent" />
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -150,7 +149,6 @@ const Dashboard = () => {
     <div className="relative space-y-5 md:space-y-6 pb-8 max-w-[1400px] mx-auto animate-fade-in">
       {/* ─── HERO — saudação + ações principais ─── */}
       <section className="relative isolate overflow-hidden rounded-2xl border border-sky-200/[.16] bg-[#0b0c0f] bg-cover bg-center p-5 shadow-[0_22px_60px_-32px_rgba(56,189,248,.28)] md:p-7" style={{ backgroundImage: "linear-gradient(90deg,rgba(8,9,12,.98) 0%,rgba(8,9,12,.88) 48%,rgba(8,9,12,.38)), url('/credmais-hero-cinematic-v2.webp')" }}>
-        <img src="/credinho-mascot-card.png" alt="" aria-hidden="true" className="pointer-events-none absolute -right-10 -top-20 hidden h-[330px] w-[230px] object-contain opacity-70 drop-shadow-[0_18px_30px_rgba(56,189,248,.2)] md:block lg:h-[390px] lg:w-[270px]" />
         <div className="pointer-events-none absolute -right-16 -top-24 -z-10 h-72 w-72 rounded-full border-[24px] border-white/[.06]" />
         <div className="pointer-events-none absolute right-20 top-10 -z-10 h-2 w-2 rounded-full bg-orange-300 shadow-[0_0_18px_6px_rgba(251,146,60,.65)]" />
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
