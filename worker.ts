@@ -4,6 +4,12 @@ export interface Env {
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
-    return env.ASSETS.fetch(request);
+    const url = new URL(request.url);
+    // Vite/React uses client-side routes. Resolve those routes to the app shell
+    // before asking the static asset binding to serve the request.
+    if (url.pathname !== "/" && !url.pathname.split("/").pop()?.includes(".")) {
+      url.pathname = "/index.html";
+    }
+    return env.ASSETS.fetch(new Request(url, request));
   },
 };
