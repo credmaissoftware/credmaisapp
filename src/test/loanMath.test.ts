@@ -24,7 +24,10 @@ describe("calculateLoan", () => {
   it("percentage mensal sem nº = 1 pagamento", () => {
     const r = calculateLoan({ capital: 1000, rate: 10, frequency: "monthly", loanMode: "percentage" })!;
     expect(r.numInstallments).toBe(1);
-    expect(r.schedule).toEqual([1100]);
+    // Contrato recorrente: o ciclo abre apenas com os juros; o capital
+    // permanece em aberto até a quitação explícita.
+    expect(r.schedule).toEqual([100]);
+    expect(r.totalAmount).toBe(1100);
   });
 
   it("valueMode installment deriva taxa", () => {
