@@ -30,6 +30,7 @@ import { renderMessage } from "@/lib/messageTemplate";
 import { useWhiteLabel } from "@/contexts/WhiteLabelContext";
 import { isEmAberto, isEmAtraso } from "../../supabase/functions/_shared/installmentStatus";
 import { portalInstallmentAmount } from "@/lib/portalAmounts";
+import "@/cobrancas-overrides.css";
 
 const fmt = (v: number) => (Number(v) || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const relTime = (iso: string) => {
@@ -891,6 +892,12 @@ const Cobrancas = () => {
 
 
       {/* Automação e métricas — colapsado por padrão */}
+      <section className="collections-overview-grid" aria-label="Resumo das cobranças">
+        <button className="collections-overview-card is-today" onClick={() => applyFocus("hoje")}><span className="collections-overview-icon"><CalendarDays size={17}/></span><span><small>Vence hoje</small><strong>{dueTodayStats.count} parcelas</strong><em>R$ {fmt(dueTodayStats.total)}</em></span><ChevronRight size={15}/></button>
+        <button className="collections-overview-card is-overdue" onClick={() => applyFocus("atrasadas")}><span className="collections-overview-icon"><AlertTriangle size={17}/></span><span><small>Atrasadas</small><strong>{stats.overdue} parcelas</strong><em>R$ {fmt(stats.totalOverdue)}</em></span><ChevronRight size={15}/></button>
+        <button className="collections-overview-card is-open" onClick={() => { setFilter("pending"); setPeriod("all"); }}><span className="collections-overview-icon"><Clock size={17}/></span><span><small>Em aberto</small><strong>{stats.pending} parcelas</strong><em>R$ {fmt(stats.totalPending)}</em></span><ChevronRight size={15}/></button>
+        <button className="collections-overview-card is-paid" onClick={() => applyFocus("pagas")}><span className="collections-overview-icon"><CheckCircle size={17}/></span><span><small>Recebido</small><strong>{stats.paid} parcelas</strong><em>R$ {fmt(stats.totalPaid)}</em></span><ChevronRight size={15}/></button>
+      </section>
       {showAutomation && <CollectionMetrics />}
 
 

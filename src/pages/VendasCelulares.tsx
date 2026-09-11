@@ -13,7 +13,7 @@ import '@/components/commercial/commercial.css';
 import '@/components/commercial/commercial-overrides.css';
 
 export default function VendasCelulares() {
-  const location = useLocation(); const { user } = useAuth(); const queryClient = useQueryClient(); const { data, isLoading, error, refresh } = useCommercial(); const [showDialog, setShowDialog] = useState(false); const [view, setView] = useState<'all' | 'active' | 'paid'>('all');
+  const location = useLocation(); const { user } = useAuth(); const queryClient = useQueryClient(); const { data, isLoading, error, refresh } = useCommercial(); const [showDialog, setShowDialog] = useState(() => new URLSearchParams(location.search).get('novo') === '1'); const [view, setView] = useState<'all' | 'active' | 'paid'>('all');
   const { data: clients = [] } = useQuery({ queryKey: ['commercial-clients', user?.id], enabled: !!user, queryFn: () => fetchAll((from, to) => supabase.from('clients').select('id,name,full_name,cpf_cnpj').eq('user_id', user!.id).order('name').range(from, to)) });
   const sales = data.operations.filter(operation => operation.kind === 'sale'); const visibleSales = useMemo(() => view === 'all' ? sales : sales.filter(operation => view === 'active' ? operation.status === 'active' : operation.status === 'completed'), [sales, view]); const revenue = sales.reduce((sum, operation) => sum + Number(operation.total || 0), 0); const received = data.payments.filter(payment => sales.some(operation => operation.id === payment.operation_id)).reduce((sum, payment) => sum + Number(payment.amount || 0), 0); const pending = Math.max(0, revenue - received);
   const reload = async () => { await refresh(); await queryClient.invalidateQueries({ queryKey: ['commercial-clients'] }); };
