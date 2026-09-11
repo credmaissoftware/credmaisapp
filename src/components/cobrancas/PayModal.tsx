@@ -24,8 +24,8 @@ const PayModal = ({ inst, fee, alreadyPaid, remaining, daysLate, onCancel, onCon
   const [saving, setSaving] = useState(false);
   const automaticNextDue = nextInterestDueDate(inst.due_date, inst.contracts?.frequency);
   const [nextDueDate, setNextDueDate] = useState(automaticNextDue);
-  const canPayInterestOnly = String(inst.contracts?.frequency || "").toLowerCase() === "monthly"
-    && Number(inst.contracts?.num_installments || 1) <= 1;
+  const renewableMode = ["percentage", "interest_only"].includes(String(inst.contracts?.loan_mode || "").toLowerCase());
+  const canPayInterestOnly = renewableMode && ["daily", "weekly", "biweekly", "monthly"].includes(String(inst.contracts?.frequency || "").toLowerCase());
 
   const value = useMemo(() => {
     const n = Number(String(raw).replace(/\./g, "").replace(",", "."));
