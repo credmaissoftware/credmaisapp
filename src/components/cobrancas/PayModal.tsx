@@ -18,7 +18,7 @@ interface Props {
 }
 
 const PayModal = ({ inst, fee, alreadyPaid, remaining, daysLate, onCancel, onConfirm }: Props) => {
-  const [mode, setMode] = useState<"full" | "partial" | "interest_only" | "discount_fee" | "no_fee">("full");
+  const [mode, setMode] = useState<"full" | "partial" | "interest_only" | "settle" | "discount_fee" | "no_fee">("full");
   const [raw, setRaw] = useState<string>(remaining.toFixed(2).replace(".", ","));
   const [discountPercent, setDiscountPercent] = useState(50);
   const [saving, setSaving] = useState(false);
@@ -26,6 +26,7 @@ const PayModal = ({ inst, fee, alreadyPaid, remaining, daysLate, onCancel, onCon
   const [nextDueDate, setNextDueDate] = useState(automaticNextDue);
   const renewableMode = ["percentage", "interest_only"].includes(String(inst.contracts?.loan_mode || "").toLowerCase());
   const canPayInterestOnly = renewableMode && ["daily", "weekly", "biweekly", "monthly"].includes(String(inst.contracts?.frequency || "").toLowerCase());
+  const capitalSettlement = Math.max(0, Number(inst.contracts?.capital || 0)) + remaining;
 
   const value = useMemo(() => {
     const n = Number(String(raw).replace(/\./g, "").replace(",", "."));
@@ -47,6 +48,7 @@ const PayModal = ({ inst, fee, alreadyPaid, remaining, daysLate, onCancel, onCon
     mode === "no_fee" ? remainingWithDiscount :
     mode === "discount_fee" ? remainingWithDiscount :
     mode === "interest_only" ? totalInterestOnly :
+    mode === "settle" ? capitalSettlement :
     value;
 
   const isPartial = (mode === "partial" || mode === "interest_only") && finalValue > 0 && finalValue + 0.005 < remaining;
@@ -61,6 +63,7 @@ const PayModal = ({ inst, fee, alreadyPaid, remaining, daysLate, onCancel, onCon
     try {
       await onConfirm(finalValue, feeDiscount, mode === "interest_only"
         ? { mode: "interest_only", nextDueDate }
+        : mode === "settle" ? { mode: "settle" }
         : { mode: "payment" });
     } finally {
       setSaving(false);
@@ -158,6 +161,15 @@ const PayModal = ({ inst, fee, alreadyPaid, remaining, daysLate, onCancel, onCon
             Pagar só juros
           </button>}
 
+          {canPayInterestOnly && <button
+            onClick={() => setMode("settle")}
+            className={`col-span-2 min-w-0 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+              mode === "settle" ? "bg-primary text-primary-foreground border-primary" : "border border-border text-muted-foreground hover:bg-accent"
+            }`}
+          >
+            Quitar capital + juros
+          </button>}
+
           <button
             onClick={() => setMode("partial")}
             className={`min-w-0 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${
@@ -219,6 +231,12 @@ const PayModal = ({ inst, fee, alreadyPaid, remaining, daysLate, onCancel, onCon
                 Usar próxima data automática: {formatBR(automaticNextDue)}
               </button>
             </div>
+          </div>
+        )}
+
+        {canPayInterestOnly && mode === "settle" && (
+          <div className="p-3 rounded-xl bg-primary/10 border border-primary/20">
+            <p className="text-xs text-foreground leading-relaxed">Esta baixa encerra o contrato e recebe <strong>R$ {fmt(capitalSettlement)}</strong>, incluindo o capital de R$ {fmt(Number(inst.contracts?.capital || 0))} e os juros do ciclo.</p>
           </div>
         )}
 
