@@ -1970,3 +1970,12 @@ div[style*="Edit with Lovable"],
   background-color: hsl(199 92% 62%);
   color: hsl(210 35% 8%);
 }
+
+@keyframes mascotFloat {
+  0%, 100% { transform: translateY(0) rotate(-1deg); }
+  50% { transform: translateY(-5px) rotate(1deg); }
+}
+.animate-mascot-float { animation: mascotFloat 4.8s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .animate-mascot-float { animation: none; }
+}
