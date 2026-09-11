@@ -294,9 +294,9 @@ const Login = () => {
 
       <div className="absolute left-[5%] top-1/2 z-10 hidden max-w-[390px] -translate-y-1/2 lg:block">
         <div className="mb-5 h-0.5 w-10 bg-sky-400" />
-        <p className="mb-6 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-300/70">GestÃ£o de emprÃ©stimos</p>
-        <h2 className="font-display text-4xl font-extrabold leading-[1.08] tracking-tight text-white xl:text-5xl">CrÃ©dito hoje,<br />mais <span className="text-sky-400">oportunidades</span><br />amanhÃ£.</h2>
-        <p className="mt-5 max-w-[320px] text-base leading-relaxed text-slate-300/75">SoluÃ§Ãµes completas, seguras e inteligentes para vocÃª e o seu negÃ³cio.</p>
+        <p className="mb-6 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-300/70">Gest&atilde;o de empr&eacute;stimos</p>
+        <h2 className="font-display text-4xl font-extrabold leading-[1.08] tracking-tight text-white xl:text-5xl">Cr&eacute;dito hoje,<br />mais <span className="text-sky-400">oportunidades</span><br />amanh&atilde;.</h2>
+        <p className="mt-5 max-w-[320px] text-base leading-relaxed text-slate-300/75">Solu&ccedil;&otilde;es completas, seguras e inteligentes para voc&ecirc; e o seu neg&oacute;cio.</p>
         <div className="mt-8 space-y-4">
           {[[Users, "GestÃ£o completa", "Controle de clientes e emprÃ©stimos"], [BarChart3, "RelatÃ³rios inteligentes", "Acompanhe tudo em tempo real"], [ShieldCheck, "Mais seguranÃ§a", "Seus dados sempre protegidos"], [MonitorSmartphone, "Acesso em qualquer lugar", "No desktop, tablet ou celular"]].map(([Icon, title, text]) => { const ItemIcon = Icon as typeof Users; return <div key={title as string} className="flex items-center gap-3"><span className="flex h-11 w-11 items-center justify-center rounded-xl border border-sky-300/30 bg-sky-500/15 text-sky-300"><ItemIcon size={20} /></span><span><strong className="block text-sm text-white">{title as string}</strong><small className="text-[11px] text-slate-300/65">{text as string}</small></span></div>; })}
         </div>
