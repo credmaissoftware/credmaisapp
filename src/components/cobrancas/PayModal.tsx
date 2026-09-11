@@ -14,7 +14,7 @@ interface Props {
   remaining: number;
   daysLate: number;
   onCancel: () => void;
-  onConfirm: (value: number, feeDiscount?: number, options?: { mode: "payment" | "interest_only"; nextDueDate?: string }) => void | Promise<void>;
+  onConfirm: (value: number, feeDiscount?: number, options?: { mode: "payment" | "interest_only" | "settle"; nextDueDate?: string }) => void | Promise<void>;
 }
 
 const PayModal = ({ inst, fee, alreadyPaid, remaining, daysLate, onCancel, onConfirm }: Props) => {
