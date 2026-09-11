@@ -197,7 +197,7 @@ const Sidebar = ({ collapsed = false, onToggleCollapse }: SidebarProps) => {
           group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium
           transition-all duration-200 ease-out will-change-transform
           ${active
-            ? "text-white bg-[#f97316] shadow-[0_8px_20px_rgba(249,115,22,.22)]"
+            ? "text-[#fff8e7] bg-gradient-to-r from-[#b7791f] via-[#eab84b] to-[#b7791f] shadow-[0_8px_20px_rgba(234,184,75,.22)]"
             : "text-slate-300/75 hover:text-white hover:bg-white/[.07]"
           }
           ${collapsed ? "justify-center px-2" : ""}
@@ -301,7 +301,7 @@ const Sidebar = ({ collapsed = false, onToggleCollapse }: SidebarProps) => {
         ${collapsed ? "w-[76px]" : "w-[240px]"}
       `}
       style={{
-        background: sidebarBg || "linear-gradient(180deg, #062b43 0%, #041d31 55%, #031827 100%)",
+        background: sidebarBg || "linear-gradient(180deg, #090a0d 0%, #060709 55%, #040506 100%)",
         backdropFilter: "blur(24px)",
       }}
     >
@@ -349,7 +349,7 @@ const Sidebar = ({ collapsed = false, onToggleCollapse }: SidebarProps) => {
           </button>
           <button
             onClick={() => navigate("/clientes/novo")}
-            className="w-full flex items-center justify-center gap-1.5 h-9 rounded-lg bg-[#f97316] text-white text-[12px] font-semibold hover:bg-[#fb923c] transition-colors shadow-md shadow-orange-950/30"
+            className="w-full flex items-center justify-center gap-1.5 h-9 rounded-lg bg-gradient-to-r from-[#b7791f] via-[#eab84b] to-[#b7791f] text-[#211707] text-[12px] font-bold hover:brightness-110 transition-colors shadow-md shadow-amber-950/30"
           >
             <Plus size={13} /> Novo cliente
           </button>
