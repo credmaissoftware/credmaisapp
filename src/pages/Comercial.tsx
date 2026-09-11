@@ -12,6 +12,7 @@ import { CollateralFields, Field, SelectField } from '@/components/commercial/Co
 import '@/components/commercial/commercial.css';
 import '@/components/commercial/commercial-overrides.css';
 import '@/components/commercial/quick-actions.css';
+import '@/components/commercial/sale-overrides.css';
 
 type Tab = 'inventory' | 'sales' | 'rentals';
 const today = () => new Date().toISOString().slice(0, 10);
@@ -62,4 +63,67 @@ function OperationDialog({kind,assets,clients,onClose,onSaved}:{kind:'sale'|'ren
 
 export function CollateralDialog({clients,onClose,onSaved}:{clients:any[];onClose:()=>void;onSaved:()=>Promise<void>}) { const {toast}=useToast();const [clientId,setClientId]=useState('');const [contractId,setContractId]=useState('');const [value,setValue]=useState<CollateralInput>(emptyCollateral());const [contracts,setContracts]=useState<any[]>([]);const [saving,setSaving]=useState(false);const load=async(id:string)=>{setClientId(id);if(!id){setContracts([]);return;}const {data}=await supabase.from('contracts').select('id,capital,created_at').eq('client_id',id).eq('user_id',(await supabase.auth.getUser()).data.user?.id).order('created_at',{ascending:false});setContracts(data||[])};const submit=async(e:React.FormEvent)=>{e.preventDefault();setSaving(true);try{if(!contractId)throw new Error('Selecione o contrato');await commercialRpc('save_loan_collateral',{_contract_id:contractId,_data:value,_request_id:crypto.randomUUID()});toast({title:'Garantia registrada',description:'O bem ficou vinculado ao contrato e entrou sob guarda.'});await onSaved();onClose();}catch(err){toast({title:'Não foi possível registrar',description:(err as Error).message,variant:'destructive'});}finally{setSaving(false)}};return <div className="commercial-overlay" role="dialog" aria-modal="true"><div className="commercial-modal commercial-dialog"><div className="commercial-toolbar"><h2>Registrar garantia voluntária</h2><button className="commercial-secondary" onClick={onClose} aria-label="Fechar"><X size={17}/></button></div><form onSubmit={submit}><SelectField label="Cliente" value={clientId} onChange={load} required><option value="">Selecione</option>{clients.map((c:any)=><option key={c.id} value={c.id}>{c.name||c.full_name||c.cpf_cnpj}</option>)}</SelectField><SelectField label="Contrato" value={contractId} onChange={setContractId} required><option value="">Selecione um contrato</option>{contracts.map(c=><option key={c.id} value={c.id}>{money(c.capital)} · {new Date(c.created_at).toLocaleDateString('pt-BR')}</option>)}</SelectField><CollateralFields value={value} onChange={setValue}/><p className="commercial-muted">A garantia é apenas voluntária e fica sob guarda até a devolução registrada. Ela não será vendida ou apropriada automaticamente.</p><div className="commercial-actions"><button type="button" className="commercial-secondary" onClick={onClose}>Cancelar</button><button className="commercial-primary" disabled={saving}>{saving?'Salvando…':'Registrar garantia'}</button></div></form></div></div> }
 function QuickActions() { return <section className="commercial-quick-actions commercial-page"><div><span className="commercial-eyebrow">Ações rápidas</span><h2>Comece uma operação</h2></div><div className="commercial-quick-action-list"><Link className="commercial-quick-action" to="/comercial/estoque?novo=1"><Package size={17}/><span><strong>Adicionar bem</strong><small>Cadastrar celular, carro ou moto</small></span><ChevronRight size={16}/></Link><Link className="commercial-quick-action" to="/comercial/vendas?novo=1"><Smartphone size={17}/><span><strong>Nova venda</strong><small>Vender um celular do estoque</small></span><ChevronRight size={16}/></Link><Link className="commercial-quick-action" to="/comercial/locacoes?novo=1"><Car size={17}/><span><strong>Nova locação</strong><small>Alugar carro ou moto</small></span><ChevronRight size={16}/></Link></div></section> }
-export { OperationDialog };
+function OperationDialogV2({ kind, assets, clients, onClose, onSaved }: { kind: 'sale' | 'rental'; assets: any[]; clients: any[]; onClose: () => void; onSaved: () => Promise<void> }) {
+  const { toast } = useToast();
+  const [paymentMode, setPaymentMode] = useState<'cash' | 'installments'>('installments');
+  const [form, setForm] = useState<any>({ client_id: '', asset_id: '', total: '', down_payment: '0', installments: '1', first_due: today(), start_date: today(), end_date: '', billing: 'monthly', rate: '', deposit: '0', method: 'pix', odometer: '0', fuel: '', notes: '' });
+  const [saving, setSaving] = useState(false);
+  const periods = kind === 'rental' && form.end_date ? rentalPeriods(form.start_date, form.end_date, form.billing) : Number(form.installments) || 1;
+  const saleTotal = Number(form.total) || 0;
+  const saleEntry = paymentMode === 'cash' ? saleTotal : Number(form.down_payment) || 0;
+  const saleInstallments = paymentMode === 'cash' ? 1 : Number(form.installments) || 1;
+  const preview = kind === 'rental' && form.rate ? Number(form.rate) * periods : saleTotal;
+  const balance = Math.max(0, saleTotal - saleEntry);
+  const set = (key: string, value: string) => setForm((current: any) => ({ ...current, [key]: value }));
+
+  const submit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!form.client_id || !form.asset_id) return;
+    setSaving(true);
+    try {
+      if (kind === 'sale') splitReceivables(saleTotal, saleEntry, saleInstallments, paymentMode === 'cash' ? today() : form.first_due, 'monthly');
+      else if (periods < 1) throw new Error('Informe um período válido');
+      await commercialRpc('create_business_operation', {
+        _data: {
+          ...form,
+          total: kind === 'sale' ? saleTotal : preview,
+          down_payment: kind === 'sale' ? saleEntry : 0,
+          installments: kind === 'sale' ? saleInstallments : periods,
+          first_due: paymentMode === 'cash' ? today() : form.first_due,
+          rate: kind === 'rental' ? Number(form.rate) : 0,
+          deposit: kind === 'rental' ? Number(form.deposit) || 0 : 0,
+          details: kind === 'rental' ? { odometer: Number(form.odometer) || 0, fuel: form.fuel, notes: form.notes } : { payment_mode: paymentMode },
+          notes: form.notes,
+        },
+        _request_id: crypto.randomUUID(),
+      });
+      toast({ title: kind === 'sale' ? 'Venda registrada' : 'Locação criada' });
+      await onSaved();
+      onClose();
+    } catch (error) {
+      toast({ title: 'Não foi possível criar operação', description: (error as Error).message, variant: 'destructive' });
+    } finally { setSaving(false); }
+  };
+
+  return <div className="commercial-overlay" role="dialog" aria-modal="true"><div className="commercial-modal commercial-dialog">
+    <div className="commercial-toolbar"><div><span className="commercial-eyebrow">{kind === 'sale' ? 'Venda de celular' : 'Locação de veículo'}</span><h2>{kind === 'sale' ? 'Registrar venda' : 'Nova locação'}</h2></div><button type="button" className="commercial-secondary" onClick={onClose} aria-label="Fechar"><X size={17} /></button></div>
+    <form onSubmit={submit}><div className="commercial-form-grid">
+      <SelectField label="Cliente" value={form.client_id} onChange={value => set('client_id', value)} required><option value="">Selecione</option>{clients.map((client: any) => <option key={client.id} value={client.id}>{client.name || client.full_name || client.cpf_cnpj}</option>)}</SelectField>
+      <SelectField label={kind === 'sale' ? 'Celular / IMEI' : 'Veículo / placa'} value={form.asset_id} onChange={value => set('asset_id', value)} required><option value="">Selecione</option>{assets.map(asset => <option key={asset.id} value={asset.id}>{asset.label} · {asset.identifier}</option>)}</SelectField>
+      {kind === 'sale' ? <>
+        <div className="commercial-choice commercial-choice-wide"><span>Forma de pagamento</span><div><button type="button" className={paymentMode === 'cash' ? 'is-active' : ''} onClick={() => setPaymentMode('cash')}><CircleDollarSign size={14} /> À vista</button><button type="button" className={paymentMode === 'installments' ? 'is-active' : ''} onClick={() => setPaymentMode('installments')}><Package size={14} /> Parcelado</button></div></div>
+        <Field label="Total da venda (R$)" required type="number" min="0.01" step="0.01" value={form.total} onChange={event => set('total', event.target.value)} />
+        {paymentMode === 'installments' && <><Field label="Entrada opcional (R$)" type="number" min="0" step="0.01" value={form.down_payment} onChange={event => set('down_payment', event.target.value)} /><Field label="Parcelas" type="number" min="1" max="366" value={form.installments} onChange={event => set('installments', event.target.value)} /><Field label="Primeiro vencimento" type="date" value={form.first_due} onChange={event => set('first_due', event.target.value)} /></>}
+        <SelectField label="Recebimento" value={form.method} onChange={value => set('method', value)} required><option value="pix">PIX</option><option value="cash">Dinheiro</option><option value="card">Cartão</option><option value="transfer">Transferência</option></SelectField>
+      </> : <>
+        <Field label="Início" type="date" required value={form.start_date} onChange={event => set('start_date', event.target.value)} /><Field label="Devolução prevista" type="date" required value={form.end_date} onChange={event => set('end_date', event.target.value)} />
+        <SelectField label="Cobrança" value={form.billing} onChange={value => set('billing', value)}><option value="daily">Diária</option><option value="weekly">Semanal</option><option value="monthly">Mensal</option></SelectField><Field label="Valor por período (R$)" required type="number" min="0.01" step="0.01" value={form.rate} onChange={event => set('rate', event.target.value)} />
+        <Field label="Caução opcional (R$)" type="number" min="0" step="0.01" value={form.deposit} onChange={event => set('deposit', event.target.value)} /><Field label="Quilometragem na saída" type="number" min="0" step="1" value={form.odometer} onChange={event => set('odometer', event.target.value)} /><Field label="Combustível / observações" value={form.fuel} onChange={event => set('fuel', event.target.value)} />
+        <SelectField label="Recebimento da caução" value={form.method} onChange={value => set('method', value)} required><option value="pix">PIX</option><option value="cash">Dinheiro</option><option value="card">Cartão</option><option value="transfer">Transferência</option></SelectField>
+      </>}
+    </div><div className="commercial-summary"><strong>Total calculado: {money(preview)}</strong><br />{kind === 'rental' ? `${periods} ${billingLabels[form.billing as keyof typeof billingLabels] || 'períodos'} cobrados. A caução opcional fica registrada até a devolução.` : paymentMode === 'cash' ? 'Pagamento à vista: o valor será recebido e a venda ficará concluída.' : `Saldo de ${money(balance)} dividido em ${saleInstallments} parcela${saleInstallments === 1 ? '' : 's'}.`}</div>
+    <div className="commercial-actions"><button type="button" className="commercial-secondary" onClick={onClose}>Cancelar</button><button className="commercial-primary" disabled={saving || assets.length === 0}>{saving ? 'Registrando…' : 'Confirmar operação'}</button></div></form>
+  </div></div>;
+}
+
+export { OperationDialogV2 as OperationDialog };
