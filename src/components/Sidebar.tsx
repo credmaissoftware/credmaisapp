@@ -9,7 +9,7 @@ import {
   Crown, ClipboardList, Sparkles, Settings, Bot, QrCode,
   UserCheck, Shield, Cog, LogOut, User, LifeBuoy, MessageCircle,
   AlertTriangle, ChevronLeft, Plus, Search, Archive, Landmark,
-  Activity, Terminal, Smartphone,
+  Activity, Terminal, Smartphone, ShieldCheck,
 } from "lucide-react";
 import AppModeSwitcher from "@/components/AppModeSwitcher";
 import { useAppMode } from "@/contexts/AppModeContext";
@@ -40,7 +40,7 @@ interface MenuSection {
 
 const menuIconTone: Record<string, string> = {
   "/hoje": "amber", "/dashboard": "blue", "/analises": "violet", "/clientes": "orange",
-  "/cobrancas": "rose", "/investidores": "teal", "/carteira": "emerald", "/comercial": "indigo",
+  "/cobrancas": "rose", "/investidores": "teal", "/carteira": "emerald", "/comercial": "indigo", "/garantias": "yellow",
   "/lucros": "green", "/gastos": "red", "/relatorios": "sky", "/historico-financeiro": "slate",
   "/comunicacao": "purple", "/comunicacao/inbox": "pink", "/chat": "cyan", "/cobradores": "lime",
   "/qrcode": "blue", "/ferramentas/simulador": "violet", "/ferramentas/metas": "amber", "/ferramentas/tarefas": "green",
@@ -65,6 +65,7 @@ const sections: MenuSection[] = [
       { label: "Investidores", icon: Landmark, path: "/investidores" },
       { label: "Carteira", icon: Wallet, path: "/carteira" },
       { label: "Comercial", icon: Smartphone, path: "/comercial" },
+      { label: "Garantias", icon: ShieldCheck, path: "/garantias" },
     ],
   },
   {

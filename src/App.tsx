@@ -86,6 +86,7 @@ const CheckoutPendente = lazy(() => import("./pages/CheckoutPendente"));
 const CentralBot = lazy(() => import("./pages/CentralBot"));
 const WhatsAppInbox = lazy(() => import("./pages/WhatsAppInbox"));
 const Comercial = lazy(() => import("./pages/Comercial"));
+const Garantias = lazy(() => import("./pages/Garantias"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -167,7 +168,8 @@ const App = () => (
                     <Route path="/contratos/:id" element={<ContractRedirect />} />
                     <Route path="/cobrancas" element={<ErrorBoundary><Cobrancas /></ErrorBoundary>} />
                     <Route path="/carteira" element={<ErrorBoundary><Carteira /></ErrorBoundary>} />
-                    <Route path="/comercial" element={<ErrorBoundary><Comercial /></ErrorBoundary>} />
+                    <Route path="/comercial/*" element={<ErrorBoundary><Comercial /></ErrorBoundary>} />
+                    <Route path="/garantias" element={<ErrorBoundary><Garantias /></ErrorBoundary>} />
                     <Route path="/investidores" element={<ErrorBoundary><Investidores /></ErrorBoundary>} />
                     <Route path="/investidores/:id" element={<ErrorBoundary><InvestidorDetalhe /></ErrorBoundary>} />
 

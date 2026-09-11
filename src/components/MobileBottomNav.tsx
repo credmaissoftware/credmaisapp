@@ -5,7 +5,7 @@ import {
   Calculator, Target, CheckSquare, StickyNote, Table, Database,
   QrCode, ClipboardList, Shield, Settings, Crown, Info,
   UserCheck, FileText, X, Sparkles, MessageCircle,
-  Plus, UserPlus, Wallet as WalletIcon, Smartphone,
+  Plus, UserPlus, Wallet as WalletIcon, Smartphone, ShieldCheck,
 } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -25,6 +25,7 @@ const mobileIconColor: Record<string, string> = {
   "/cobradores": "text-slate-300",
   "/lucros": "text-emerald-400",
   "/gastos": "text-rose-400",
+  "/garantias": "text-amber-300",
   "/agente-ia": "text-violet-400",
   "/ferramentas/simulador": "text-zinc-300",
   "/ferramentas/metas": "text-zinc-300",
@@ -43,7 +44,7 @@ const mobileIconColor: Record<string, string> = {
   "/chat": "text-emerald-400",
 };
 const mobileIconTone: Record<string, string> = {
-  "/hoje": "amber", "/dashboard": "blue", "/clientes": "orange", "/cobrancas": "rose", "/carteira": "emerald", "/comercial": "indigo", "/analises": "violet", "/relatorios": "sky", "/cobradores": "lime", "/lucros": "green", "/gastos": "red", "/chat": "cyan", "/qrcode": "blue", "/configuracoes": "slate", "/suporte": "pink", "/admin": "amber",
+  "/hoje": "amber", "/dashboard": "blue", "/clientes": "orange", "/cobrancas": "rose", "/carteira": "emerald", "/comercial": "indigo", "/garantias": "yellow", "/analises": "violet", "/relatorios": "sky", "/cobradores": "lime", "/lucros": "green", "/gastos": "red", "/chat": "cyan", "/qrcode": "blue", "/configuracoes": "slate", "/suporte": "pink", "/admin": "amber",
 };
 
 const mainTabs = [
@@ -77,6 +78,7 @@ const moreGroups = [
     items: [
       { label: "Carteira", icon: WalletIcon, path: "/carteira" },
       { label: "Comercial", icon: Smartphone, path: "/comercial" },
+      { label: "Garantias", icon: ShieldCheck, path: "/garantias" },
       { label: "Lucros", icon: TrendingUp, path: "/lucros" },
       { label: "Gastos", icon: DollarSign, path: "/gastos" },
     ],
