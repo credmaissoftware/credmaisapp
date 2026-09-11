@@ -123,15 +123,16 @@ export function calculateLoan(input: CalculateLoanInput): CalculateLoanResult | 
 
   // ── percentage ──
   if (loanMode === "percentage") {
-    if (frequency === "monthly" && periods <= 0) {
+    // Contrato renov?vel: cada ciclo cobra somente os juros; o capital
+    // continua aberto at? o operador escolher quitar capital + juros.
+    if (periods <= 0) {
       const juros = capital * (rate / 100);
-      const total = capital + juros;
       return {
-        installmentAmount: total,
-        totalAmount: total,
+        installmentAmount: juros,
+        totalAmount: capital + juros,
         totalInterest: juros,
         numInstallments: 1,
-        schedule: [total],
+        schedule: [juros],
         perPeriodLabel: label,
       };
     }
