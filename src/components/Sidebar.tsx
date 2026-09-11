@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import defaultLogo from "@/assets/credmais-cplus-logo.jpg";
+import defaultLogo from "@/assets/credmais-mark.svg";
 import type { LucideIcon } from "lucide-react";
 import {
   LayoutDashboard, BarChart3, Users, Receipt, Wallet,
@@ -197,13 +197,13 @@ const Sidebar = ({ collapsed = false, onToggleCollapse }: SidebarProps) => {
           group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium
           transition-all duration-200 ease-out will-change-transform
           ${active
-            ? "text-white bg-gradient-to-r from-[#075985] via-[#38bdf8] to-[#075985] shadow-[0_8px_20px_rgba(56,189,248,.22)]"
+            ? "text-[#201a10] bg-gradient-to-r from-[#e3a33e] via-[#ffdc91] to-[#e3a33e] shadow-[0_8px_20px_rgba(245,189,89,.16)]"
             : "text-slate-300/75 hover:text-white hover:bg-white/[.07]"
           }
           ${collapsed ? "justify-center px-2" : ""}
         `}
       >
-        <div className={`relative shrink-0 transition-colors duration-200 ${active ? "text-white" : "text-slate-400 group-hover:text-white"}`}>
+        <div className={`relative shrink-0 transition-colors duration-200 ${active ? "text-[#201a10]" : "text-slate-400 group-hover:text-white"}`}>
           <Icon size={19} strokeWidth={active ? 2.4 : 1.9} />
           {item.highlight && !active && !collapsed && (
             <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_6px_hsl(45_95%_55%/0.8)]" />
@@ -349,7 +349,7 @@ const Sidebar = ({ collapsed = false, onToggleCollapse }: SidebarProps) => {
           </button>
           <button
             onClick={() => navigate("/clientes/novo")}
-            className="w-full flex items-center justify-center gap-1.5 h-9 rounded-lg bg-gradient-to-r from-[#075985] via-[#38bdf8] to-[#075985] text-white text-[12px] font-bold hover:brightness-110 transition-colors shadow-md shadow-sky-950/30"
+            className="w-full flex items-center justify-center gap-1.5 h-9 rounded-lg bg-gradient-to-r from-[#e3a33e] via-[#ffdc91] to-[#e3a33e] text-[#201a10] text-[12px] font-bold hover:brightness-110 transition-colors shadow-md shadow-amber-950/30"
           >
             <Plus size={13} /> Novo cliente
           </button>

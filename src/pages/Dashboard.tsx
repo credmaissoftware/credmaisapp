@@ -1,3 +1,4 @@
+import { CredinhoBannerArt, CredinhoLoader } from "@/components/brand/Credinho";
 import { lazy, Suspense, useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -101,10 +102,7 @@ const Dashboard = () => {
   if (isLoading || !metrics) {
     return (
       <div role="status" aria-label="Carregando painel" className="space-y-6 max-w-[1400px] mx-auto animate-fade-in">
-        <div className="relative h-32 overflow-hidden skeleton-shimmer rounded-3xl">
-          <img src="/credinho-mascot-card.png" alt="" aria-hidden="true" className="absolute -right-3 -top-28 h-64 w-48 object-contain opacity-55" />
-          <div className="absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-background/70 to-transparent" />
-        </div>
+        <CredinhoLoader label="Carregando painel" />
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {[1, 2, 3, 4].map((i) => <div key={i} className="h-24 skeleton-shimmer" />)}
         </div>
@@ -149,13 +147,13 @@ const Dashboard = () => {
   return (
     <div className="relative space-y-5 md:space-y-6 pb-8 max-w-[1400px] mx-auto animate-fade-in">
       {/* ─── HERO — saudação + ações principais ─── */}
-      <section className="relative isolate overflow-hidden rounded-2xl border border-sky-200/[.16] bg-[#0b0c0f] bg-cover bg-center p-5 shadow-[0_22px_60px_-32px_rgba(56,189,248,.28)] md:p-7" style={{ backgroundImage: "linear-gradient(90deg,rgba(8,9,12,.98) 0%,rgba(8,9,12,.88) 48%,rgba(8,9,12,.38)), url('/credmais-hero-cinematic-v2.webp')" }}>
-        <img src="/credinho-mascot-card.png" alt="" aria-hidden="true" className="pointer-events-none absolute -right-10 -top-20 hidden h-[330px] w-[230px] object-contain opacity-70 drop-shadow-[0_18px_30px_rgba(56,189,248,.2)] md:block lg:h-[390px] lg:w-[270px]" />
+      <section className="credinho-banner credinho-dashboard-banner p-5 md:p-7">
+        <CredinhoBannerArt priority />
         <div className="pointer-events-none absolute -right-16 -top-24 -z-10 h-72 w-72 rounded-full border-[24px] border-white/[.06]" />
         <div className="pointer-events-none absolute right-20 top-10 -z-10 h-2 w-2 rounded-full bg-orange-300 shadow-[0_0_18px_6px_rgba(251,146,60,.65)]" />
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+        <div className="credinho-dashboard-copy relative flex flex-col gap-5">
           <div className="space-y-2 min-w-0">
-            <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-sky-100/65">
+            <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-amber-100/65">
               <span className="inline-flex items-center gap-1.5">
                 <span className="status-dot status-dot-success" />
                 Ao vivo
@@ -164,10 +162,10 @@ const Dashboard = () => {
               <span>{timeStr}</span>
             </div>
             <h1 className="text-3xl font-bold leading-tight tracking-tight text-white sm:text-4xl">
-              <span className="font-normal text-sky-100/80">{greeting},</span>{" "}
+              <span className="font-normal text-amber-100/80">{greeting},</span>{" "}
               <span>{firstName}</span>
             </h1>
-            <p className="text-sm capitalize text-sky-100/65">{dateStr}</p>
+            <p className="text-sm capitalize text-amber-100/65">{dateStr}</p>
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5">
@@ -197,7 +195,7 @@ const Dashboard = () => {
             </button>
             <button
               onClick={() => navigate("/clientes/novo")}
-              className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#075985] via-[#38bdf8] to-[#075985] px-4 py-2 text-xs font-bold text-white shadow-lg shadow-sky-950/20 transition-colors hover:brightness-110"
+              className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#e3a33e] via-[#ffdc91] to-[#e3a33e] px-4 py-2 text-xs font-bold text-[#201a10] shadow-lg shadow-amber-950/20 transition-colors hover:brightness-110"
             >
               <Plus size={14} strokeWidth={2.5} />
               Novo
@@ -206,7 +204,7 @@ const Dashboard = () => {
         </div>
 
         {/* Quick actions inline */}
-        <div className="mt-5 grid grid-cols-2 gap-2.5 border-t border-white/[.06] pt-5 md:grid-cols-4 md:gap-3">
+        <div className="relative mt-5 grid grid-cols-2 gap-2.5 border-t border-white/[.06] pt-5 md:grid-cols-4 md:gap-3">
           {quickActions.map((a, i) => (
             <button
               key={a.label}

@@ -2,8 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { hasPortalSession } from "@/lib/portalSession";
 import { z } from "zod";
-import ConstellationBackground from "@/components/ConstellationBackground";
-import defaultLogo from "@/assets/credmais-cplus-logo.jpg";
+import defaultLogo from "@/assets/credmais-mark.svg";
 import { supabase } from "@/integrations/supabase/client";
 import { setRememberMe, getRememberMe } from "@/integrations/supabase/remember";
 import { useToast } from "@/hooks/use-toast";
@@ -271,14 +270,13 @@ const Login = () => {
 
   return (
     <div
-      className="relative min-h-dvh flex flex-col overflow-x-hidden font-body bg-[#020719] bg-cover bg-center bg-no-repeat px-5 py-6 sm:px-8 lg:px-12"
+      className="credinho-auth relative min-h-dvh flex flex-col overflow-x-hidden font-body bg-[#0c0b09] bg-cover bg-center bg-no-repeat px-5 py-6 sm:px-8 lg:px-12"
       style={{
         backgroundImage:
-          "linear-gradient(90deg,rgba(2,7,25,.98),rgba(2,7,25,.78) 45%,rgba(2,7,25,.42)), url('/credmais-hero-cinematic-v2.webp')",
+          "url('/mascots/credinho-v2/login-background.png')",
       }}
     >
-      <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_50%_18%,rgba(22,139,255,.22),transparent_38%),linear-gradient(180deg,rgba(2,7,25,.08),rgba(2,7,25,.82))] backdrop-blur-[1px]" />
-      <ConstellationBackground />
+      <div className="credinho-auth-shade absolute inset-0 z-0" />
 
       <button
         onClick={() => navigate("/")}
@@ -292,44 +290,18 @@ const Login = () => {
         <Globe size={14} /> Português (BR) <span className="ml-2 text-white/45">⌄</span>
       </div>
 
-      <div className="absolute left-[5%] top-1/2 z-10 hidden max-w-[390px] -translate-y-1/2 lg:block">
-        <img src="/credinho-mascot-card.png" alt="" aria-hidden="true" className="pointer-events-none absolute -bottom-36 -right-44 h-72 w-48 object-contain opacity-35 drop-shadow-[0_18px_30px_rgba(56,189,248,.2)] animate-mascot-float" />
-        <div className="mb-5 h-0.5 w-10 bg-sky-400" />
-        <p className="mb-6 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-300/70">Gest&atilde;o de empr&eacute;stimos</p>
-        <h2 className="font-display text-4xl font-extrabold leading-[1.08] tracking-tight text-white xl:text-5xl">Cr&eacute;dito hoje,<br />mais <span className="text-sky-400">oportunidades</span><br />amanh&atilde;.</h2>
-        <p className="mt-5 max-w-[320px] text-base leading-relaxed text-slate-300/75">Solu&ccedil;&otilde;es completas, seguras e inteligentes para voc&ecirc; e o seu neg&oacute;cio.</p>
-        <div className="mt-8 space-y-4">
-          {[[Users, "Gestão completa", "Controle de clientes e empréstimos"], [BarChart3, "Relatórios inteligentes", "Acompanhe tudo em tempo real"], [ShieldCheck, "Mais segurança", "Seus dados sempre protegidos"], [MonitorSmartphone, "Acesso em qualquer lugar", "No desktop, tablet ou celular"]].map(([Icon, title, text]) => { const ItemIcon = Icon as typeof Users; return <div key={title as string} className="flex items-center gap-3"><span className="flex h-11 w-11 items-center justify-center rounded-xl border border-sky-300/30 bg-sky-500/15 text-sky-300"><ItemIcon size={20} /></span><span><strong className="block text-sm text-white">{title as string}</strong><small className="text-[11px] text-slate-300/65">{text as string}</small></span></div>; })}
-        </div>
-      </div>
-
-      {/* Logo & Título */}
-      <div className="relative z-10 flex flex-col items-center mb-6 md:mb-8 animate-fade-in lg:hidden">
-        <div className="relative w-[78px] h-[78px] md:w-[96px] md:h-[96px] flex items-center justify-center">
-          <div className="absolute inset-2 rounded-full gold-glow" />
-          <div className="absolute inset-0 rounded-full pointer-events-none">
-            <span className="absolute top-0 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-[hsl(35,100%,54%)] shadow-[0_0_12px_hsl(35,100%,54%)]" />
-          </div>
-          <img
-            src={logoSrc}
-            alt={brandTitle}
-            width={72}
-            height={72}
-            className="relative h-[64px] w-[64px] rounded-2xl object-cover ring-1 ring-primary/40 shadow-[0_0_34px_hsl(var(--primary)/.28)] md:h-[76px] md:w-[76px]"
-          />
-        </div>
-        <h1 className="font-display max-w-[92vw] text-xl md:text-2xl font-semibold tracking-tight mt-3 text-gradient-gold text-center">
-          {brandTitle} — Gestão de Empréstimos
-        </h1>
-        <p className="text-white/40 text-[10px] md:text-xs mt-1.5 tracking-wider text-center">{brandSubtitle}</p>
-      </div>
-
+      <aside className="credinho-auth-copy">
+        <span className="credinho-kicker">SEU PARCEIRO EM CADA CONQUISTA</span>
+        <h2 className="mt-4 font-display font-semibold text-white">Seu próximo passo<br />começa <span className="text-[#f5bd59]">aqui.</span></h2>
+        <p className="mt-5 max-w-sm text-sm leading-7 text-white/55">Organize sua carteira, acompanhe seus resultados e conquiste uma rotina mais tranquila.</p>
+        <div className="mt-6 flex gap-6 text-xs text-[#f5bd59]"><span className="flex items-center gap-2"><ShieldCheck size={16} /> Confiança</span><span className="flex items-center gap-2"><BarChart3 size={16} /> Progresso</span></div>
+      </aside>
       {/* Card */}
       <div className="relative z-10 w-full max-w-[500px] mx-auto animate-scale-in">
-        <div className="rounded-[26px] overflow-hidden border border-sky-200/20 bg-slate-950/55 shadow-[0_0_0_1px_rgba(56,189,248,.08),0_30px_90px_rgba(0,0,0,.55),0_0_35px_rgba(14,165,233,.22)] backdrop-blur-2xl">
+        <div className="rounded-[26px] overflow-hidden border border-amber-200/20 bg-[#101010]/90 shadow-[0_0_0_1px_rgba(245,189,89,.08),0_30px_90px_rgba(0,0,0,.55),0_0_35px_rgba(245,189,89,.22)] backdrop-blur-2xl">
           <div className="flex flex-col items-center px-6 pt-7 sm:pt-8">
-            <img src={logoSrc} alt={brandTitle} className="h-16 w-16 rounded-2xl object-cover ring-1 ring-sky-400/60 shadow-[0_0_28px_rgba(14,165,233,.35)]" />
-            <p className="mt-3 text-xl font-bold tracking-tight text-white">CREDMAIS <span className="text-sky-400">APP</span></p>
+            <img src={logoSrc} alt={brandTitle} className="h-16 w-16 rounded-2xl object-cover ring-1 ring-amber-400/60 shadow-[0_0_28px_rgba(245,189,89,.35)]" />
+            <p className="mt-3 text-xl font-bold tracking-tight text-white">CREDMAIS <span className="text-amber-400">APP</span></p>
             <p className="mt-1 text-[9px] tracking-[0.18em] text-white/40">{brandSubtitle}</p>
           </div>
           {!isRegister ? (
@@ -337,7 +309,7 @@ const Login = () => {
               {/* Form de Login */}
               <div className="flex-1 p-6 sm:p-8 md:p-10 bg-white/[0.025]">
                 <div className="mb-7 grid grid-cols-2 border-b border-white/15">
-                  <button type="button" onClick={() => setIsRegister(false)} className="relative pb-3 text-sm font-semibold text-white after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-sky-400">Entrar</button>
+                  <button type="button" onClick={() => setIsRegister(false)} className="relative pb-3 text-sm font-semibold text-white after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-amber-400">Entrar</button>
                   <button type="button" onClick={() => platform.allow_new_registrations && setIsRegister(true)} className="pb-3 text-sm font-semibold text-white/45 transition hover:text-white/80">Criar conta</button>
                 </div>
                 <h2 className="font-display text-xl font-semibold text-white mb-1">Bem-vindo</h2>

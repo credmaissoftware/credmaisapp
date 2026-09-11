@@ -1,3 +1,4 @@
+import { Credinho } from "@/components/brand/Credinho";
 import { useEffect, useMemo, useState } from "react";
 import { formatBR } from "@/lib/dateUtils";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,7 +12,7 @@ import { computeLateFee } from "@/lib/lateFee";
 import { portalInstallmentAmount } from "@/lib/portalAmounts";
 import { generatePortalStatementPdf } from "@/utils/portalPdf";
 import { isPortalLoginBlocked, recordPortalLoginAttempt, performFullPortalLogout } from "@/lib/portalSession";
-import defaultLogo from "@/assets/credmais-cplus-logo.jpg";
+import defaultLogo from "@/assets/credmais-mark.svg";
 import { isValidCPF, onlyDigits } from "@/lib/cpfCnpj";
 
 type PortalInstallment = {
@@ -243,7 +244,7 @@ const PortalCliente = () => {
   // Apply dynamic primary color from branding
   useEffect(() => {
     const color = portalData?.branding?.portal_primary_color;
-    document.documentElement.style.setProperty("--portal-primary", color || "#006FEF");
+    document.documentElement.style.setProperty("--portal-primary", color || "#F5BD59");
     return () => { document.documentElement.style.removeProperty("--portal-primary"); };
   }, [portalData?.branding?.portal_primary_color]);
 
@@ -454,7 +455,7 @@ const PortalCliente = () => {
         <>
           <div
             aria-hidden
-            className="pointer-events-none fixed inset-0 z-0 bg-center bg-cover bg-no-repeat opacity-55 md:opacity-70"
+            className="pointer-events-none fixed inset-0 z-0 bg-center bg-cover bg-no-repeat opacity-[.035] md:opacity-[.05]"
             style={{ backgroundImage: `url(${logoUrl})` }}
           />
           <div
@@ -505,6 +506,7 @@ const PortalCliente = () => {
                       <Shield size={38} className="text-white" strokeWidth={2.2} />
                     </div>
                   )}
+                  <Credinho pose="welcome" className="w-[60px] mt-3" />
                   <span className="portal-chip mt-5">
                     <Sparkles size={11} /> Área exclusiva do cliente
                   </span>

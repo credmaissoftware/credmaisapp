@@ -1,3 +1,4 @@
+import { Credinho } from "@/components/brand/Credinho";
 import { useEffect, useMemo, useRef, useState, lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -277,7 +278,7 @@ const Chat = () => {
       setMessages([]);
       setReactions([]);
       setScopeError(error);
-      const friendly = friendlyError(error, "NÃ£o foi possÃ­vel carregar esta conversa.");
+      const friendly = friendlyError(error, "Não foi possível carregar esta conversa.");
       toast.error(friendly.title, { description: friendly.description });
     });
 
@@ -945,13 +946,14 @@ const Chat = () => {
                 <div className="mx-auto max-w-lg py-8">
                   <ErrorState
                     error={scopeError}
-                    title="NÃ£o foi possÃ­vel carregar a conversa"
-                    description="Confira sua conexÃ£o e tente novamente."
+                    title="Não foi possível carregar a conversa"
+                    description="Confira sua conexão e tente novamente."
                     onRetry={() => setScopeReloadKey((key) => key + 1)}
                   />
                 </div>
               ) : visibleMessages.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20 text-center">
+                  <Credinho pose="thinking" className="credinho-chat-empty" />
                   <p className="text-sm text-muted-foreground">{inThreadSearch ? "Nenhum resultado." : "Nenhuma mensagem ainda. Diga olá! 👋"}</p>
                 </div>
               ) : (

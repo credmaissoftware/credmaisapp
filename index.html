@@ -4,41 +4,47 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="google" content="notranslate" />
-    <title>CredMais App — Empreste com controle e receba em dia</title>
+    <title>CredMais App — Mais controle. Mais conquistas.</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Manrope:wght@500;600;700;800&amp;family=Instrument+Serif:ital@0;1&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" />
-    <link rel="preload" href="/credmais-cplus-logo.jpg" as="image" type="image/jpeg" fetchpriority="high" />
-    <meta name="description" content="Controle empréstimos, parcelas e cobranças em um só lugar. Cobrança automática no WhatsApp, portal do cliente e relatórios de lucro: receba em dia e reduza o calote.">
+    <link rel="preload" href="/mascots/credinho-v2/loading.png" as="image" type="image/png" fetchpriority="high" />
+    <meta name="description" content="Organize clientes, contratos e cobranças com o CredMais e o Credinho. Mais controle para sua rotina e suas próximas conquistas.">
     <meta name="author" content="CredMais App" />
     <link rel="canonical" href="https://credmaisapp.com.br/" />
 
     <!-- PWA installable -->
     <link rel="manifest" href="/manifest.json" />
-    <meta name="theme-color" content="#006FEF" />
+    <meta name="theme-color" content="#101010" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="CredMais" />
     <meta name="application-name" content="CredMais" />
     <link rel="icon" href="/favicon.png" type="image/png" sizes="64x64" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" sizes="any" />
+    <link rel="shortcut icon" href="/favicon.ico" />
     <link rel="icon" href="/pwa-192.png" type="image/png" sizes="192x192" />
     <!-- iOS usa exclusivamente o apple-touch-icon (180x180) como ícone da tela inicial -->
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
 
     <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="CredMais App" />
+    <meta property="og:locale" content="pt_BR" />
+    <meta property="og:image:type" content="image/png" />
+    <meta name="twitter:image:alt" content="CredMais e Credinho: mais controle, mais conquistas." />
     <meta property="og:url" content="https://credmaisapp.com.br/" />
-    
-    
-    <meta property="og:image" content="https://credmaisapp.com.br/og-credmais.jpg">
-    <meta property="og:image:width" content="1200">
-    <meta property="og:image:height" content="630">
+
+
+    <meta property="og:image" content="https://credmaisapp.com.br/brand/credmais-social-v2.png">
+    <meta property="og:image:width" content="1731">
+    <meta property="og:image:height" content="909">
     <meta property="og:image:alt" content="CredMais App — gestão de empréstimos e cobranças">
 
     <meta name="twitter:card" content="summary_large_image" />
-    
-    
-    <meta name="twitter:image" content="https://credmaisapp.com.br/og-credmais.jpg">
+
+
+    <meta name="twitter:image" content="https://credmaisapp.com.br/brand/credmais-social-v2.png">
 
     <script type="application/ld+json">
       {
@@ -46,7 +52,7 @@
         "@type": "Organization",
         "name": "CredMais App",
         "url": "https://credmaisapp.com.br/",
-        "logo": "https://credmaisapp.com.br/favicon.png",
+        "logo": "https://credmaisapp.com.br/pwa-512.png",
         "description": "Sistema completo para quem empresta dinheiro: contratos, parcelas, cobrança automática no WhatsApp e controle de lucro em tempo real."
       }
     </script>
@@ -58,22 +64,20 @@
         "url": "https://credmaisapp.com.br/"
       }
     </script>
-    <meta property="og:title" content="CredMais App — Empreste com controle e receba em dia">
-  <meta name="twitter:title" content="CredMais App — Empreste com controle e receba em dia">
-  <meta property="og:description" content="Controle empréstimos, parcelas e cobranças em um só lugar. Cobrança automática no WhatsApp, portal do cliente e relatórios de lucro: receba em dia e reduza o calote.">
-  <meta name="twitter:description" content="Controle empréstimos, parcelas e cobranças em um só lugar. Cobrança automática no WhatsApp, portal do cliente e relatórios de lucro: receba em dia e reduza o calote.">
+    <meta property="og:title" content="CredMais App — Mais controle. Mais conquistas.">
+  <meta name="twitter:title" content="CredMais App — Mais controle. Mais conquistas.">
+  <meta property="og:description" content="Organize clientes, contratos e cobranças com o CredMais e o Credinho. Mais controle para sua rotina e suas próximas conquistas.">
+  <meta name="twitter:description" content="Organize clientes, contratos e cobranças com o CredMais e o Credinho. Mais controle para sua rotina e suas próximas conquistas.">
 </head>
 
   <body>
     <div id="root"></div>
-    <div id="app-splash" aria-hidden="true" style="position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(ellipse at top,#0a2f80 0%,#020719 62%);transition:opacity .35s ease;font-family:system-ui,-apple-system,sans-serif;color:#f5f7ff;">
-      <div style="position:relative;width:120px;height:120px;display:flex;align-items:center;justify-content:center;margin-bottom:1.1rem;">
-        <div style="position:absolute;inset:-18px;border-radius:50%;background:radial-gradient(circle,rgba(8,119,255,.38),transparent 70%);filter:blur(6px);animation:sj-glow 2.4s ease-in-out infinite;"></div>
-        <img src="/credmais-cplus-logo.jpg" alt="CredMais App" width="120" height="120" style="position:relative;width:120px;height:120px;border-radius:24px;object-fit:cover;filter:drop-shadow(0 18px 40px rgba(8,119,255,.35));animation:sj-pulse 2.4s ease-in-out infinite;" />
-      </div>
-      <div style="font-size:1.05rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;background:linear-gradient(90deg,#64b5ff,#0877ff);-webkit-background-clip:text;background-clip:text;color:transparent;">CredMais App</div>
-      <div style="margin-top:1.25rem;width:28px;height:28px;border:2.5px solid rgba(8,119,255,.18);border-top-color:#0877ff;border-radius:50%;animation:sj-spin .9s linear infinite;"></div>
-      <style>@keyframes sj-spin{to{transform:rotate(360deg)}}@keyframes sj-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}@keyframes sj-glow{0%,100%{opacity:.55}50%{opacity:1}}</style>
+    <div id="app-splash" role="status" aria-label="Carregando CredMais" style="position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#101010;color:#faf7f0;font-family:system-ui,sans-serif;transition:opacity .35s ease;">
+      <div aria-hidden="true" style="position:relative;width:176px;height:176px;overflow:hidden;margin-bottom:20px;mask-image:linear-gradient(transparent,#000 8%,#000 88%,transparent)"><img src="/mascots/credinho-v2/loading.png" alt="" fetchpriority="high" width="1254" height="1254" style="width:100%;height:100%;object-fit:contain;border-radius:24px" /></div>
+      <strong style="color:#f5bd59;letter-spacing:.2em;font-size:13px">CREDMAIS</strong>
+      <p style="font-size:14px;margin:16px 20px;text-align:center">Preparando seu próximo passo.</p>
+      <div aria-hidden="true" style="height:3px;width:150px;background:#f5bd5926;overflow:hidden;border-radius:4px"><div style="height:100%;width:45%;background:#f5bd59;animation:sj-progress 1.7s ease-in-out infinite"></div></div>
+      <style>@keyframes sj-progress{from{transform:translateX(-100%)}to{transform:translateX(325%)}}@media(prefers-reduced-motion:reduce){#app-splash,#app-splash *{animation:none!important;transition:none!important}}</style>
     </div>
     <script>
       (function () {

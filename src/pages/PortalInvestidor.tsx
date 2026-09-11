@@ -1,3 +1,4 @@
+import { Credinho, CredinhoLoader } from "@/components/brand/Credinho";
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,7 +8,7 @@ import {
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { generateInvestorStatementPdf } from "@/utils/investorPdf";
-import defaultLogo from "@/assets/credmais-cplus-logo.jpg";
+import defaultLogo from "@/assets/credmais-mark.svg";
 
 const brl = (n: number) => (n || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 const fmtDate = (d?: string | null) => (d ? new Date(d + "T00:00:00").toLocaleDateString("pt-BR") : "-");
@@ -63,20 +64,13 @@ export default function PortalInvestidor() {
     };
   }, [data]);
 
-  if (loading) {
-    return (
-      <div className="min-h-dvh bg-[#020719] bg-cover bg-center text-white grid place-items-center" style={{ backgroundImage: "linear-gradient(rgba(2,7,25,.62),rgba(2,7,25,.94)),url('/credmais-flow-sculpture-v2.webp')" }}>
-        <div className="flex items-center gap-3 text-white/70">
-          <Clock className="h-5 w-5 animate-spin" /> Carregando portal…
-        </div>
-      </div>
-    );
-  }
+  if (loading) return <CredinhoLoader fullScreen label="Carregando portal" />;
 
   if (!data) {
     return (
-      <div className="min-h-dvh bg-[#020719] bg-cover bg-center text-white grid place-items-center p-6" style={{ backgroundImage: "linear-gradient(rgba(2,7,25,.62),rgba(2,7,25,.94)),url('/credmais-flow-sculpture-v2.webp')" }}>
+      <div className="min-h-dvh bg-[#101010] bg-cover bg-center text-white grid place-items-center p-6" style={{ backgroundImage: "radial-gradient(at 50% 25%,#e4a33d14,transparent 60%)" }}>
         <div className="max-w-md rounded-2xl border border-white/10 bg-white/5 p-8 text-center backdrop-blur">
+          <Credinho pose="thinking" className="mx-auto w-[110px]" />
           <Shield className="mx-auto h-10 w-10 text-red-400" />
           {loadError ? (
             <>
@@ -103,8 +97,8 @@ export default function PortalInvestidor() {
 
   return (
     <div
-      className="min-h-dvh bg-[#020719] bg-cover bg-center bg-fixed text-white"
-      style={{ backgroundImage: `linear-gradient(135deg,rgba(2,7,25,.95),rgba(7,20,61,.82),rgba(2,7,25,.96)),url(${logo})` }}
+      className="min-h-dvh bg-[#101010] bg-cover bg-center bg-fixed text-white"
+      style={{ backgroundImage: `linear-gradient(135deg,rgba(16,16,16,.95),rgba(35,29,19,.82),rgba(16,16,16,.96)),url(${logo})` }}
     >
       <div className="mx-auto max-w-5xl px-4 py-6 sm:py-10">
         {/* Header */}

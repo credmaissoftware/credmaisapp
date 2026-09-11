@@ -1,7 +1,8 @@
+import { Credinho } from "@/components/brand/Credinho";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowUpRight, ShieldCheck, Zap, MessageSquareText } from "lucide-react";
-import defaultLogo from "@/assets/credmais-cplus-logo.jpg";
+import defaultLogo from "@/assets/credmais-mark.svg";
 
 const promises = [
   "Você sabe quem deve, quanto deve e desde quando — sem abrir planilha.",
@@ -80,13 +81,7 @@ const LandingHero = () => {
           {/* Retrato do mascote */}
           <div className="lg:col-span-5" data-hero-panel>
             <div className="relative rounded-[2rem] overflow-hidden border border-border">
-              <img
-                src="/credinho-mascot-card.png"
-                alt="Mascote Credinho apresentando a plataforma"
-                width={1024}
-                height={1536}
-                className="mx-auto h-[300px] sm:h-[400px] lg:h-[460px] w-auto object-contain drop-shadow-[0_24px_38px_rgba(56,189,248,.22)]"
-              />
+              <Credinho priority className="mx-auto w-[180px]" />
               <div className="absolute inset-0 bg-gradient-to-t from-background via-background/15 to-transparent pointer-events-none" />
               <img
                 src={defaultLogo}

@@ -1,3 +1,4 @@
+import { CredinhoAvatar } from "@/components/brand/Credinho";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import {
@@ -186,7 +187,7 @@ const Overview = () => {
               label="Identidade da empresa"
               ok={!!settings?.company_name}
               warn={!settings?.company_name}
-              detail={settings?.company_name ? `Bot se identifica como “${settings.company_name}”.` : "Defina o nome da empresa em Configurações para o bot se apresentar corretamente."}
+              detail={settings?.company_name ? `Bot se identifica como "${settings.company_name}".` : "Defina o nome da empresa em Configurações para o bot se apresentar corretamente."}
             />
             <p className="pt-3 text-sm text-muted-foreground">A execução das cobranças deve ser conferida no histórico de cobranças. Esta tela não verifica o agendamento em tempo real.</p>
           </div>
@@ -245,7 +246,7 @@ const CentralBot = () => {
         <div className="page-hero-content flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-3">
             <div className="page-hero-icon">
-              <Bot size={22} />
+              <CredinhoAvatar size={44} />
             </div>
             <div>
               <h1 className="text-2xl font-bold text-shimmer">Atendimento</h1>

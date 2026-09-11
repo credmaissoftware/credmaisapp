@@ -43,8 +43,8 @@ const defaults: WhiteLabelConfig = {
   companyName: "CREDMAIS APP",
   companyLogo: null,
   faviconUrl: null,
-  primaryColor: "#006FEF",
-  accentColor: "#FF9D16",
+  primaryColor: "#F5BD59",
+  accentColor: "#E3A33E",
   themeMode: "dark",
   sidebarStyle: "default",
   loginTitle: "CREDMAIS APP",
@@ -165,6 +165,11 @@ function applyConfig(config: WhiteLabelConfig) {
       document.head.appendChild(link);
     }
     link.href = config.faviconUrl;
+    document.querySelectorAll<HTMLLinkElement>("link[rel~='icon']").forEach(icon => {
+      icon.href = config.faviconUrl!;
+      icon.removeAttribute("type");
+      icon.removeAttribute("sizes");
+    });
     let apple = document.querySelector<HTMLLinkElement>("link[rel='apple-touch-icon']");
     if (!apple) {
       apple = document.createElement("link");

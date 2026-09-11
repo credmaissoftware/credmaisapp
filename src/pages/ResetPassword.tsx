@@ -1,9 +1,10 @@
+import { Credinho } from "@/components/brand/Credinho";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import ConstellationBackground from "@/components/ConstellationBackground";
-import defaultLogo from "@/assets/credmais-cplus-logo.jpg";
+import defaultLogo from "@/assets/credmais-mark.svg";
 import { useWhiteLabel } from "@/contexts/WhiteLabelContext";
 import { ArrowLeft, ArrowRight, Eye, EyeOff, Lock, Mail, CheckCircle2, Loader2, Send, Check, Clock, AlertTriangle } from "lucide-react";
 
@@ -321,10 +322,10 @@ const ResetPassword = () => {
 
   return (
     <div
-      className="relative min-h-dvh flex flex-col items-center justify-center overflow-hidden font-body bg-[#020719] bg-cover bg-center bg-no-repeat px-4"
-      style={{ backgroundImage: "linear-gradient(90deg,rgba(2,7,25,.96),rgba(2,7,25,.58)),url('/credmais-hero-cinematic-v2.webp')" }}
+      className="relative min-h-dvh flex flex-col items-center justify-center overflow-hidden font-body bg-[#101010] bg-cover bg-center bg-no-repeat px-4"
+      style={{ backgroundImage: "radial-gradient(at 50% 25%,#e4a33d14,transparent 60%),linear-gradient(#101010,#090807)" }}
     >
-      <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_50%_18%,rgba(22,139,255,.20),transparent_38%),linear-gradient(180deg,rgba(2,7,25,.08),rgba(2,7,25,.82))] backdrop-blur-[1px]" />
+      <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_50%_18%,rgba(245,189,89,.20),transparent_38%),linear-gradient(180deg,rgba(2,7,25,.08),rgba(2,7,25,.82))] backdrop-blur-[1px]" />
       <ConstellationBackground />
 
       <button
@@ -335,7 +336,8 @@ const ResetPassword = () => {
         <span className="text-sm font-medium">Voltar ao login</span>
       </button>
 
-      <div className="relative z-10 flex flex-col items-center mb-8 animate-fade-in">
+      <div className="relative z-10 flex flex-col items-center mb-8 mt-20 animate-fade-in">
+        <Credinho pose="thinking" className="w-[60px]" />
         <img src={logoSrc} alt={brandTitle} width={72} height={72} className="rounded-2xl object-cover ring-2 ring-primary/35 shadow-[0_0_34px_hsl(var(--primary)/.28)]" />
         <h1 className="font-display text-xl tracking-[0.35em] mt-4 text-gradient-gold">{brandTitle} — Redefinir Senha</h1>
       </div>

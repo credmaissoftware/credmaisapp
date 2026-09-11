@@ -1,3 +1,4 @@
+import { CredinhoBanner } from "@/components/brand/Credinho";
 import { useState, useEffect, lazy, Suspense, useCallback } from "react";
 
 import Sidebar from "@/components/Sidebar";
@@ -124,6 +125,7 @@ const DashboardLayout = () => {
               : "px-4 py-4 sm:px-5 sm:py-5 md:px-6 md:py-6 lg:px-8 lg:py-8"
           }`}
         >
+          <CredinhoBanner />
           <Outlet />
         </main>
       </div>

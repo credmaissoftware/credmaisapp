@@ -1,3 +1,4 @@
+import { Credinho } from "@/components/brand/Credinho";
 import { AlertTriangle, RefreshCw, WifiOff } from "lucide-react";
 import { friendlyError } from "@/lib/friendlyError";
 
@@ -24,6 +25,7 @@ export const ErrorState = ({ error, title, description, onRetry, retryLabel = "T
       role="alert"
       className={`relative flex flex-col items-center justify-center overflow-hidden text-center rounded-2xl border border-destructive/20 bg-destructive/5 ${compact ? "py-8 px-4" : "py-14 px-6"}`}
     >
+      {!compact && <Credinho pose="thinking" className="credinho-empty" />}
       <div className={`${compact ? "w-12 h-12" : "w-16 h-16"} rounded-2xl bg-destructive/10 border border-destructive/20 flex items-center justify-center mb-4`}>
         <Icon className={`${compact ? "w-5 h-5" : "w-7 h-7"} text-destructive`} strokeWidth={1.5} />
       </div>

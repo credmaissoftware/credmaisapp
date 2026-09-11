@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useWhiteLabel } from "@/contexts/WhiteLabelContext";
-import defaultLogo from "@/assets/credmais-cplus-logo.jpg";
+import defaultLogo from "@/assets/credmais-mark.svg";
 import { Mail, Phone, MapPin } from "lucide-react";
 
 const LandingFooter = () => {

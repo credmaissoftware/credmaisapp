@@ -1,3 +1,4 @@
+import { Credinho } from "@/components/brand/Credinho";
 import { ReactNode } from "react";
 import { LucideIcon, Inbox } from "lucide-react";
 
@@ -16,6 +17,7 @@ const EmptyState = ({ icon: Icon = Inbox, title, description, action, className 
     role="status"
     className={`relative flex flex-col items-center justify-center overflow-hidden text-center ${compact ? "py-10 px-4" : "py-16 px-6"} ${className}`}
   >
+    {!compact && <Credinho pose="thinking" className="credinho-empty" />}
     <div className={`${compact ? "w-12 h-12" : "w-16 h-16"} rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 flex items-center justify-center mb-4 shadow-inner`}>
       <Icon className={`${compact ? "w-5 h-5" : "w-7 h-7"} text-primary/70`} strokeWidth={1.5} />
     </div>

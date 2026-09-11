@@ -1,7 +1,8 @@
+import { Credinho } from "@/components/brand/Credinho";
 import { TrendingUp, TrendingDown, Info } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 
 export type BentoTone = "primary" | "success" | "danger" | "warning" | "info" | "muted";
 
@@ -79,6 +80,7 @@ export default function BentoKPI({
   size = "md",
   className,
 }: Props) {
+  const reducedMotion = useReducedMotion();
   const t = toneMap[tone];
   const showDelta = typeof delta === "number" && isFinite(delta);
   const up = showDelta && (delta as number) >= 0;
@@ -110,10 +112,11 @@ export default function BentoKPI({
         !clickable && "cursor-default",
         className
       )}
-      whileHover={clickable ? { y: -4, scale: 1.01 } : undefined}
-      whileTap={clickable ? { scale: 0.985 } : undefined}
+      whileHover={clickable && !reducedMotion ? { y: -4, scale: 1.01 } : undefined}
+      whileTap={clickable && !reducedMotion ? { scale: 0.985 } : undefined}
       transition={{ type: "spring", stiffness: 320, damping: 24 }}
     >
+      {size === "lg" && <Credinho pose={tone === "danger" || tone === "warning" ? "thinking" : tone === "success" ? "results" : "organize"} className="absolute right-5 top-2 w-[65px] opacity-40" />}
       {/* faixa gradient */}
       <div
         className={cn(
@@ -158,7 +161,7 @@ export default function BentoKPI({
           )}
         </div>
 
-        <div className="space-y-1">
+        <div className={size === "lg" ? "space-y-1 pr-16" : "space-y-1"}>
           <p
             className={cn("font-semibold tabular-nums leading-none", valueCls, t.text)}
             style={{ letterSpacing: "-0.025em", fontFeatureSettings: '"tnum","lnum"' }}

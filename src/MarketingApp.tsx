@@ -1,3 +1,4 @@
+import { CredinhoLoader } from "@/components/brand/Credinho";
 import { lazy, Suspense, useEffect } from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import ErrorBoundary from "@/components/ErrorBoundary";
@@ -15,12 +16,10 @@ function OpenFullApp() {
     window.location.assign(window.location.href);
   }, []);
 
-  return <div role="status" aria-label="Abrindo aplicação" className="min-h-screen bg-[#020719]" />;
+  return <CredinhoLoader fullScreen label="Abrindo aplicação" />;
 }
 
-const MarketingLoader = () => (
-  <div role="status" aria-label="Carregando página" className="min-h-screen bg-[#020719]" />
-);
+const MarketingLoader = () => <CredinhoLoader fullScreen label="Carregando página" />;
 
 export default function MarketingApp() {
   return (

@@ -1,3 +1,4 @@
+import { CredinhoBannerArt } from "@/components/brand/Credinho";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -5,7 +6,6 @@ import { ArrowLeft, ArrowRight, Check, Loader2, Lock, ShieldCheck, User, CreditC
 import { supabase } from "@/integrations/supabase/client";
 import { useWhiteLabel } from "@/contexts/WhiteLabelContext";
 import { toast } from "sonner";
-import { ParticleOrb } from "@/components/vexon/ParticleOrbLazy";
 import { TextEffect } from "@/components/vexon/ui/text-effect";
 import { PLANS, PLAN_LIST, normalizeTier, type PlanTier } from "@/lib/plans";
 
@@ -179,7 +179,7 @@ export default function Checkout() {
             style: {
               theme: "dark",
               customVariables: {
-                baseColor: "#006FEF",
+                baseColor: "#F5BD59",
                 textPrimaryColor: "#F4F1E8",
                 borderRadiusMedium: "12px",
                 borderRadiusLarge: "16px",
@@ -286,11 +286,11 @@ export default function Checkout() {
   };
 
   const c = {
-    bg: "#020719",
-    ink: "#07112F",
-    inkSoft: "#07143D",
-    gold: "#006FEF",
-    goldSoft: "#64B5FF",
+    bg: "#101010",
+    ink: "#201a10",
+    inkSoft: "#292115",
+    gold: "#F5BD59",
+    goldSoft: "#FFDC91",
     cream: "#F5F7FF",
   };
 
@@ -298,7 +298,7 @@ export default function Checkout() {
   const body: React.CSSProperties = { fontFamily: "'Figtree', system-ui, sans-serif" };
 
   const inputBase =
-    "w-full px-4 py-3 bg-white/[0.04] border rounded-xl outline-none transition-all text-white placeholder:text-white/35 focus:ring-2 focus:ring-[#168BFF]/30";
+    "w-full px-4 py-3 bg-white/[0.04] border rounded-xl outline-none transition-all text-white placeholder:text-white/35 focus:ring-2 focus:ring-[#F5BD59]/30";
 
   const STEPS = [
     { n: 1, label: "Identificação", icon: User },
@@ -308,13 +308,9 @@ export default function Checkout() {
 
   return (
     <div className="relative min-h-dvh w-full flex items-start justify-center py-6 px-4 md:px-8 overflow-hidden" style={{ backgroundColor: c.bg, ...body }}>
-      {/* Reduced opacity particle background to ensure readability */}
-      <div className="pointer-events-none fixed inset-0 z-0 opacity-20">
-        <ParticleOrb className="h-full w-full" start />
-      </div>
       <div
         className="pointer-events-none fixed inset-0 z-0"
-        style={{ background: "radial-gradient(circle at 50% 0%, rgba(0,111,239,0.16), transparent 55%), radial-gradient(circle at 50% 100%, rgba(0,0,0,0.95), transparent 60%)" }}
+        style={{ background: "radial-gradient(circle at 50% 0%, rgba(245,189,89,0.16), transparent 55%), radial-gradient(circle at 50% 100%, rgba(0,0,0,0.95), transparent 60%)" }}
       />
       <motion.div
         initial={{ opacity: 0, y: 24, filter: "blur(12px)" }}
@@ -332,6 +328,15 @@ export default function Checkout() {
           </div>
         </div>
 
+        {step !== 3 && <section className="credinho-banner credinho-context-banner mb-6">
+          <CredinhoBannerArt scene="checkout" priority />
+          <div className="credinho-banner-copy relative z-10 py-7 pl-6 sm:pl-8">
+            <span className="credinho-kicker">SEU PRÓXIMO PASSO COMEÇA AQUI</span>
+            <h2 className="mt-3 text-2xl font-semibold tracking-tight text-white sm:text-3xl">Mais controle para suas conquistas.</h2>
+            <p className="mt-3 max-w-md text-sm leading-6 text-white/70">Você escolheu o plano <strong className="text-[#f5bd59]">{selectedPlan.name}</strong>. Complete seus dados para continuar.</p>
+          </div>
+        </section>}
+
         {/* Stepper */}
         {step !== 3 && (
           <div className="mb-6 rounded-2xl bg-black/40 backdrop-blur-3xl border border-white/10 p-4 md:p-5 shadow-[0_20px_60px_-30px_rgba(0,0,0,0.9)]">
@@ -347,7 +352,7 @@ export default function Checkout() {
                         animate={{ scale: active ? 1.05 : 1 }}
                         className="w-9 h-9 md:w-10 md:h-10 rounded-full flex items-center justify-center text-sm font-bold shadow-sm transition-colors"
                         style={{
-                          backgroundColor: done ? c.gold : active ? "rgba(0,111,239,0.22)" : "rgba(255,255,255,0.06)",
+                          backgroundColor: done ? c.gold : active ? "rgba(245,189,89,0.22)" : "rgba(255,255,255,0.06)",
                           color: done ? "#0A0A0A" : active ? c.gold : "rgba(255,255,255,0.35)",
                           border: active ? `1px solid ${c.gold}` : "1px solid rgba(255,255,255,0.10)",
                         }}
@@ -493,7 +498,7 @@ export default function Checkout() {
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             placeholder="Como no seu documento"
-                            className={`${inputBase} border-white/10 focus:border-[#168BFF]`}
+                            className={`${inputBase} border-white/10 focus:border-[#F5BD59]`}
                           />
                         </div>
 
@@ -505,7 +510,7 @@ export default function Checkout() {
                               value={email}
                               onChange={(e) => setEmail(e.target.value)}
                               placeholder="voce@empresa.com"
-                              className={`${inputBase} border-white/10 focus:border-[#168BFF]`}
+                              className={`${inputBase} border-white/10 focus:border-[#F5BD59]`}
                             />
                           </div>
                           <div>
@@ -516,7 +521,7 @@ export default function Checkout() {
                               value={whatsapp}
                               onChange={(e) => setWhatsapp(maskPhone(e.target.value))}
                               placeholder="(11) 99999-9999"
-                              className={`${inputBase} ${whatsapp && !validPhone ? "border-red-400" : "border-white/10 focus:border-[#168BFF]"}`}
+                              className={`${inputBase} ${whatsapp && !validPhone ? "border-red-400" : "border-white/10 focus:border-[#F5BD59]"}`}
                             />
                           </div>
                         </div>
@@ -545,14 +550,14 @@ export default function Checkout() {
                             value={doc}
                             onChange={(e) => setDoc(docType === "CPF" ? maskCPF(e.target.value) : maskCNPJ(e.target.value))}
                             placeholder={docType === "CPF" ? "000.000.000-00" : "00.000.000/0000-00"}
-                            className={`${inputBase} ${doc && !validDoc ? "border-red-400" : "border-white/10 focus:border-[#168BFF]"}`}
+                            className={`${inputBase} ${doc && !validDoc ? "border-red-400" : "border-white/10 focus:border-[#F5BD59]"}`}
                           />
                           {doc && !validDoc && (
                             <p className="text-[11px] text-red-500 mt-2">{docType} inválido</p>
                           )}
                         </div>
 
-                        <div className="rounded-xl border border-dashed p-4 text-[12px] text-white/60 leading-relaxed flex gap-3 items-start" style={{ borderColor: "rgba(0,111,239,0.40)", backgroundColor: "rgba(255,255,255,0.04)" }}>
+                        <div className="rounded-xl border border-dashed p-4 text-[12px] text-white/60 leading-relaxed flex gap-3 items-start" style={{ borderColor: "rgba(245,189,89,0.40)", backgroundColor: "rgba(255,255,255,0.04)" }}>
                           <Mail size={16} className="mt-0.5 flex-shrink-0" style={{ color: c.inkSoft }} />
                           <span>Após a confirmação você recebe um <strong style={{ color: c.gold }}>link de acesso</strong> em <strong style={{ color: c.gold }}>{email || "seu e-mail"}</strong>.</span>
                         </div>
@@ -562,7 +567,7 @@ export default function Checkout() {
                         <button
                           type="submit"
                           disabled={brickLoading || !canContinue}
-                          className="w-full py-4 rounded-xl font-bold text-[15px] transition-all shadow-[0_8px_20px_-4px_rgba(0,111,239,0.5)] hover:brightness-110 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-2"
+                          className="w-full py-4 rounded-xl font-bold text-[15px] transition-all shadow-[0_8px_20px_-4px_rgba(245,189,89,0.5)] hover:brightness-110 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-2"
                           style={{ ...heading, backgroundColor: c.gold, color: c.cream }}
                         >
                           {brickLoading ? (
@@ -631,7 +636,7 @@ export default function Checkout() {
                       )}
 
                       {boletoUrl && (
-                        <div className="mt-6 p-6 rounded-2xl border text-center" style={{ borderColor: `${c.gold}55`, backgroundColor: "rgba(0,111,239,0.10)" }}>
+                        <div className="mt-6 p-6 rounded-2xl border text-center" style={{ borderColor: `${c.gold}55`, backgroundColor: "rgba(245,189,89,0.10)" }}>
                           <div className="text-sm font-bold mb-3" style={{ color: c.goldSoft }}>Boleto gerado</div>
                           <a
                             href={boletoUrl}
@@ -730,7 +735,7 @@ function SuccessScreen({
           initial={{ scale: 0, rotate: -180 }}
           animate={{ scale: 1, rotate: 0 }}
           transition={{ type: "spring", stiffness: 200, damping: 15, delay: 0.1 }}
-          className="relative z-10 mx-auto w-24 h-24 rounded-full flex items-center justify-center mb-6 shadow-[0_10px_40px_rgba(0,111,239,0.5)]"
+          className="relative z-10 mx-auto w-24 h-24 rounded-full flex items-center justify-center mb-6 shadow-[0_10px_40px_rgba(245,189,89,0.5)]"
           style={{ backgroundColor: c.gold }}
         >
           <motion.div
@@ -785,7 +790,7 @@ function SuccessScreen({
             </div>
           </div>
 
-          <div className="flex items-start gap-4 p-4 rounded-2xl border" style={{ borderColor: `${c.gold}33`, backgroundColor: "rgba(0,111,239,0.10)" }}>
+          <div className="flex items-start gap-4 p-4 rounded-2xl border" style={{ borderColor: `${c.gold}33`, backgroundColor: "rgba(245,189,89,0.10)" }}>
             <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: c.gold }}>
               <ShieldCheck size={18} style={{ color: c.cream }} />
             </div>
@@ -797,7 +802,7 @@ function SuccessScreen({
 
           <button
             onClick={onGoToLogin}
-            className="w-full py-4 rounded-xl font-bold text-[15px] transition-all shadow-[0_8px_20px_-4px_rgba(0,111,239,0.5)] hover:brightness-110 active:scale-[0.99] flex items-center justify-center gap-2 mt-4"
+            className="w-full py-4 rounded-xl font-bold text-[15px] transition-all shadow-[0_8px_20px_-4px_rgba(245,189,89,0.5)] hover:brightness-110 active:scale-[0.99] flex items-center justify-center gap-2 mt-4"
             style={{ ...heading, backgroundColor: c.gold, color: c.cream }}
           >
             Acessar minha conta <ArrowRight size={18} strokeWidth={2.5} />

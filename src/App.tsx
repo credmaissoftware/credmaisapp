@@ -1,3 +1,5 @@
+import { CredinhoLoader } from "@/components/brand/Credinho";
+import { MotionConfig } from "framer-motion";
 import { lazy, Suspense } from "react";
 import { QueryClient } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
@@ -106,25 +108,13 @@ const queryClient = new QueryClient({
   },
 });
 
-const PageLoader = () => (
-  <SuspenseWatchdog>
-    <div role="status" aria-label="Carregando página" className="min-h-[60vh] p-6 space-y-4 animate-fade-in">
-      <div className="h-7 w-48 skeleton-shimmer" />
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="h-24 skeleton-shimmer" style={{ animationDelay: `${i * 70}ms` }} />
-        ))}
-      </div>
-      <div className="h-[320px] skeleton-shimmer" />
-      <span className="sr-only">Carregando…</span>
-    </div>
-  </SuspenseWatchdog>
-);
+const PageLoader = () => (<SuspenseWatchdog><CredinhoLoader label="Carregando página" /></SuspenseWatchdog>);
 
 
 const idbPersister = createIDBPersister();
 
 const App = () => (
+  <MotionConfig reducedMotion="user">
   <PersistQueryClientProvider
     client={queryClient}
     persistOptions={{ persister: idbPersister, maxAge: 1000 * 60 * 60 * 24 * 3, buster: "sj-v1" }}
@@ -179,7 +169,7 @@ const App = () => (
                     <Route path="/investidores" element={<ErrorBoundary><Investidores /></ErrorBoundary>} />
                     <Route path="/investidores/:id" element={<ErrorBoundary><InvestidorDetalhe /></ErrorBoundary>} />
 
-                    
+
                     <Route path="/lucros" element={<ErrorBoundary><Lucros /></ErrorBoundary>} />
                     <Route path="/gastos" element={<ErrorBoundary><Gastos /></ErrorBoundary>} />
                     <Route path="/ferramentas" element={<ErrorBoundary><Ferramentas /></ErrorBoundary>} />
@@ -225,6 +215,7 @@ const App = () => (
     </TooltipProvider>
     </I18nProvider>
   </PersistQueryClientProvider>
+  </MotionConfig>
 );
 
 export default App;

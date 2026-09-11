@@ -1,3 +1,4 @@
+import { Credinho, CredinhoAvatar } from "@/components/brand/Credinho";
 import { computeOutstandingPrincipal, isEmAtraso, isEmAberto } from "@/lib/dashboardMetrics";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -805,7 +806,7 @@ const AgenteIA = () => {
     setSelectedChat(chat);
     setReplyInput("");
     setAiAssist({ suggestions: [] });
-    
+
     const { data: convo } = chat.conversationId ? { data: { id: chat.conversationId } } : await supabase
       .from("whatsapp_conversations")
       .select("id")
@@ -1372,7 +1373,7 @@ const AgenteIA = () => {
         <div className="page-hero-content flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="page-hero-icon">
-              <Bot size={22} />
+              <CredinhoAvatar size={44} />
             </div>
             <div>
               <h1 className="text-2xl font-bold text-shimmer">Agente IA</h1>
@@ -2098,18 +2099,18 @@ const AgenteIA = () => {
           <div className="rounded-2xl border border-border bg-card flex flex-col" style={{ height: "calc(100vh - 400px)", minHeight: "420px" }}>
             <div className="px-4 py-2.5 border-b border-border flex items-center justify-between">
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Sparkles size={12} className="text-primary" />
-                <span>IA conectada · {messages.filter(m => m.role === "user").length} pergunta{messages.filter(m => m.role === "user").length !== 1 ? "s" : ""}</span>
+                <CredinhoAvatar size={28} /><span>Credinho · IA conectada · {messages.filter(m => m.role === "user").length} pergunta{messages.filter(m => m.role === "user").length !== 1 ? "s" : ""}</span>
               </div>
               <button onClick={clearChat} className="flex items-center gap-1.5 px-2 py-1 rounded-md text-xs text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors">
                 <Trash2 size={12} /> Limpar
               </button>
             </div>
             <div className="flex-1 overflow-y-auto p-4 space-y-4 notranslate" translate="no">
+              {messages.length <= 1 && !loading && <div className="flex items-center gap-4 rounded-2xl border border-primary/15 bg-background/40 p-3"><Credinho pose="thinking" className="credinho-chat-intro" /><div><p className="text-sm font-semibold">Vamos encontrar seu próximo passo?</p><p className="mt-1 text-xs text-muted-foreground">Pergunte sobre sua carteira, seus clientes ou os resultados.</p></div></div>}
               {messages.map((msg, i) => (
                 <div key={i} className={`group flex gap-3 ${msg.role === "user" ? "flex-row-reverse" : ""}`}>
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${msg.role === "assistant" ? "bg-primary/10" : "bg-accent"}`}>
-                    {msg.role === "assistant" ? <Bot size={16} className="text-primary" /> : <User size={16} className="text-foreground" />}
+                    {msg.role === "assistant" ? <CredinhoAvatar /> : <User size={16} className="text-foreground" />}
                   </div>
                   <div className={`max-w-[75%] rounded-xl px-4 py-2.5 text-sm relative ${msg.role === "assistant" ? "bg-muted/50 text-foreground" : "bg-primary text-primary-foreground"}`}>
                     <SafeMessageContent content={msg.content} />
@@ -2128,7 +2129,7 @@ const AgenteIA = () => {
               ))}
               {loading && (
                 <div className="flex gap-3">
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center"><Bot size={16} className="text-primary" /></div>
+                  <CredinhoAvatar />
                   <div className="bg-muted/50 rounded-xl px-4 py-3 text-sm text-muted-foreground flex items-center gap-2">
                     <Loader2 size={12} className="animate-spin" /> Analisando seus dados...
                   </div>

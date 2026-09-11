@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
+import { Credinho } from "@/components/brand/Credinho";
 import { ArrowUpRight } from "lucide-react";
-import defaultLogo from "@/assets/credmais-cplus-logo.jpg";
+import defaultLogo from "@/assets/credmais-mark.svg";
 
 const LandingCTA = () => {
   return (
@@ -9,17 +9,7 @@ const LandingCTA = () => {
       <div className="container mx-auto px-5 sm:px-6">
         <div className="relative overflow-hidden rounded-[2.5rem] border border-border obsidian-card px-6 py-16 sm:px-14 sm:py-20 text-center">
           <div className="absolute inset-0 rule-grid opacity-40 pointer-events-none" aria-hidden />
-          <motion.img
-            src={defaultLogo}
-            alt=""
-            aria-hidden
-            width={200}
-            height={200}
-            loading="lazy"
-            className="relative mx-auto w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover ring-1 ring-primary/40"
-            animate={{ y: [0, -8, 0] }}
-            transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-          />
+          <Credinho pose="results" className="mx-auto w-[80px]" />
           <h2 className="relative font-editorial text-[clamp(2rem,5vw,3.6rem)] leading-[1.05] text-foreground mt-7 max-w-3xl mx-auto">
             Assuma o controle da sua carteira ainda hoje.
           </h2>

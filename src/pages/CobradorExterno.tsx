@@ -1,3 +1,4 @@
+import { Credinho } from "@/components/brand/Credinho";
 import { isEmAtraso, isEmAberto } from "@/lib/dashboardMetrics";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,7 +17,7 @@ import { renderMessage } from "@/lib/messageTemplate";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { accumulatedPaymentTotal, portalInstallmentAmount } from "@/lib/portalAmounts";
-import defaultLogo from "@/assets/credmais-cplus-logo.jpg";
+import defaultLogo from "@/assets/credmais-mark.svg";
 
 const TOKEN_KEY = "cobrador-token";
 
@@ -238,8 +239,8 @@ const CobradorExterno = () => {
   if (!collectorData) {
     return (
       <div
-        className="min-h-dvh flex items-center justify-center bg-[#020719] bg-cover bg-center p-4 relative overflow-hidden"
-        style={{ backgroundImage: "linear-gradient(135deg,rgba(2,7,25,.92),rgba(7,20,61,.58),rgba(2,7,25,.96)),url('/credmais-hero-cinematic-v2.webp')" }}
+        className="min-h-dvh flex items-center justify-center bg-[#101010] bg-cover bg-center p-4 relative overflow-hidden"
+        style={{ backgroundImage: "radial-gradient(at 50% 25%,#e4a33d14,transparent 60%)" }}
       >
         <div className="pointer-events-none absolute inset-0 opacity-60">
           <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] rounded-full bg-primary/20 blur-[120px]" />
@@ -251,6 +252,7 @@ const CobradorExterno = () => {
               <img src={defaultLogo} alt="CredMais App" width={80} height={80} className="h-full w-full object-cover" />
               <div className="absolute inset-0 rounded-2xl bg-primary/10 blur-xl -z-10" />
             </div>
+            <Credinho pose="organize" className="mx-auto w-[100px]" />
             <h1 className="text-2xl font-display font-bold text-shimmer tracking-wide">Portal do Cobrador</h1>
             <p className="text-sm text-muted-foreground mt-2">Acesse com seu token de acesso</p>
           </div>

@@ -595,7 +595,7 @@ const ClienteDetalhe = () => {
         const paid = existing.filter((i: any) => i.status === "paid");
         const paidNumbers = new Set(paid.map((i: any) => Number(i.installment_number)));
         if (paid.length > n || [...paidNumbers].some((number) => number < 1 || number > n)) {
-          throw new Error("A nova quantidade nÃ£o pode excluir parcelas que jÃ¡ foram pagas.");
+          throw new Error("A nova quantidade não pode excluir parcelas que já foram pagas.");
         }
 
         const dueDates = generateDueDates(f.start_date, freqValue, n);

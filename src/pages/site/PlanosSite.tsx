@@ -19,9 +19,9 @@ export default function PlanosSite() {
     >
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {PLAN_LIST.map((plan) => (
-          <Card key={plan.tier} className={plan.highlight ? "border-[#1B6EF3]/60 bg-[#1B6EF3]/[0.06]" : ""}>
+          <Card key={plan.tier} className={plan.highlight ? "border-[#A46A19]/60 bg-[#A46A19]/[0.06]" : ""}>
             {plan.highlight && (
-              <div className="mb-4 inline-flex rounded-full bg-[#1B6EF3] px-3 py-1 text-[10px] uppercase tracking-widest text-white">
+              <div className="mb-4 inline-flex rounded-full bg-[#A46A19] px-3 py-1 text-[10px] uppercase tracking-widest text-white">
                 Mais completo
               </div>
             )}
@@ -34,7 +34,7 @@ export default function PlanosSite() {
             <ul className="mt-6 space-y-2">
               {plan.features.map((f) => (
                 <li key={f} className="flex gap-2 text-sm text-white/75">
-                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-[#3B8DFF]" />
+                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-[#F5BD59]" />
                   <span>{f}</span>
                 </li>
               ))}
@@ -49,7 +49,7 @@ export default function PlanosSite() {
               to={`/checkout?plan=${plan.tier}`}
               className={`mt-8 flex items-center justify-center rounded-xl px-6 py-3.5 text-sm font-medium transition-colors ${
                 plan.highlight
-                  ? "bg-[#1B6EF3] text-white hover:bg-[#3B8DFF]"
+                  ? "bg-[#A46A19] text-white hover:bg-[#F5BD59]"
                   : "border border-white/15 text-white hover:bg-white/5"
               }`}
             >

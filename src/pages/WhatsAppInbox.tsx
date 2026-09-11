@@ -1,3 +1,4 @@
+import { Credinho, CredinhoAvatar } from "@/components/brand/Credinho";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -632,9 +633,7 @@ export default function WhatsAppInbox() {
         <Card className="flex flex-col overflow-hidden rounded-2xl border-border/60">
           {!selected ? (
             <div className="flex-1 flex flex-col items-center justify-center text-center px-8 bg-gradient-to-b from-transparent to-muted/10">
-              <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-emerald-500/20 to-primary/10 border border-emerald-500/20 flex items-center justify-center mb-4 shadow-[0_0_40px_rgb(16_185_129/0.15)]">
-                <MessageCircle className="h-9 w-9 text-emerald-500" />
-              </div>
+              <Credinho pose="thinking" className="credinho-chat-empty" />
               <h3 className="text-lg font-bold text-foreground mb-1">Sua caixa de conversas</h3>
               <p className="text-sm text-muted-foreground max-w-sm">Selecione uma conversa à esquerda para responder, acionar o bot ou registrar notas internas.</p>
               <div className="flex items-center gap-2 mt-4 text-[11px] text-muted-foreground">
@@ -796,7 +795,7 @@ export default function WhatsAppInbox() {
                         {isOut && (
                           <div className="flex items-center gap-1 text-[10px] opacity-70 mb-0.5">
                             {m.sender === "bot"
-                              ? (<><Bot className="h-3 w-3" /> Bot IA{isFollowup && " • follow-up"}</>)
+                              ? (<><CredinhoAvatar size={20} /> Bot IA{isFollowup && " • follow-up"}</>)
                               : (<><User className="h-3 w-3" /> Você{isScheduled && " • agendada"}</>)}
                           </div>
                         )}

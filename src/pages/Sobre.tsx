@@ -1,6 +1,6 @@
 import { Shield, Code, Users, Zap, Star, Globe, Sparkles, Rocket, Heart } from "lucide-react";
 import { useWhiteLabel } from "@/contexts/WhiteLabelContext";
-import defaultLogo from "@/assets/credmais-cplus-logo.jpg";
+import defaultLogo from "@/assets/credmais-mark.svg";
 import { Link } from "react-router-dom";
 
 const features = [

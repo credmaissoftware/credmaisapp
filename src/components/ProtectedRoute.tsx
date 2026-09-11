@@ -1,7 +1,8 @@
+import { CredinhoLoader } from "@/components/brand/Credinho";
 import { useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { AlertCircle, Lock, CreditCard, Loader2, Wrench } from "lucide-react";
+import { AlertCircle, Lock, CreditCard, Wrench } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { hasPortalSession } from "@/lib/portalSession";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
@@ -169,11 +170,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
   if (loading || (user && !authError && !profile?.is_blocked && access === "checking")) {
     return (
-      <div role="status" aria-label="Verificando acesso" className="min-h-dvh bg-background flex items-center justify-center">
-        <div className="flex items-center gap-3 text-muted-foreground text-sm">
-          <Loader2 size={16} className="animate-spin" /> Carregando...
-        </div>
-      </div>
+      <CredinhoLoader fullScreen label="Verificando acesso" />
     );
   }
 

@@ -146,7 +146,7 @@
     --ring: 212 100% 47%;
 
     --radius: 0.875rem;
-    --portal-primary: #006FEF;
+    --portal-primary: #F5BD59;
 
     --font-display: 'Manrope', sans-serif;
     --font-body: 'Inter', sans-serif;
@@ -1090,10 +1090,10 @@
   98% { transform: rotate(-6deg); }
 }
 
-a[href*="lovable.app"], 
-iframe[src*="lovable.app"], 
-a[href*="lovable.dev"], 
-iframe[src*="lovable.dev"], 
+a[href*="lovable.app"],
+iframe[src*="lovable.app"],
+a[href*="lovable.dev"],
+iframe[src*="lovable.dev"],
 div[style*="Edit with Lovable"],
 .lovable-badge {
   display: none !important;
@@ -1139,7 +1139,7 @@ div[style*="Edit with Lovable"],
     position: relative;
     min-height: 100vh;
     background:
-      radial-gradient(1200px 600px at 10% -10%, color-mix(in srgb, var(--portal-primary, #0877FF) 18%, transparent), transparent 60%),
+      radial-gradient(1200px 600px at 10% -10%, color-mix(in srgb, var(--portal-primary, #F5BD59) 18%, transparent), transparent 60%),
       radial-gradient(900px 500px at 100% 10%, hsl(204 100% 55% / 0.12), transparent 60%),
       linear-gradient(180deg, hsl(226 82% 10%) 0%, hsl(228 85% 4%) 100%);
     color: hsl(0 0% 96%);
@@ -1161,11 +1161,11 @@ div[style*="Edit with Lovable"],
     content: "";
     position: absolute; inset: -20%;
     background: conic-gradient(from 180deg at 50% 50%,
-      color-mix(in srgb, var(--portal-primary, #0877FF) 10%, transparent),
+      color-mix(in srgb, var(--portal-primary, #F5BD59) 10%, transparent),
       transparent 25%,
       hsl(0 0% 100% / 0.06),
       transparent 55%,
-      color-mix(in srgb, var(--portal-primary, #0877FF) 12%, transparent),
+      color-mix(in srgb, var(--portal-primary, #F5BD59) 12%, transparent),
       transparent 90%);
     filter: blur(80px);
     pointer-events: none;
@@ -1200,10 +1200,10 @@ div[style*="Edit with Lovable"],
     padding: 1px;
     border-radius: inherit;
     background: linear-gradient(135deg,
-      color-mix(in srgb, var(--portal-primary, #0877FF) 60%, transparent),
+      color-mix(in srgb, var(--portal-primary, #F5BD59) 60%, transparent),
       hsl(0 0% 100% / 0.12) 40%,
       transparent 60%,
-      color-mix(in srgb, var(--portal-primary, #0877FF) 40%, transparent));
+      color-mix(in srgb, var(--portal-primary, #F5BD59) 40%, transparent));
     -webkit-mask:
       linear-gradient(#000 0 0) content-box,
       linear-gradient(#000 0 0);
@@ -1223,7 +1223,7 @@ div[style*="Edit with Lovable"],
     overflow: hidden;
   }
   .bento-tile:hover {
-    border-color: color-mix(in srgb, var(--portal-primary, #0877FF) 40%, transparent);
+    border-color: color-mix(in srgb, var(--portal-primary, #F5BD59) 40%, transparent);
     transform: translateY(-2px);
     box-shadow: 0 20px 40px -20px hsl(0 0% 0% / 0.7);
   }
@@ -1241,10 +1241,10 @@ div[style*="Edit with Lovable"],
 
   .bento-hero {
     background:
-      radial-gradient(500px 200px at 100% 0%, color-mix(in srgb, var(--portal-primary, #0877FF) 35%, transparent), transparent 60%),
+      radial-gradient(500px 200px at 100% 0%, color-mix(in srgb, var(--portal-primary, #F5BD59) 35%, transparent), transparent 60%),
       linear-gradient(135deg, hsl(224 72% 20%) 0%, hsl(228 82% 8%) 60%);
     color: hsl(0 0% 98%);
-    border: 1px solid color-mix(in srgb, var(--portal-primary, #0877FF) 25%, transparent);
+    border: 1px solid color-mix(in srgb, var(--portal-primary, #F5BD59) 25%, transparent);
   }
   .bento-hero .kpi-value { font-family: var(--font-heading); }
 
@@ -1257,8 +1257,8 @@ div[style*="Edit with Lovable"],
   }
   .portal-input:focus {
     outline: none;
-    border-color: var(--portal-primary, #0877FF);
-    box-shadow: 0 0 0 4px color-mix(in srgb, var(--portal-primary, #0877FF) 15%, transparent),
+    border-color: var(--portal-primary, #F5BD59);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--portal-primary, #F5BD59) 15%, transparent),
                 0 8px 24px -8px hsl(0 0% 0% / 0.7);
     background: hsl(226 72% 13%);
   }
@@ -1266,7 +1266,7 @@ div[style*="Edit with Lovable"],
   /* Botão premium */
   .portal-btn-primary {
     position: relative;
-    background: linear-gradient(135deg, var(--portal-primary, #0877FF), color-mix(in srgb, var(--portal-primary, #0877FF) 65%, #168BFF));
+    background: linear-gradient(135deg, var(--portal-primary, #F5BD59), color-mix(in srgb, var(--portal-primary, #F5BD59) 65%, #168BFF));
     color: #080808;
     border-radius: 0.9rem;
     font-weight: 700;
@@ -1287,16 +1287,16 @@ div[style*="Edit with Lovable"],
     font-weight: 600;
     letter-spacing: .08em;
     text-transform: uppercase;
-    border: 1px solid color-mix(in srgb, var(--portal-primary, #0877FF) 20%, transparent);
-    background: color-mix(in srgb, var(--portal-primary, #0877FF) 8%, transparent);
-    color: color-mix(in srgb, var(--portal-primary, #0877FF) 82%, white);
+    border: 1px solid color-mix(in srgb, var(--portal-primary, #F5BD59) 20%, transparent);
+    background: color-mix(in srgb, var(--portal-primary, #F5BD59) 8%, transparent);
+    color: color-mix(in srgb, var(--portal-primary, #F5BD59) 82%, white);
   }
   .portal-chip.warn { border-color: hsl(38 92% 60% / 0.35); background: hsl(38 92% 50% / 0.12); color: hsl(38 92% 78%); }
   .portal-chip.ok   { border-color: hsl(152 65% 55% / 0.35); background: hsl(152 65% 42% / 0.12); color: hsl(152 65% 72%); }
 
   /* Animação de pulso do escudo */
   @keyframes shieldPulse {
-    0%,100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--portal-primary, #0877FF) 50%, transparent); }
+    0%,100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--portal-primary, #F5BD59) 50%, transparent); }
     50%     { box-shadow: 0 0 0 18px transparent; }
   }
   .shield-pulse { animation: shieldPulse 2.4s ease-out infinite; }
@@ -1962,14 +1962,9 @@ div[style*="Edit with Lovable"],
   border-color: hsl(0 0% 100% / .10);
 }
 
-.dark .app-content [class*="text-primary"] {
-  color: hsl(199 92% 68%);
-}
 
-.dark .app-content [class*="bg-primary"] {
-  background-color: hsl(199 92% 62%);
-  color: hsl(210 35% 8%);
-}
+
+
 
 @keyframes mascotFloat {
   0%, 100% { transform: translateY(0) rotate(-1deg); }

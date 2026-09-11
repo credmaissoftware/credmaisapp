@@ -976,7 +976,7 @@ export function EditLoanDialog({ loan, onClose, onSaved }: { loan: Loan; onClose
             <div>
               <Label>Já pago (somente leitura)</Label>
               <Input value={brl(paidAmount)} readOnly aria-readonly="true" className="cursor-not-allowed opacity-70" />
-              <p className="mt-1 text-[10px] text-muted-foreground">Use “Registrar pagamento” ou “Desfazer último pagamento”.</p>
+              <p className="mt-1 text-[10px] text-muted-foreground">Use "Registrar pagamento" ou "Desfazer último pagamento".</p>
             </div>
           </div>
           <Button type="button" size="sm" variant="outline" className="justify-self-start gap-1.5" onClick={recalcTotal}>

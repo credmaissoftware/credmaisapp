@@ -1,5 +1,6 @@
+import { Credinho, type CredinhoPose } from "@/components/brand/Credinho";
 import { Users, CalendarClock, MessageSquareText, LineChart, Wallet, ShieldCheck } from "lucide-react";
-import defaultLogo from "@/assets/credmais-cplus-logo.jpg";
+import defaultLogo from "@/assets/credmais-mark.svg";
 
 const features = [
   {
@@ -46,9 +47,9 @@ const LandingFeatures = () => {
         </div>
 
         <div className="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-border border border-border rounded-3xl overflow-hidden" data-anim-group>
-          {features.map(({ icon: Icon, title, text }) => (
+          {features.map(({ icon: Icon, title, text }, i) => (
             <div key={title} data-anim="up" className="group bg-card p-7 sm:p-8 transition-colors hover:bg-secondary/60">
-              <Icon size={22} className="text-primary" />
+              <div className="flex items-end justify-between"><Icon size={22} className="text-primary" /><Credinho pose={(["welcome", "organize", "thinking", "results", "results", "welcome"] as CredinhoPose[])[i]} className="w-[50px]" /></div>
               <h3 className="font-editorial text-2xl text-foreground mt-6">{title}</h3>
               <p className="text-sm text-muted-foreground leading-relaxed mt-3">{text}</p>
             </div>

@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Users, Ban, CheckCircle, Search, Shield, Crown, MessageCircle,
   TrendingUp, UserCheck, UserX, Calendar, Filter, MoreVertical,
@@ -401,11 +401,11 @@ const Admin = () => {
           icon={LayoutDashboard}
           label="Visão geral"
         />
-        <NavButton 
-          active={section === "users"} 
-          onClick={() => setSection("users")} 
-          icon={Users} 
-          label="Usuários" 
+        <NavButton
+          active={section === "users"}
+          onClick={() => setSection("users")}
+          icon={Users}
+          label="Usuários"
         />
         <NavButton
           active={section === "finance"}
@@ -413,18 +413,18 @@ const Admin = () => {
           icon={CreditCard}
           label="Financeiro"
         />
-        <NavButton 
-          active={section === "support"} 
-          onClick={() => setSection("support")} 
-          icon={LifeBuoy} 
-          label="Suporte" 
+        <NavButton
+          active={section === "support"}
+          onClick={() => setSection("support")}
+          icon={LifeBuoy}
+          label="Suporte"
           badge={supportUnread}
         />
-        <NavButton 
-          active={section === "automations"} 
-          onClick={() => setSection("automations")} 
-          icon={Activity} 
-          label="Automações" 
+        <NavButton
+          active={section === "automations"}
+          onClick={() => setSection("automations")}
+          icon={Activity}
+          label="Automações"
         />
         <NavButton
           active={section === "security"}
@@ -432,15 +432,15 @@ const Admin = () => {
           icon={Lock}
           label="Segurança"
         />
-        <NavButton 
-          active={section === "logs"} 
-          onClick={() => setSection("logs")} 
-          icon={Terminal} 
-          label="Logs" 
+        <NavButton
+          active={section === "logs"}
+          onClick={() => setSection("logs")}
+          icon={Terminal}
+          label="Logs"
         />
-        <NavButton 
-          active={section === "settings"} 
-          onClick={() => setSection("settings")} 
+        <NavButton
+          active={section === "settings"}
+          onClick={() => setSection("settings")}
           icon={Settings2}
           label="Plataforma"
         />
@@ -962,7 +962,7 @@ const AdminAutomacoesWrapper = () => {
           </div>
         ))}
       </div>
-      
+
       <div className="rounded-2xl border border-border bg-card overflow-hidden">
         <div className="p-4 border-b border-border bg-accent/20 flex items-center justify-between">
           <div className="flex items-center gap-2">
