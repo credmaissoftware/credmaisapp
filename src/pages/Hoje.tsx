@@ -193,7 +193,7 @@ const Hoje = () => {
     inst: any,
     received: number,
     feeDiscount = 0,
-    options?: { mode: "payment" | "interest_only"; nextDueDate?: string },
+    options?: { mode: "payment" | "interest_only" | "settle"; nextDueDate?: string },
   ) => {
     setSavingId(inst.id);
     if (options?.mode === "interest_only") {
@@ -216,6 +216,29 @@ const Hoje = () => {
         ]);
       } catch (error: any) {
         toast.error("Erro ao renovar vencimento", { description: error?.message });
+        throw error;
+      } finally {
+        setSavingId(null);
+      }
+      return;
+    }
+    if (options?.mode === "settle") {
+      try {
+        const { error } = await (supabase as any).rpc("settle_percentage_installment", {
+          _installment_id: inst.id,
+          _method: "pix",
+          _origin: "hoje",
+        });
+        if (error) throw error;
+        setPendingPayment(null);
+        toast.success("Capital e juros quitados");
+        await Promise.all([
+          qc.invalidateQueries({ queryKey: ["hoje"] }),
+          qc.invalidateQueries({ queryKey: ["dashboard-data"] }),
+          qc.invalidateQueries({ queryKey: ["cobrancas-installments"] }),
+        ]);
+      } catch (error: any) {
+        toast.error("Erro ao quitar capital e juros", { description: error?.message });
         throw error;
       } finally {
         setSavingId(null);
