@@ -14,6 +14,7 @@ import { getSignedUploadUrl } from "@/lib/storage";
 import { friendlyError } from "@/lib/friendlyError";
 import { DEFAULT_MODULES, type ModuleKey } from "@/contexts/WhiteLabelContext";
 import { usePwaInstall } from "@/hooks/usePwaInstall";
+import "@/configuracoes-overrides.css";
 
 const COLOR_PRESETS = [
   { label: "Azul Steel", primary: "#4a86c8", accent: "#6ba3d6", emoji: "🔷" },
@@ -523,7 +524,7 @@ const Configuracoes = () => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto pb-20">
+    <div className="settings-page max-w-6xl mx-auto pb-20">
       {/* Header sticky */}
       {/* A margem negativa serve para a faixa encostar nas bordas da tela, e por
           isso precisa bater com o padding do `main`, que é `px-3` (12px). Com
@@ -592,6 +593,12 @@ const Configuracoes = () => {
         )}
       </div>
 
+      <section className="settings-overview-grid" aria-label="Resumo das configurações">
+        <button className="settings-overview-card" onClick={() => setTab(configSteps.find(s => !s.done)?.tab || "marca")}><span className="settings-overview-icon"><Check size={16}/></span><span><small>Configuração essencial</small><strong>{completedSteps}/{configSteps.length} concluídas</strong><em>{completedSteps === configSteps.length ? "Tudo pronto" : "Continue sua configuração"}</em></span></button>
+        <button className="settings-overview-card" onClick={() => setTab("modulos")}><span className="settings-overview-icon is-purple"><Package size={16}/></span><span><small>Módulos ativos</small><strong>{Object.values(form.modules_enabled).filter(Boolean).length}</strong><em>Recursos disponíveis no app</em></span></button>
+        <button className="settings-overview-card" onClick={() => setTab("marca")}><span className="settings-overview-icon is-amber"><Palette size={16}/></span><span><small>Aparência atual</small><strong>{form.theme_mode === "light" ? "Modo claro" : form.theme_mode === "system" ? "Automático" : "Modo escuro"}</strong><em>Personalize cores e identidade</em></span></button>
+      </section>
+
       <div className="grid md:grid-cols-[240px_1fr] gap-5">
         {/* Sidebar nav */}
         <aside className="md:sticky md:top-32 md:self-start space-y-4 md:max-h-[calc(100vh-9rem)] md:overflow-y-auto pr-1">
@@ -609,7 +616,7 @@ const Configuracoes = () => {
                     <button
                       key={item.id}
                       onClick={() => setTab(item.id)}
-                      className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] transition group ${
+                      className={`settings-nav-item w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] transition group ${
                         active
                           ? "bg-primary/12 text-foreground font-semibold"
                           : "text-muted-foreground hover:text-foreground hover:bg-accent/30"
@@ -640,7 +647,7 @@ const Configuracoes = () => {
         </aside>
 
         {/* Conteúdo */}
-        <div className="rounded-2xl border border-border/30 bg-card/30 backdrop-blur-md p-6 md:p-8 space-y-8 animate-fade-in shadow-xl min-w-0">
+        <div className="settings-page-shell rounded-2xl border border-border/30 bg-card/30 backdrop-blur-md p-6 md:p-8 space-y-8 animate-fade-in shadow-xl min-w-0">
           <SectionRenderer tab={tab} ctx={ctx} />
 
         </div>

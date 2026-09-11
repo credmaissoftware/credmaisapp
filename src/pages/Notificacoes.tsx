@@ -8,6 +8,7 @@ import EmptyState from "@/components/EmptyState";
 import ErrorState from "@/components/feedback/ErrorState";
 import { notificationCategory, safeNotificationPath } from "@/lib/notification";
 import { fetchAll } from "@/lib/fetchAll";
+import "@/notificacoes-overrides.css";
 
 interface NotificationItem {
   id: string;
@@ -112,6 +113,7 @@ const Notificacoes = () => {
     total: items.length,
     unread: items.filter((n) => !n.is_read).length,
     today: items.filter((n) => new Date(n.created_at).toDateString() === new Date().toDateString()).length,
+    urgent: items.filter((n) => !n.is_read && ["error", "warning"].includes(notificationCategory(n.type))).length,
   }), [items]);
 
   const allSelectedOnPage = paginated.length > 0 && paginated.every((n) => selected.has(n.id));
@@ -168,7 +170,7 @@ const Notificacoes = () => {
   const fmtDate = (s: string) => new Date(s).toLocaleString("pt-BR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
 
   return (
-    <div className="p-3 lg:p-6 space-y-5">
+    <div className="notifications-page p-3 lg:p-6 space-y-5">
       {/* Header */}
       <div className="page-hero animate-fade-in">
         <div className="page-hero-content flex items-start sm:items-center justify-between gap-3 flex-wrap">
@@ -205,7 +207,7 @@ const Notificacoes = () => {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 min-[400px]:grid-cols-3 gap-3">
+      <div className="notifications-stats grid grid-cols-2 lg:grid-cols-4 gap-3">
         <button
           onClick={() => setStatusFilter("all")}
           className={`text-left rounded-2xl border p-4 transition ${statusFilter === "all" ? "border-primary/40 bg-primary/5" : "border-border bg-card hover:border-border/80"}`}
@@ -224,6 +226,14 @@ const Notificacoes = () => {
           <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Hoje</div>
           <div className="text-2xl font-bold text-success mt-1">{stats.today}</div>
         </div>
+        <button
+          onClick={() => { setStatusFilter("unread"); setTypeFilter("error"); }}
+          className={`text-left rounded-2xl border p-4 transition ${typeFilter === "error" && statusFilter === "unread" ? "border-destructive/40 bg-destructive/5" : "border-border bg-card hover:border-destructive/30"}`}
+        >
+          <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Atenção</div>
+          <div className="text-2xl font-bold text-destructive mt-1">{stats.urgent}</div>
+          <div className="text-[11px] text-muted-foreground mt-1">não lidas urgentes</div>
+        </button>
       </div>
 
       {/* Filters bar */}
@@ -245,6 +255,7 @@ const Notificacoes = () => {
           </div>
         </div>
         <div className="flex items-center gap-1.5 flex-wrap">
+          <div className="notification-status-switch" role="group" aria-label="Status"><button className={statusFilter === "all" ? "is-active" : ""} onClick={() => setStatusFilter("all")}>Todas</button><button className={statusFilter === "unread" ? "is-active" : ""} onClick={() => setStatusFilter("unread")}>Não lidas</button><button className={statusFilter === "read" ? "is-active" : ""} onClick={() => setStatusFilter("read")}>Lidas</button></div>
           <Filter size={12} className="text-muted-foreground mr-1" />
           {typeFilters.map((f) => {
             const Icon = f.icon;
