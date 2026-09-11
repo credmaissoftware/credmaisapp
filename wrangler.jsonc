@@ -1,6 +1,11 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "credmaisapp",
-  "pages_build_output_dir": "./dist",
-  "compatibility_date": "2026-08-17"
+  "account_id": "02a741b5fbcd8b5b164c842a32d2eb1e",
+  "main": "worker.ts",
+  "compatibility_date": "2026-08-17",
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "single-page-application"
+  }
 }
