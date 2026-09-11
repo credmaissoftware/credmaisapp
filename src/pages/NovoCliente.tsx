@@ -1187,6 +1187,7 @@ const NovoCliente = () => {
                       setLoanMode(m.v);
                       setValueMode(m.v === "installments" ? "installment" : "rate");
                       if (m.v === "bullet") setNumInstallments("1");
+                      if (m.v === "percentage") setNumInstallments("0");
                       if (m.v === "installments" && (parseInt(numInstallments) || 0) < 2) setNumInstallments("2");
                       setLoanJourneyStep(2);
                     }}
