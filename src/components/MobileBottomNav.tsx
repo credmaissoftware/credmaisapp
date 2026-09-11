@@ -171,7 +171,7 @@ const MobileBottomNav = () => {
             className="fixed inset-0 bg-background/70 backdrop-blur-sm z-[28] animate-fade-in"
             onClick={() => setShowMore(false)}
           />
-          <div className="fixed left-0 right-0 z-[31] px-3 pb-2 animate-slide-up" style={{ bottom: "calc(4.75rem + env(safe-area-inset-bottom, 0px))" }}>
+          <div className="mobile-more-sheet fixed left-0 right-0 z-[31] px-3 pb-2 animate-slide-up" style={{ bottom: "calc(4.75rem + env(safe-area-inset-bottom, 0px))" }}>
             <div className="glass-strong rounded-2xl border border-border/40 p-4 max-h-[70vh] overflow-y-auto shadow-2xl">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-sm font-bold text-foreground">Menu Completo</h3>
@@ -267,7 +267,7 @@ const MobileBottomNav = () => {
 
       {/* Bottom nav */}
       <nav
-        className="fixed bottom-0 left-0 right-0 z-30 border-t border-white/10 bg-black/75 backdrop-blur-2xl shadow-[0_-16px_40px_-28px_hsl(0_0%_0%/.9)]"
+        className="mobile-bottom-nav fixed bottom-0 left-0 right-0 z-30 border-t border-white/10 bg-black/75 backdrop-blur-2xl shadow-[0_-16px_40px_-28px_hsl(0_0%_0%/.9)]"
         style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
       >
         <div className="flex items-stretch justify-around px-1.5 pt-1 pb-1">

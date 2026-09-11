@@ -75,7 +75,7 @@ const TopBar = ({ onSearchClick, onQuickPayment }: TopBarProps) => {
 
   return (
     <header
-      className="sticky top-0 z-40 border-b border-white/[.08] bg-background/85 backdrop-blur-2xl shadow-[0_12px_35px_-28px_rgba(0,0,0,.9)]"
+      className="app-topbar sticky top-0 z-40 border-b border-white/[.08] bg-background/85 backdrop-blur-2xl shadow-[0_12px_35px_-28px_rgba(0,0,0,.9)]"
       style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
     >
       <div className="h-16 lg:h-[72px] flex items-center justify-between px-3 lg:px-7 gap-2 lg:gap-4">

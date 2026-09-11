@@ -3,7 +3,7 @@
 // - Precache de todos os chunks gerados pelo Vite (inclusive rotas lazy)
 // - CacheFirst para assets com hash, que são imutáveis
 // - Nunca cacheia Supabase, APIs ou rotas internas (~oauth)
-const VERSION = "credmais-v20-credinho-brand";
+const VERSION = "credmais-v21-mobile-shell";
 const STATIC_CACHE = `${VERSION}-static`;
 const RUNTIME_CACHE = `${VERSION}-runtime`;
 const HTML_CACHE = `${VERSION}-html`;
