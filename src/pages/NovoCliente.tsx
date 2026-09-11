@@ -1134,7 +1134,7 @@ const NovoCliente = () => {
               </div>
             </div>
           )}
-          <div className="rounded-2xl border border-border bg-card shadow-sm">
+          <div className="rounded-3xl border border-white/[.10] bg-white/[.025] shadow-[0_24px_70px_-45px_rgba(0,0,0,.95)] backdrop-blur-xl">
             <div className="flex items-center justify-between gap-3 p-4 sm:p-5">
               <div>
                 <p className="text-base font-semibold text-foreground">Tipo de empréstimo</p>
@@ -1159,12 +1159,11 @@ const NovoCliente = () => {
               {(() => {
                 const primary = [
                   { v: "installments" as LoanMode, label: "Parcelado", desc: "Valor dividido em parcelas", Icon: Hash },
-                  { v: "bullet" as LoanMode, label: "Pagamento único", desc: "Capital e juros em uma data", Icon: Target },
-                  { v: "interest_only" as LoanMode, label: "Somente juros", desc: "Juros periódicos e capital no final", Icon: Coins },
+                  { v: "bullet" as LoanMode, label: "Pagamento único", desc: "Capital + juros no vencimento", Icon: Target },
+                  { v: "percentage" as LoanMode, label: "Por porcentagem", desc: "Juros por ciclo com renovação", Icon: Percent },
                 ];
                 const extra = [
                   { v: "price" as LoanMode, label: "Tabela Price", desc: "Parcela fixa com amortização", Icon: TrendingDown },
-                  { v: "percentage" as LoanMode, label: "Por percentual", desc: "Taxa aplicada por período", Icon: Percent },
                   { v: "grace" as LoanMode, label: "Com carência", desc: "Início dos pagamentos adiado", Icon: PauseCircle },
                 ];
                 const all = (isNewContractOnly || showMoreModes || extra.some(m => m.v === loanMode)) ? [...primary, ...extra] : primary;
