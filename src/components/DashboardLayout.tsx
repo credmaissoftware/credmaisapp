@@ -14,7 +14,7 @@ import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { toast } from "sonner";
 import ProductivityOfflineSync from "@/components/ProductivityOfflineSync";
 
-// Defer heavy overlays â€” they're only rendered after user interaction.
+// Defer heavy overlays — they're only rendered after user interaction.
 const GlobalSearch = lazy(() => import("@/components/GlobalSearch"));
 const QuickPaymentModal = lazy(() => import("@/components/QuickPaymentModal"));
 const KeyboardShortcutsHelp = lazy(() => import("@/components/KeyboardShortcutsHelp"));
@@ -34,8 +34,8 @@ const DashboardLayout = () => {
 
   const openQuickPayment = useCallback(() => {
     if (!online) {
-      toast.error("Pagamento indisponÃ­vel sem internet", {
-        description: "Reconecte para registrar a baixa com seguranÃ§a e evitar duplicidade.",
+      toast.error("Pagamento indisponível sem internet", {
+        description: "Reconecte para registrar a baixa com segurança e evitar duplicidade.",
       });
       return;
     }
@@ -44,8 +44,8 @@ const DashboardLayout = () => {
 
   // Subscription enforcement lives in ProtectedRoute (single source of truth).
 
-  // Em modo plataforma o dono do app nÃ£o vÃª tela de operaÃ§Ã£o: se cair numa por
-  // link antigo ou URL digitada, volta para o painel. Trocar para "Minha operaÃ§Ã£o"
+  // Em modo plataforma o dono do app não vê tela de operação: se cair numa por
+  // link antigo ou URL digitada, volta para o painel. Trocar para "Minha operação"
   // no seletor libera tudo de novo.
   const blockedByMode =
     mode === "platform" &&
@@ -86,20 +86,20 @@ const DashboardLayout = () => {
   return (
     <div className="app-shell min-h-dvh bg-background relative overflow-x-hidden">
       <ProductivityOfflineSync />
-      {/* Static mesh gradients â€” no animation (animated blur is one of the heaviest paints).
+      {/* Static mesh gradients — no animation (animated blur is one of the heaviest paints).
        *
        * Ficam dentro de uma camada `fixed` que corta o que passa da tela. Antes
-       * eram `absolute` soltos aqui: o primeiro tem 600px de largura comeÃ§ando a
-       * 25% da tela, entÃ£o num celular de 360px a borda direita caÃ­a em 690px e
-       * ESTE container passava a ter 690px de Ã¡rea rolÃ¡vel.
+       * eram `absolute` soltos aqui: o primeiro tem 600px de largura começando a
+       * 25% da tela, então num celular de 360px a borda direita caía em 690px e
+       * ESTE container passava a ter 690px de área rolável.
        *
-       * O estrago aparecia no cadastro de cliente, que dÃ¡ foco automÃ¡tico no
+       * O estrago aparecia no cadastro de cliente, que dá foco automático no
        * campo Nome: o navegador rolava o container para revelar o campo, o app
-       * inteiro deslizava 280px para fora da tela â€” e o `overflow-x-hidden` daqui
-       * escondia a barra, entÃ£o nÃ£o havia como rolar de volta. No celular a tela
-       * simplesmente ficava preta com um pedaÃ§o de formulÃ¡rio na borda.
+       * inteiro deslizava 280px para fora da tela — e o `overflow-x-hidden` daqui
+       * escondia a barra, então não havia como rolar de volta. No celular a tela
+       * simplesmente ficava preta com um pedaço de formulário na borda.
        *
-       * `fixed` + `overflow-hidden` faz o enfeite nÃ£o somar largura para ninguÃ©m.
+       * `fixed` + `overflow-hidden` faz o enfeite não somar largura para ninguém.
        */}
       <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
         <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-primary/[0.04] rounded-full blur-[80px]" />
