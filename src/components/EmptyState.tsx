@@ -14,8 +14,9 @@ interface Props {
 const EmptyState = ({ icon: Icon = Inbox, title, description, action, className = "", compact = false }: Props) => (
   <div
     role="status"
-    className={`flex flex-col items-center justify-center text-center ${compact ? "py-10 px-4" : "py-16 px-6"} ${className}`}
+    className={`relative flex flex-col items-center justify-center overflow-hidden text-center ${compact ? "py-10 px-4" : "py-16 px-6"} ${className}`}
   >
+    {!compact && <img src="/credinho-mascot-card.png" alt="" aria-hidden="true" className="pointer-events-none absolute bottom-0 right-2 h-40 w-28 object-contain object-bottom opacity-[.14] grayscale-[.15] animate-mascot-float" />}
     <div className={`${compact ? "w-12 h-12" : "w-16 h-16"} rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 flex items-center justify-center mb-4 shadow-inner`}>
       <Icon className={`${compact ? "w-5 h-5" : "w-7 h-7"} text-primary/70`} strokeWidth={1.5} />
     </div>
