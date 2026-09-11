@@ -18,18 +18,23 @@ import {
   AlertCircle,
   CheckCircle2,
   Loader2,
+  Globe,
+  Users,
+  BarChart3,
+  ShieldCheck,
+  MonitorSmartphone,
 } from "lucide-react";
 import { useWhiteLabel } from "@/contexts/WhiteLabelContext";
 import { toSafeHttpUrl } from "@/lib/safeUrl";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { withTimeout } from "@/lib/withTimeout";
 
-// ---------- Validação ----------
+// ---------- ValidaÃ§Ã£o ----------
 const emailSchema = z
   .string()
   .trim()
   .min(1, "Informe seu e-mail")
-  .email("E-mail inválido")
+  .email("E-mail invÃ¡lido")
   .max(255, "E-mail muito longo");
 
 const passwordLoginSchema = z
@@ -39,7 +44,7 @@ const passwordLoginSchema = z
 
 const passwordRegisterSchema = z
   .string()
-  .min(6, "Use no mínimo 6 caracteres")
+  .min(6, "Use no mÃ­nimo 6 caracteres")
   .max(72, "Senha muito longa");
 
 const AUTH_REQUEST_TIMEOUT_MS = 15_000;
@@ -47,10 +52,10 @@ const AUTH_REQUEST_TIMEOUT_MS = 15_000;
 const nameSchema = z
   .string()
   .trim()
-  .min(2, "Informe seu nome (mín. 2 caracteres)")
+  .min(2, "Informe seu nome (mÃ­n. 2 caracteres)")
   .max(80, "Nome muito longo");
 
-// ---------- Tradução de erros do Supabase ----------
+// ---------- TraduÃ§Ã£o de erros do Supabase ----------
 const friendlyAuthError = (err: any): string => {
   const msg = String(err?.message || "").toLowerCase();
   const code = String(err?.code || "").toLowerCase();
@@ -59,14 +64,14 @@ const friendlyAuthError = (err: any): string => {
   if (msg.includes("email not confirmed"))
     return "Confirme seu e-mail antes de entrar.";
   if (code === "user_already_exists" || msg.includes("already registered") || msg.includes("user already"))
-    return "Este e-mail já está cadastrado. Faça login.";
+    return "Este e-mail jÃ¡ estÃ¡ cadastrado. FaÃ§a login.";
   if (msg.includes("rate limit") || err?.status === 429)
     return "Muitas tentativas. Aguarde alguns minutos.";
   if (msg.includes("weak password"))
-    return "Senha fraca. Use letras e números.";
+    return "Senha fraca. Use letras e nÃºmeros.";
   if (msg.includes("network") || msg.includes("failed to fetch"))
-    return "Sem conexão. Verifique sua internet.";
-  return err?.message || "Não foi possível concluir. Tente novamente.";
+    return "Sem conexÃ£o. Verifique sua internet.";
+  return err?.message || "NÃ£o foi possÃ­vel concluir. Tente novamente.";
 };
 
 const Login = () => {
@@ -78,7 +83,7 @@ const Login = () => {
   const { settings: platform } = usePlatformSettings();
   const [isRegister, setIsRegister] = useState(!!planParam);
 
-  // Se o dono do app fechar o cadastro, ninguém fica preso na aba de criar conta
+  // Se o dono do app fechar o cadastro, ninguÃ©m fica preso na aba de criar conta
   // (inclusive quem chegou por um link antigo com ?plan=).
   useEffect(() => {
     if (!platform.allow_new_registrations && isRegister) setIsRegister(false);
@@ -93,15 +98,15 @@ const Login = () => {
   const [formError, setFormError] = useState<string | null>(null);
   const [touched, setTouched] = useState<{ email?: boolean; password?: boolean; name?: boolean }>({});
   const navigate = useNavigate();
-  // Estes três ficavam DEPOIS do `return` logo abaixo. Quando `hasPortalSession()`
-  // mudava de valor entre dois renders — é o que acontece ao sair do portal do
-  // cliente neste mesmo navegador — a quantidade de hooks mudava junto e o React
+  // Estes trÃªs ficavam DEPOIS do `return` logo abaixo. Quando `hasPortalSession()`
+  // mudava de valor entre dois renders â€” Ã© o que acontece ao sair do portal do
+  // cliente neste mesmo navegador â€” a quantidade de hooks mudava junto e o React
   // derrubava a tela de login inteira (erro #310).
   const { toast } = useToast();
   const { config } = useWhiteLabel();
 
-  // Se este navegador possui sessão do portal do cliente, não permitir acesso
-  // à tela de login do credor — devolve o cliente ao portal dele.
+  // Se este navegador possui sessÃ£o do portal do cliente, nÃ£o permitir acesso
+  // Ã  tela de login do credor â€” devolve o cliente ao portal dele.
   const temSessaoDoPortal = hasPortalSession();
 
   const sanitizeNext = (raw: string | null): string | null => {
@@ -114,10 +119,10 @@ const Login = () => {
   const nextPath = sanitizeNext(searchParams.get("next"));
   const logoSrc = config.companyLogo || defaultLogo;
   const brandTitle = config.loginTitle || config.companyName || "CREDMAIS APP";
-  const brandSubtitle = config.loginSubtitle || "SISTEMA DE GESTÃO DE EMPRÉSTIMOS";
-  const footerText = config.footerText || `© ${new Date().getFullYear()} CREDMAIS APP · TODOS OS DIREITOS RESERVADOS`;
+  const brandSubtitle = config.loginSubtitle || "SISTEMA DE GESTÃƒO DE EMPRÃ‰STIMOS";
+  const footerText = config.footerText || `Â© ${new Date().getFullYear()} CREDMAIS APP Â· TODOS OS DIREITOS RESERVADOS`;
 
-  // Força da senha (apenas no registro)
+  // ForÃ§a da senha (apenas no registro)
   const passwordStrength = useMemo(() => {
     if (!password) return 0;
     let s = 0;
@@ -128,7 +133,7 @@ const Login = () => {
     if (/[^A-Za-z0-9]/.test(password)) s++;
     return Math.min(s, 4);
   }, [password]);
-  const strengthLabel = ["", "Fraca", "Razoável", "Boa", "Forte"][passwordStrength];
+  const strengthLabel = ["", "Fraca", "RazoÃ¡vel", "Boa", "Forte"][passwordStrength];
   const strengthColor = [
     "bg-white/10",
     "bg-red-400/80",
@@ -188,9 +193,9 @@ const Login = () => {
       return;
     }
 
-    // A decisão de assinatura pertence ao ProtectedRoute, que também considera
-    // vitalício, administrador e a tabela de assinaturas. Duplicar a regra aqui
-    // mandava contas válidas ao checkout antes da verificação completa.
+    // A decisÃ£o de assinatura pertence ao ProtectedRoute, que tambÃ©m considera
+    // vitalÃ­cio, administrador e a tabela de assinaturas. Duplicar a regra aqui
+    // mandava contas vÃ¡lidas ao checkout antes da verificaÃ§Ã£o completa.
     setLoading(false);
     navigate(nextPath ?? "/dashboard", { replace: true });
   };
@@ -209,7 +214,7 @@ const Login = () => {
         setLoading(false);
         const msg = "Nenhum link de pagamento configurado. Entre em contato com o suporte.";
         setFormError(msg);
-        toast({ title: "Indisponível", description: msg, variant: "destructive" });
+        toast({ title: "IndisponÃ­vel", description: msg, variant: "destructive" });
         return;
       }
 
@@ -217,9 +222,9 @@ const Login = () => {
       const checkout = toSafeHttpUrl(checkoutUrl);
       if (!checkout) {
         setLoading(false);
-        const msg = "O endereço de pagamento configurado é inválido. Entre em contato com o suporte.";
+        const msg = "O endereÃ§o de pagamento configurado Ã© invÃ¡lido. Entre em contato com o suporte.";
         setFormError(msg);
-        toast({ title: "Pagamento indisponível", description: msg, variant: "destructive" });
+        toast({ title: "Pagamento indisponÃ­vel", description: msg, variant: "destructive" });
         return;
       }
       checkout.searchParams.set("email", email.trim());
@@ -227,15 +232,15 @@ const Login = () => {
       const url = checkout.toString();
 
       toast({
-        title: "Redirecionando para o pagamento 💳",
-        description: "Após a confirmação, você receberá um e-mail para criar sua senha e acessar o sistema.",
+        title: "Redirecionando para o pagamento ðŸ’³",
+        description: "ApÃ³s a confirmaÃ§Ã£o, vocÃª receberÃ¡ um e-mail para criar sua senha e acessar o sistema.",
       });
       setTimeout(() => {
         window.location.href = url;
       }, 1200);
     } catch (err: any) {
       setLoading(false);
-      const msg = err?.message || "Não foi possível abrir o checkout. Tente novamente.";
+      const msg = err?.message || "NÃ£o foi possÃ­vel abrir o checkout. Tente novamente.";
       setFormError(msg);
       toast({ title: "Erro", description: msg, variant: "destructive" });
     }
@@ -258,7 +263,7 @@ const Login = () => {
     ) : null;
 
   // O desvio para o portal do cliente acontece aqui embaixo, com todos os hooks
-  // já chamados — o comportamento é o mesmo de antes, sem o risco de mudar a
+  // jÃ¡ chamados â€” o comportamento Ã© o mesmo de antes, sem o risco de mudar a
   // quantidade de hooks entre um render e outro.
   if (temSessaoDoPortal) {
     return <Navigate to="/portal-cliente" replace />;
@@ -266,10 +271,10 @@ const Login = () => {
 
   return (
     <div
-      className="relative min-h-dvh flex flex-col items-center justify-center overflow-x-hidden font-body bg-[#020719] bg-cover bg-center bg-no-repeat px-4 py-6 sm:py-8"
+      className="relative min-h-dvh flex flex-col overflow-x-hidden font-body bg-[#020719] bg-cover bg-center bg-no-repeat px-5 py-6 sm:px-8 lg:px-12"
       style={{
         backgroundImage:
-          "linear-gradient(90deg,rgba(2,7,25,.96),rgba(2,7,25,.72) 48%,rgba(2,7,25,.28)), url('/credmais-hero-cinematic-v2.webp')",
+          "linear-gradient(90deg,rgba(2,7,25,.98),rgba(2,7,25,.78) 45%,rgba(2,7,25,.42)), url('/credmais-hero-cinematic-v2.webp')",
       }}
     >
       <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_50%_18%,rgba(22,139,255,.22),transparent_38%),linear-gradient(180deg,rgba(2,7,25,.08),rgba(2,7,25,.82))] backdrop-blur-[1px]" />
@@ -283,8 +288,22 @@ const Login = () => {
         <span className="text-sm font-medium hidden sm:inline">Voltar para o site</span>
       </button>
 
-      {/* Logo & Título */}
-      <div className="relative z-10 flex flex-col items-center mb-6 md:mb-8 animate-fade-in">
+      <div className="absolute right-8 top-7 z-20 hidden items-center gap-2 text-xs font-medium text-white/75 sm:flex">
+        <Globe size={14} /> PortuguÃªs (BR) <span className="ml-2 text-white/45">âŒ„</span>
+      </div>
+
+      <div className="absolute left-[5%] top-1/2 z-10 hidden max-w-[390px] -translate-y-1/2 lg:block">
+        <div className="mb-5 h-0.5 w-10 bg-sky-400" />
+        <p className="mb-6 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-300/70">GestÃ£o de emprÃ©stimos</p>
+        <h2 className="font-display text-4xl font-extrabold leading-[1.08] tracking-tight text-white xl:text-5xl">CrÃ©dito hoje,<br />mais <span className="text-sky-400">oportunidades</span><br />amanhÃ£.</h2>
+        <p className="mt-5 max-w-[320px] text-base leading-relaxed text-slate-300/75">SoluÃ§Ãµes completas, seguras e inteligentes para vocÃª e o seu negÃ³cio.</p>
+        <div className="mt-8 space-y-4">
+          {[[Users, "GestÃ£o completa", "Controle de clientes e emprÃ©stimos"], [BarChart3, "RelatÃ³rios inteligentes", "Acompanhe tudo em tempo real"], [ShieldCheck, "Mais seguranÃ§a", "Seus dados sempre protegidos"], [MonitorSmartphone, "Acesso em qualquer lugar", "No desktop, tablet ou celular"]].map(([Icon, title, text]) => { const ItemIcon = Icon as typeof Users; return <div key={title as string} className="flex items-center gap-3"><span className="flex h-11 w-11 items-center justify-center rounded-xl border border-sky-300/30 bg-sky-500/15 text-sky-300"><ItemIcon size={20} /></span><span><strong className="block text-sm text-white">{title as string}</strong><small className="text-[11px] text-slate-300/65">{text as string}</small></span></div>; })}
+        </div>
+      </div>
+
+      {/* Logo & TÃ­tulo */}
+      <div className="relative z-10 flex flex-col items-center mb-6 md:mb-8 animate-fade-in lg:hidden">
         <div className="relative w-[78px] h-[78px] md:w-[96px] md:h-[96px] flex items-center justify-center">
           <div className="absolute inset-2 rounded-full gold-glow" />
           <div className="absolute inset-0 rounded-full pointer-events-none">
@@ -299,18 +318,27 @@ const Login = () => {
           />
         </div>
         <h1 className="font-display max-w-[92vw] text-xl md:text-2xl font-semibold tracking-tight mt-3 text-gradient-gold text-center">
-          {brandTitle} — Gestão de Empréstimos
+          {brandTitle} â€” GestÃ£o de EmprÃ©stimos
         </h1>
         <p className="text-white/40 text-[10px] md:text-xs mt-1.5 tracking-wider text-center">{brandSubtitle}</p>
       </div>
 
       {/* Card */}
-      <div className="relative z-10 w-full max-w-[820px] mx-auto animate-scale-in">
-        <div className="rounded-2xl overflow-hidden border border-white/[0.06] shadow-2xl">
+      <div className="relative z-10 w-full max-w-[500px] mx-auto animate-scale-in">
+        <div className="rounded-[26px] overflow-hidden border border-sky-200/20 bg-slate-950/55 shadow-[0_0_0_1px_rgba(56,189,248,.08),0_30px_90px_rgba(0,0,0,.55),0_0_35px_rgba(14,165,233,.22)] backdrop-blur-2xl">
+          <div className="flex flex-col items-center px-6 pt-7 sm:pt-8">
+            <img src={logoSrc} alt={brandTitle} className="h-16 w-16 rounded-2xl object-cover ring-1 ring-sky-400/60 shadow-[0_0_28px_rgba(14,165,233,.35)]" />
+            <p className="mt-3 text-xl font-bold tracking-tight text-white">CREDMAIS <span className="text-sky-400">APP</span></p>
+            <p className="mt-1 text-[9px] tracking-[0.18em] text-white/40">{brandSubtitle}</p>
+          </div>
           {!isRegister ? (
             <div className="flex flex-col md:flex-row">
               {/* Form de Login */}
-              <div className="flex-1 p-5 sm:p-7 md:p-10 glass bg-white/[0.03]">
+              <div className="flex-1 p-6 sm:p-8 md:p-10 bg-white/[0.025]">
+                <div className="mb-7 grid grid-cols-2 border-b border-white/15">
+                  <button type="button" onClick={() => setIsRegister(false)} className="relative pb-3 text-sm font-semibold text-white after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-sky-400">Entrar</button>
+                  <button type="button" onClick={() => platform.allow_new_registrations && setIsRegister(true)} className="pb-3 text-sm font-semibold text-white/45 transition hover:text-white/80">Criar conta</button>
+                </div>
                 <h2 className="font-display text-xl font-semibold text-white mb-1">Bem-vindo</h2>
                 <p className="text-white/40 text-sm mb-6">Acesse sua conta para continuar</p>
 
@@ -364,7 +392,7 @@ const Login = () => {
                         id="login-password"
                         type={showPassword ? "text" : "password"}
                         autoComplete="current-password"
-                        placeholder="••••••••"
+                        placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                         value={password}
                         onChange={(e) => {
                           setPassword(e.target.value);
@@ -451,7 +479,7 @@ const Login = () => {
               </div>
 
               {/* Painel direito */}
-              <div className="flex-1 flex flex-col items-center justify-center p-5 sm:p-7 md:p-10 glass bg-white/[0.02] border-t md:border-t-0 md:border-l border-white/[0.06]">
+              <div className="hidden flex-1 flex-col items-center justify-center p-5 sm:p-7 md:p-10 glass bg-white/[0.02] border-t md:border-t-0 md:border-l border-white/[0.06]">
                 <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center mb-5">
                   <ArrowRight size={28} className="text-white/70" />
                 </div>
@@ -461,7 +489,7 @@ const Login = () => {
                 <p className="text-white/40 text-sm text-center mb-6 max-w-[260px]">
                   {platform.allow_new_registrations
                     ? "Crie uma conta gratuita e descubra todas as possibilidades."
-                    : "No momento não estamos aceitando novos cadastros. Fale com o suporte se já é cliente."}
+                    : "No momento nÃ£o estamos aceitando novos cadastros. Fale com o suporte se jÃ¡ Ã© cliente."}
                 </p>
                 {platform.allow_new_registrations && (
                   <button
@@ -481,7 +509,7 @@ const Login = () => {
           ) : (
             <div className="flex flex-col md:flex-row">
               <div className="flex-1 flex flex-col items-center justify-center p-7 md:p-10 glass bg-white/[0.02] border-b md:border-b-0 md:border-r border-white/[0.06]">
-                <h2 className="font-display text-xl font-bold text-white mb-2">Já tem conta?</h2>
+                <h2 className="font-display text-xl font-bold text-white mb-2">JÃ¡ tem conta?</h2>
                 <p className="text-white/40 text-sm text-center mb-6 max-w-[260px]">
                   Entre com suas credenciais e acesse o sistema.
                 </p>
@@ -501,12 +529,12 @@ const Login = () => {
               <div className="flex-1 p-7 md:p-10 glass bg-white/[0.03]">
                 <h2 className="font-display text-xl font-semibold text-white mb-1">Assinar &amp; criar conta</h2>
                 <p className="text-white/40 text-sm mb-4">
-                  Pague primeiro com segurança. Sua conta é criada automaticamente após a confirmação — você recebe um e-mail para definir a senha.
+                  Pague primeiro com seguranÃ§a. Sua conta Ã© criada automaticamente apÃ³s a confirmaÃ§Ã£o â€” vocÃª recebe um e-mail para definir a senha.
                 </p>
 
                 <div className="mb-5 p-3 rounded-xl border border-amber-400/20 bg-amber-400/[0.04] text-[11px] text-amber-100/80 leading-relaxed">
-                  <strong className="text-amber-200">Como funciona:</strong> preencha nome e e-mail →
-                  é redirecionado para o pagamento no Mercado Pago → recebe e-mail de boas-vindas com link para entrar.
+                  <strong className="text-amber-200">Como funciona:</strong> preencha nome e e-mail â†’
+                  Ã© redirecionado para o pagamento no Mercado Pago â†’ recebe e-mail de boas-vindas com link para entrar.
                 </div>
 
                 {formError && (
@@ -574,7 +602,7 @@ const Login = () => {
                     </div>
                     <FieldError msg={touched.email ? errors.email : undefined} />
                     <p className="mt-1.5 text-[10px] text-white/40">
-                      Use o mesmo e-mail no checkout para que sua assinatura seja vinculada à sua conta.
+                      Use o mesmo e-mail no checkout para que sua assinatura seja vinculada Ã  sua conta.
                     </p>
                   </div>
 
@@ -596,7 +624,7 @@ const Login = () => {
                   </button>
 
                   <p className="text-[10px] text-white/30 text-center leading-relaxed">
-                    Pagamento processado de forma segura pelo Mercado Pago. Sem fidelidade — cancele quando quiser.
+                    Pagamento processado de forma segura pelo Mercado Pago. Sem fidelidade â€” cancele quando quiser.
                   </p>
                 </form>
               </div>
