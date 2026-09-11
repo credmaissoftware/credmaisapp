@@ -506,6 +506,7 @@ const Configuracoes = () => {
   const progressPercent = (completedSteps / configSteps.length) * 100;
 
   const activeItem = groups.flatMap(g => g.items).find(i => i.id === tab);
+  const activeGroup = groups.find(g => g.items.some(i => i.id === tab));
 
   const handleInstallApp = async () => {
     if (!canPrompt) {
@@ -601,7 +602,7 @@ const Configuracoes = () => {
 
       <div className="grid md:grid-cols-[240px_1fr] gap-5">
         {/* Sidebar nav */}
-        <aside className="md:sticky md:top-32 md:self-start space-y-4 md:max-h-[calc(100vh-9rem)] md:overflow-y-auto pr-1">
+        <aside className="settings-sidebar md:sticky md:top-32 md:self-start space-y-4 md:max-h-[calc(100vh-9rem)] md:overflow-y-auto pr-1">
           {visibleGroups.map(group => (
             <div key={group.id}>
               <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground/60 px-3 mb-1.5">
@@ -648,6 +649,14 @@ const Configuracoes = () => {
 
         {/* Conteúdo */}
         <div className="settings-page-shell rounded-2xl border border-border/30 bg-card/30 backdrop-blur-md p-6 md:p-8 space-y-8 animate-fade-in shadow-xl min-w-0">
+          <div className="settings-content-header">
+            <div className="settings-content-icon"><Settings size={18} /></div>
+            <div className="min-w-0">
+              <p>{activeGroup?.label || "Configurações"}</p>
+              <h2>{activeItem?.label || "Personalize o sistema"}</h2>
+              <span>Altere os dados desta área e salve no topo quando terminar.</span>
+            </div>
+          </div>
           <SectionRenderer tab={tab} ctx={ctx} />
 
         </div>
