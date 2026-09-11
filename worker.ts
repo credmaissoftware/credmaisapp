@@ -10,6 +10,6 @@ export default {
     if (url.pathname !== "/" && !url.pathname.split("/").pop()?.includes(".")) {
       url.pathname = "/index.html";
     }
-    return env.ASSETS.fetch(new Request(url, request));
+    return env.ASSETS.fetch(url);
   },
 };
