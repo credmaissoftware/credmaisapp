@@ -1,3 +1,4 @@
+import "@/components/cliente-detalhe/client-profile.css";
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -56,10 +57,11 @@ const ClienteDetalhe = () => {
   const { toast } = useToast();
   const qc = useQueryClient();
 
-  const [activeTab, setActiveTab] = useState<"contratos" | "parcelas">("contratos");
+  const [contractFilter, setContractFilter] = useState<"all" | "active" | "settled">("all");
+  const [contractSearch, setContractSearch] = useState("");
   const [docsOpen, setDocsOpen] = useState(false);
   const [histOpen, setHistOpen] = useState(false);
-  const [showInfo, setShowInfo] = useState(false);
+
   const [expandedContracts, setExpandedContracts] = useState<Set<string>>(new Set());
   const toggleContract = (cid: string) => setExpandedContracts(prev => {
     const n = new Set(prev);
@@ -1304,10 +1306,7 @@ const ClienteDetalhe = () => {
 
   const address = client.address as any;
 
-  const tabs = [
-    { key: "contratos" as const, label: "Contratos", Icon: FileText },
-    { key: "parcelas" as const, label: "Parcelas", Icon: Receipt },
-  ];
+
 
 
 
@@ -1354,32 +1353,24 @@ const ClienteDetalhe = () => {
   ];
 
 
+  const visibleContracts = contracts.filter((contract: any) => {
+    const rows = installments.filter((row: any) => row.contract_id === contract.id);
+    const settled = rows.length > 0 && rows.every((row: any) => row.status === "paid");
+    const matchesStatus = contractFilter === "all" || (contractFilter === "settled" ? settled : !settled && ["active", "overdue"].includes(contract.status));
+    const searchable = [fmt(Number(contract.capital)), formatBR(contract.start_date), FREQ[contract.frequency] || contract.frequency, LOAN_MODE_LABEL[contract.loan_mode as LoanMode] || contract.loan_mode].join(" ").toLocaleLowerCase("pt-BR");
+    return matchesStatus && searchable.includes(contractSearch.trim().toLocaleLowerCase("pt-BR"));
+  });
+
   const daysAsClient = client.created_at ? Math.max(1, Math.floor((Date.now() - new Date(client.created_at).getTime()) / 86400000)) : 0;
   const clientSince = client.created_at ? new Date(client.created_at).toLocaleDateString("pt-BR", { month: "short", year: "numeric" }).toUpperCase() : "—";
   const riskLabel = (client.credit_score || 0) >= 75 ? "Baixo Risco" : (client.credit_score || 0) >= 50 ? "Risco Moderado" : (client.credit_score || 0) >= 25 ? "Risco Elevado" : "Risco Alto";
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 pb-24" style={{ fontFamily: "'Manrope', 'Inter', sans-serif" }}>
-      {/* ===== Banner Navy + Ações Rápidas + KPIs (padrão CRM) ===== */}
-      <header className="space-y-5">
-        <div className="overflow-hidden rounded-2xl border border-white/[.08] bg-card/65 shadow-[0_18px_50px_-36px_rgba(0,0,0,.9)]">
-
-          {/* Voltar / Cliente desde */}
-          <div className="flex items-center justify-between border-b border-white/[.06] px-5 py-3 md:px-6">
-            <button onClick={() => navigate("/clientes")} className="rounded-lg border border-white/10 bg-white/[.035] p-2 text-foreground transition-colors hover:bg-white/[.07]" aria-label="Voltar">
-              <ArrowLeft size={16} />
-            </button>
-            <div className="flex items-center gap-2 rounded-lg border border-white/[.08] bg-white/[.025] px-3 py-1.5 text-[11px] font-semibold text-muted-foreground">
-              <Calendar size={12} className="opacity-80" />
-              <span className="opacity-75">Cliente desde</span>
-              <span className="font-bold">{clientSince.toLowerCase()}</span>
-            </div>
-          </div>
-
-          {/* Conteúdo principal do banner */}
-          <div className="flex flex-col gap-4 px-5 py-5 md:flex-row md:items-center md:px-6">
-            {/* Avatar circular */}
-            <div className="relative shrink-0 mx-auto md:mx-0">
+    <div className="client-profile">
+      <div className="client-profile-breadcrumb"><button onClick={() => navigate('/clientes')}><ArrowLeft size={15} /> Clientes</button><ChevronRight size={13} /><span>Ficha do cliente</span></div>
+      <header className="client-profile-header">
+        <div className="client-profile-identity">
+                      <div className="client-profile-avatar relative shrink-0">
               <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-2xl border border-primary/15 bg-primary/10 text-3xl font-extrabold text-primary md:h-24 md:w-24 md:text-4xl"
                    style={{ fontFamily: "'Sora','Space Grotesk',sans-serif" }}>
                 {client.avatar_url ? <img src={client.avatar_url} alt="" className="w-full h-full object-cover" /> : client.name?.charAt(0)?.toUpperCase()}
@@ -1409,118 +1400,31 @@ const ClienteDetalhe = () => {
                   } else {
                     toast({ title: "Erro no upload", description: upErr.message, variant: "destructive" });
                   }
-                }} className="hidden" />
+                }} className="sr-only" aria-label="Trocar foto do cliente" />
               </label>
             </div>
 
-            {/* Nome + chips */}
-            <div className="min-w-0 flex-1 text-center md:text-left">
-              <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">Ficha do cliente</p>
-              <h1 className="mt-1 truncate text-2xl font-extrabold leading-tight tracking-tight text-foreground md:text-3xl"
-                  style={{ fontFamily: "'Sora','Space Grotesk',sans-serif", letterSpacing: "-0.02em" }}>
-                {client.name}
-              </h1>
-              <div className="flex flex-wrap justify-center md:justify-start items-center gap-1.5 mt-3">
-                <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${client.status === "Ativo" ? "bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-400/25" : "bg-white/5 text-muted-foreground ring-1 ring-white/10"}`}>
-                  <span className={`w-1.5 h-1.5 rounded-full ${client.status === "Ativo" ? "bg-emerald-400" : "bg-white/50"}`} />
-                  {client.status}
-                </span>
-                <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ring-1 ${(client.credit_score || 0) >= 75 ? "bg-emerald-500/10 text-emerald-400 ring-emerald-400/25" : (client.credit_score || 0) >= 50 ? "bg-amber-500/10 text-amber-300 ring-amber-400/25" : "bg-rose-500/10 text-rose-400 ring-rose-400/25"}`}>
-                  <ShieldCheck size={11} /> {riskLabel}
-                </span>
-                {client.cpf_cnpj && (
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-white/[.035] px-2.5 py-1 font-mono text-[10px] font-semibold text-muted-foreground ring-1 ring-white/10">
-                    {client.cpf_cnpj}
-                  </span>
-                )}
-                {kpis.activeContracts.length > 0 && (
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider text-sky-200 bg-sky-500/20 ring-1 ring-sky-400/40">
-                    <FileText size={11} /> {kpis.activeContracts.length} ativo{kpis.activeContracts.length > 1 ? "s" : ""}
-                  </span>
-                )}
-              </div>
-            </div>
+
+          <div className="min-w-0">
+            <span className="client-profile-eyebrow">RELACIONAMENTO · CREDMAIS</span>
+            <h1>{client.name}</h1>
+            <div className="client-profile-meta"><span className={client.status === 'Ativo' ? 'client-profile-status' : ''}><span aria-hidden="true">●</span> {client.status}</span><span>Cliente desde {clientSince.toLowerCase()}</span>{client.cpf_cnpj && <span className="font-mono">{client.cpf_cnpj}</span>}</div>
           </div>
         </div>
-
-        {/* Ações rápidas */}
-        <div>
-          <p className="text-sm font-bold text-foreground mb-3" style={{ fontFamily: "'Sora','Space Grotesk',sans-serif" }}>Ações rápidas</p>
-          <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-7">
-            {[
-              { Icon: MessageSquare, label: "WhatsApp",   sub: "Enviar mensagem", tint: "bg-emerald-500 text-white",   onClick: () => { const p = getPhone(); if (p) window.open(`https://wa.me/${p}`, "_blank"); }, disabled: !getPhone() },
-              { Icon: Phone,         label: "Ligar",      sub: "Fazer ligação",   tint: "bg-sky-500 text-white",       onClick: () => { const p = getPreferredPhone(client); if (p) window.open(`tel:${p.replace(/\D/g, "")}`, "_self"); }, disabled: !getPreferredPhone(client) },
-              { Icon: Mail,          label: "E-mail",     sub: "Enviar e-mail",   tint: "bg-violet-500 text-white",    onClick: () => { if (client.email) window.open(`mailto:${client.email}`, "_blank"); }, disabled: !client.email },
-              { Icon: Send,          label: "Portal",     sub: "Acessar portal",  tint: "bg-amber-500 text-white",     onClick: sendPortalLink },
-              { Icon: Plus,          label: "Empréstimo", sub: "Novo empréstimo", tint: "bg-primary text-primary-foreground", onClick: () => setNewLoanMode(true) },
-            ].map((a) => (
-              <button
-                key={a.label}
-                onClick={a.onClick}
-                disabled={a.disabled}
-                className="group flex items-center gap-3 rounded-xl border border-border/40 bg-card/55 px-3 py-2.5 text-left transition-colors hover:border-primary/20 hover:bg-card/75 disabled:pointer-events-none disabled:opacity-40"
-              >
-                <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${a.tint}`}>
-                  <a.Icon size={16} />
-                </span>
-                <span className="min-w-0">
-                  <span className="block text-[11px] font-bold uppercase tracking-wider text-foreground leading-none">{a.label}</span>
-                  <span className="block text-[10px] text-muted-foreground truncate mt-0.5">{a.sub}</span>
-                </span>
-              </button>
-            ))}
-            <ClientToolsPanel
-              open={showMoreActions}
-              onOpenChange={setShowMoreActions}
-              groups={toolGroups}
-              trigger={
-                <button className="group flex items-center gap-3 rounded-xl border border-border/40 bg-card/55 px-3 py-2.5 text-left transition-colors hover:border-primary/20 hover:bg-card/75">
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted text-foreground">
-                    <Wrench size={16} />
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block text-[11px] font-bold uppercase tracking-wider text-foreground leading-none">Mais</span>
-                    <span className="block text-[10px] text-muted-foreground truncate mt-0.5">Outras ações</span>
-                  </span>
-                </button>
-              }
-            />
-            <button onClick={startEdit} className="group flex items-center gap-3 rounded-xl border border-border/40 bg-card/55 px-3 py-2.5 text-left transition-colors hover:border-primary/20 hover:bg-card/75" title="Editar dados">
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted text-foreground">
-                <Edit size={16} />
-              </span>
-              <span className="min-w-0">
-                <span className="block text-[11px] font-bold uppercase tracking-wider text-foreground leading-none">Editar</span>
-                <span className="block text-[10px] text-muted-foreground truncate mt-0.5">Editar cliente</span>
-              </span>
-            </button>
-          </div>
-        </div>
-
-        {/* KPI strip com ícone circular */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {[
-            { label: "Capital ativo",  value: `R$ ${fmt(kpis.totalCapital)}`, sub: `${kpis.activeContracts.length} contrato(s)`, Icon: Wallet,      chip: "bg-primary text-primary-foreground" },
-            { label: "Recebido",       value: `R$ ${fmt(kpis.totalPaid)}`,    sub: `${kpis.ltvPct}% do total`,                    Icon: CheckCircle, chip: "bg-emerald-500 text-white" },
-            { label: "Lucro",          value: `R$ ${fmt(kpis.totalProfit)}`,  sub: `Ticket médio: R$ ${fmt(kpis.ticketMedio)}`,   Icon: TrendingUp,  chip: "bg-amber-500 text-white" },
-            { label: "Próx. vencimento", value: kpis.nextDueInst ? formatBR(kpis.nextDueInst.due_date) : "—", sub: kpis.nextDueInst ? `R$ ${fmt(Number(kpis.nextDueInst.amount))}` : "Sem pendências", Icon: Calendar, chip: kpis.overdueInst.length > 0 ? "bg-rose-500 text-white" : "bg-sky-500 text-white" },
-          ].map(k => (
-            <div key={k.label} className="flex items-center gap-3 rounded-2xl border border-border/40 bg-card/55 p-4 transition-colors hover:border-border">
-              <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${k.chip}`}>
-                <k.Icon size={18} />
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground truncate">{k.label}</p>
-                <p className="text-lg md:text-[22px] font-extrabold text-foreground leading-tight tracking-tight tabular-nums truncate"
-                   style={{ fontFamily: "'Sora','Space Grotesk',sans-serif" }}>{k.value}</p>
-                <p className="text-[11px] text-muted-foreground truncate">{k.sub}</p>
-              </div>
-            </div>
-          ))}
+        <div className="client-profile-primary-actions">
+          <button className="client-profile-button is-primary" onClick={() => navigate(`/clientes/novo?clientId=${id}`)}><Plus size={17} /> Novo empréstimo</button>
+          <button className="client-profile-button" onClick={() => setDistributedPayOpen(true)} disabled={kpis.remaining <= 0}><Wallet size={16} /> Registrar pagamento</button>
+          <ClientToolsPanel open={showMoreActions} onOpenChange={setShowMoreActions} groups={toolGroups} trigger={<button className="client-profile-button is-icon" aria-label="Mais ações do cliente"><MoreHorizontal size={20} /></button>} />
         </div>
       </header>
-
-
+      <section className="client-profile-metrics" aria-label="Resumo financeiro">
+        {[
+          {label:'Saldo em aberto',value:kpis.remaining,detail:`${kpis.pendingInst.length + kpis.overdueInst.length} parcelas a receber`,Icon:Wallet,featured:true},
+          {label:'Capital ativo',value:kpis.totalCapital,detail:`${kpis.activeContracts.length} contratos ativos`,Icon:FileText},
+          {label:'Total recebido',value:kpis.totalPaid,detail:`${kpis.paidInst.length} parcelas pagas`,Icon:CheckCircle},
+          {label:'Lucro recebido',value:kpis.totalProfit,detail:'Resultado dos recebimentos',Icon:TrendingUp},
+        ].map(metric => <article key={metric.label} className={metric.featured ? 'is-featured' : ''}><div className="client-profile-metric-label"><span>{metric.label}</span><metric.Icon size={17} /></div><p><span>R$</span> {fmt(metric.value)}</p><small>{metric.detail}</small></article>)}
+      </section>
 
       {/* ===== MODALS ===== */}
 
@@ -1675,146 +1579,42 @@ const ClienteDetalhe = () => {
 
 
 
-      {/* ===== CONTENT ===== */}
-
-
-
-
-      {/* Alertas críticos (atraso / pendências urgentes) — antes do Resumo */}
-      {(kpis.overdueInst.length > 0 || kpis.pendingInst.length > 0) && (
-        <div className="flex items-center gap-2 flex-wrap">
-          {kpis.overdueInst.length > 0 && (
-            <button onClick={sendAllOverdue} className="flex items-center gap-2 rounded-xl border border-rose-400/30 bg-rose-500/10 px-4 py-2.5 text-xs font-bold text-rose-400 transition-colors hover:bg-rose-500/20">
-              <AlertTriangle size={14} /> {kpis.overdueInst.length} parcela(s) em atraso · Cobrar todas
-            </button>
-          )}
-          {kpis.pendingInst.length > 0 && (
-            <button onClick={payAllPending} className="flex items-center gap-2 rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-2.5 text-xs font-bold text-emerald-400 transition-colors hover:bg-emerald-500/20">
-              <CheckCircle size={14} /> Quitar todas as pendentes
-            </button>
-          )}
-        </div>
-      )}
-
-      {/* Section: Informações — colapsável (Contato + Endereço + Estatísticas) */}
-      <section id="sec-resumo" className="scroll-mt-24">
-        <button
-          onClick={() => setShowInfo(v => !v)}
-          className="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-2xl border border-border/60 bg-card/40 hover:bg-card/60 hover:border-border transition-all"
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center"><User size={15} /></div>
-            <div className="text-left">
-              <p className="text-sm font-bold text-foreground">Informações & Estatísticas</p>
-              <p className="text-[11px] text-muted-foreground">Contato, endereço e métricas do cliente</p>
-            </div>
-          </div>
-          <div className={`transition-transform ${showInfo ? "rotate-180" : ""}`}>
-            <ChevronDown size={16} className="text-muted-foreground" />
-          </div>
-        </button>
-        {showInfo && (
-        <div className="mt-4 space-y-5">
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-          {/* Contato & Endereço (2/3) */}
-          <section className="lg:col-span-2 rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md p-5">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center"><User size={14} /></div>
-                <h3 className="text-sm font-bold text-foreground">Contato & Endereço</h3>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <button onClick={startEdit} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-border/60 text-muted-foreground text-[11px] font-semibold hover:bg-accent hover:text-foreground transition-all">
-                  <Edit size={12} /> Editar dados
-                </button>
-                <button onClick={startEditAddress} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-border/60 text-muted-foreground text-[11px] font-semibold hover:bg-accent hover:text-foreground transition-all">
-                  <MapPin size={12} /> Endereço
-                </button>
-              </div>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {[
-                { Icon: Phone, label: "Telefone", value: getPreferredPhone(client), tint: "text-sky-400 bg-sky-500/10 ring-sky-400/20", onClick: () => { const p = getPreferredPhone(client); if (p) window.open(`tel:${p.replace(/\D/g, "")}`, "_self"); } },
-                { Icon: MessageSquare, label: "WhatsApp", value: client.whatsapp || client.phone, tint: "text-emerald-400 bg-emerald-500/10 ring-emerald-400/20", onClick: () => { const p = getPhone(); if (p) window.open(`https://wa.me/${p}`, "_blank"); } },
-                { Icon: Mail, label: "E-mail", value: client.email, tint: "text-amber-400 bg-amber-500/10 ring-amber-400/20", onClick: () => { if (client.email) window.open(`mailto:${client.email}`, "_blank"); } },
-                { Icon: User, label: "CPF/CNPJ", value: client.cpf_cnpj, tint: "text-violet-400 bg-violet-500/10 ring-violet-400/20", onClick: startEdit },
-                { Icon: MapPin, label: "Cidade", value: address?.city ? `${address.city}/${address.state}` : null, tint: "text-rose-400 bg-rose-500/10 ring-rose-400/20", onClick: startEditAddress },
-                { Icon: Calendar, label: "Cliente desde", value: client.created_at ? formatBR(client.created_at) : null, tint: "text-primary bg-primary/10 ring-primary/20", onClick: () => {} },
-              ].map(item => (
-                <button key={item.label} onClick={item.value ? item.onClick : startEdit}
-                  className="flex items-center gap-3 p-3 rounded-xl border border-border/40 bg-background/30 hover:bg-accent/60 hover:border-border transition-all text-left">
-                  <div className={`w-10 h-10 rounded-xl ring-1 flex items-center justify-center shrink-0 ${item.tint}`}>
-                    <item.Icon size={16} />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-[0.14em] font-semibold">{item.label}</p>
-                    <p className="text-sm text-foreground font-semibold truncate">{item.value || <span className="text-muted-foreground/60 italic font-normal">Adicionar</span>}</p>
-                  </div>
-                </button>
-              ))}
-            </div>
-            {address?.street && (
-              <p className="text-xs text-muted-foreground mt-4 pt-4 border-t border-border/40 flex items-center gap-1.5">
-                <MapPin size={12} className="text-primary shrink-0" />
-                <span className="truncate">{address.street}{address.number ? `, ${address.number}` : ""}{address.neighborhood ? ` — ${address.neighborhood}` : ""} · {address.city}/{address.state}</span>
-              </p>
-            )}
+      <div className="client-profile-grid">
+        <aside className="client-profile-sidebar">
+          <section className="client-profile-panel">
+            <div className="client-profile-section-heading"><h2>Dados do cliente</h2><button onClick={startEdit} aria-label="Editar dados do cliente"><Edit size={16} /></button></div>
+            <dl className="client-profile-contact">
+              <div><dt><Phone size={14} /> Telefone</dt><dd>{getPreferredPhone(client) || 'Não informado'}</dd></div>
+              <div><dt><Mail size={14} /> E-mail</dt><dd>{client.email || 'Não informado'}</dd></div>
+              <div><dt><MapPin size={14} /> Endereço <button onClick={startEditAddress} aria-label="Editar endereço"><Edit size={12} /></button></dt><dd>{address?.street ? `${address.street}${address.number ? `, ${address.number}` : ''}` : 'Não informado'}{address?.city && <small>{address.neighborhood ? `${address.neighborhood} · ` : ''}{address.city}/{address.state}</small>}</dd></div>
+            </dl>
+            <button className="client-profile-button is-whatsapp" disabled={!getPhone()} onClick={() => { const phone = getPhone(); if (phone) window.open(`https://wa.me/${phone}`, '_blank', 'noopener,noreferrer'); }}><MessageSquare size={16} /> Conversar no WhatsApp</button>
+            <div className="client-profile-contact-actions"><button disabled={!getPreferredPhone(client)} onClick={() => {const phone=getPreferredPhone(client);if(phone)window.open(`tel:${phone.replace(/\D/g,'')}`,'_self');}}><Phone size={14} /> Ligar</button><button disabled={!client.email} onClick={() => {if(client.email)window.open(`mailto:${client.email}`,'_self');}}><Mail size={14} /> E-mail</button><button onClick={sendPortalLink}><Send size={14} /> Enviar portal</button></div>
           </section>
-
-          {/* Estatísticas do cliente (1/3) */}
-          <section className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md p-5">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center"><Activity size={14} /></div>
-              <h3 className="text-sm font-bold text-foreground">Estatísticas</h3>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              {[
-                { label: "Contratos", value: String(contracts.length), Icon: FileText },
-                { label: "Parcelas pagas", value: `${kpis.paidInst.length}/${kpis.paidInst.length + kpis.overdueInst.length + kpis.pendingInst.length}`, Icon: CheckCircle },
-                { label: "Taxa de atraso", value: `${kpis.latePayRate}%`, Icon: AlertTriangle, tone: kpis.latePayRate > 30 ? "text-rose-400" : kpis.latePayRate > 10 ? "text-amber-300" : "text-emerald-400" },
-                { label: "Ticket médio", value: `R$ ${fmt(kpis.ticketMedio)}`, Icon: DollarSign },
-                { label: "Cliente há", value: `${daysAsClient}d`, Icon: Calendar },
-                { label: "Em atraso", value: String(kpis.overdueInst.length), Icon: AlertTriangle, tone: kpis.overdueInst.length ? "text-rose-400" : "text-foreground" },
-              ].map(s => (
-                <div key={s.label} className="rounded-xl border border-border/60 bg-background/40 p-3">
-                  <div className="flex items-center gap-1.5 text-muted-foreground mb-1">
-                    <s.Icon size={11} />
-                    <span className="text-[9px] uppercase tracking-[0.14em] font-semibold truncate">{s.label}</span>
-                  </div>
-                  <p className={`text-sm font-bold tabular-nums truncate ${s.tone || "text-foreground"}`}>{s.value}</p>
-                </div>
-              ))}
-            </div>
+          <section className="client-profile-panel">
+            <div className="client-profile-section-heading"><h2>Relacionamento</h2><ShieldCheck size={17} className="text-primary" /></div>
+            <div className="client-profile-score"><span>Score cadastrado</span><strong>{client.credit_score ?? 0}<small>/100</small></strong></div>
+            <div className="client-profile-score-track" aria-hidden="true"><span style={{width:`${Math.max(0,Math.min(100,client.credit_score || 0))}%`}} /></div>
+            <div className="client-profile-meta mt-3"><span>{riskLabel}</span><span>{daysAsClient} dias de relacionamento</span></div>
+            <div className="client-profile-stat-row"><span>Parcelas pagas</span><strong>{kpis.paidInst.length} de {installments.length}</strong></div>
+            <div className="client-profile-stat-row"><span>Ticket médio</span><strong>R$ {fmt(kpis.ticketMedio)}</strong></div>
           </section>
-        </div>
-        </div>
-        )}
-      </section>
-
-
-
-      {/* Ações rápidas: Documentos e Histórico */}
-      <div className="flex items-center justify-end gap-2">
-        <button
-          onClick={() => setDocsOpen(true)}
-          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold bg-card/60 border border-border/60 text-muted-foreground hover:text-foreground hover:bg-accent/50 hover:border-border transition-all"
-        >
-          <FileIcon size={14} />
-          <span>Documentos</span>
-          {clientDocs.length > 0 && (
-            <span className="text-[10px] font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">{clientDocs.length}</span>
-          )}
-        </button>
-        <button
-          onClick={() => setHistOpen(true)}
-          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold bg-card/60 border border-border/60 text-muted-foreground hover:text-foreground hover:bg-accent/50 hover:border-border transition-all"
-        >
-          <Clock size={14} />
-          <span>Histórico</span>
-        </button>
-      </div>
-
+          <section className="client-profile-panel client-profile-shortcuts" aria-label="Arquivos e acompanhamento">
+            <button onClick={() => setDocsOpen(true)}><span className="client-profile-shortcut-icon"><FileIcon size={18} /></span><span><strong>Documentos</strong><small>{clientDocs.length} arquivos anexados</small></span><ChevronRight size={16} /></button>
+            <button onClick={() => setHistOpen(true)}><span className="client-profile-shortcut-icon"><Clock size={18} /></span><span><strong>Histórico</strong><small>Atividades e movimentações</small></span><ChevronRight size={16} /></button>
+            <button onClick={quickNote}><span className="client-profile-shortcut-icon"><StickyNote size={18} /></span><span><strong>Nova anotação</strong><small>Registre algo importante</small></span><Plus size={16} /></button>
+          </section>
+        </aside>
+        <div className="client-profile-main">
+          <section className={`client-profile-followup ${kpis.overdueInst.length > 0 ? 'has-overdue' : ''}`}>
+            <div className="client-profile-followup-icon">{kpis.overdueInst.length > 0 ? <AlertTriangle size={22} /> : <Calendar size={22} />}</div>
+            <div className="min-w-0 flex-1"><span className="client-profile-eyebrow">ACOMPANHAMENTO</span><h2>{kpis.overdueInst.length > 0 ? `${kpis.overdueInst.length} parcelas precisam de atenção` : kpis.nextDueInst ? `Próximo vencimento · ${formatBR(kpis.nextDueInst.due_date)}` : 'Tudo em dia por aqui'}</h2><p>{kpis.overdueInst.length > 0 ? `R$ ${fmt(kpis.totalOverdue)} em atraso. Consulte as parcelas antes de cobrar.` : kpis.nextDueInst ? `Parcela de R$ ${fmt(Number(kpis.nextDueInst.amount))}. Acompanhe os detalhes do contrato abaixo.` : 'Nenhuma parcela pendente. O histórico do cliente continua disponível.'}</p></div>
+            {kpis.overdueInst.length > 0 && <button className="client-profile-button" onClick={sendAllOverdue}><Send size={15} /> Cobrar atrasadas</button>}
+          </section>
+          <section className="client-profile-contract-toolbar" aria-label="Filtrar contratos">
+            <div className="client-profile-section-heading"><div><span className="client-profile-eyebrow">CARTEIRA DO CLIENTE</span><h2>Contratos <span>{contracts.length}</span></h2></div><button className="client-profile-button" onClick={generatePDF}><Download size={15} /> Extrato PDF</button></div>
+            <div className="client-profile-filters"><div className="client-profile-filter-options">{([{value:'all',label:'Todos'},{value:'active',label:'Em andamento'},{value:'settled',label:'Quitados'}] as const).map(filter => <button key={filter.value} aria-pressed={contractFilter === filter.value} onClick={() => setContractFilter(filter.value)}>{filter.label}</button>)}</div><label className="client-profile-search"><Search size={16} /><input value={contractSearch} onChange={e => setContractSearch(e.target.value)} placeholder="Valor, data ou modalidade" aria-label="Buscar contrato" />{contractSearch && <button onClick={() => setContractSearch('')} aria-label="Limpar busca"><X size={14} /></button>}</label></div>
+          </section>
 
       {/* Modal de Documentos & Anexos */}
       <Dialog open={docsOpen} onOpenChange={setDocsOpen}>
@@ -1881,7 +1681,9 @@ const ClienteDetalhe = () => {
 
           {contracts.length === 0 ? (
             <EmptyState compact title="Nenhum contrato" description="Clique em Novo Empréstimo para começar." />
-          ) : contracts.map((c: any) => {
+          ) : visibleContracts.length === 0 ? (
+            <EmptyState compact title="Nenhum contrato encontrado" description="Tente outro valor, data ou filtro." />
+          ) : visibleContracts.map((c: any) => {
             const cInsts = installments.filter((i: any) => i.contract_id === c.id);
             const total = cInsts.length;
             const paid = cInsts.filter((i: any) => i.status === "paid").length;
@@ -1896,7 +1698,7 @@ const ClienteDetalhe = () => {
             const barColor = isPaid ? "bg-emerald-500" : overdue > 0 ? "bg-destructive" : "bg-primary";
             const isExpanded = expandedContracts.has(c.id);
             return (
-            <div key={c.id} className={`group relative overflow-hidden rounded-2xl border bg-card/55 transition-colors ${isExpanded ? "border-primary/40" : "border-border/50 hover:border-primary/30"}`}>
+            <div key={c.id} className={`client-profile-contract group relative overflow-hidden rounded-2xl border bg-card/55 transition-colors ${isExpanded ? "border-primary/40" : "border-border/50 hover:border-primary/30"}`}>
               {/* Faixa lateral de status */}
               <div className={`absolute left-0 top-0 bottom-0 w-[3px] ${barColor}`} />
 
@@ -1904,6 +1706,8 @@ const ClienteDetalhe = () => {
               <button
                 type="button"
                 onClick={() => toggleContract(c.id)}
+                aria-expanded={isExpanded}
+                aria-controls={`contract-installments-${c.id}`}
                 className="w-full text-left p-4 pl-5 hover:bg-accent/20 transition-colors"
               >
                 {/* Linha superior: valor + status + lucro */}
@@ -1996,7 +1800,7 @@ const ClienteDetalhe = () => {
 
               {/* Parcelas inline (expandable) */}
               {expandedContracts.has(c.id) && (
-                <div className="border-t border-border/40 bg-background/30 p-3 space-y-2">
+                <div id={`contract-installments-${c.id}`} className="client-profile-installments border-t border-border/40 bg-background/30 p-3 space-y-2">
                   {cInsts.length === 0 ? (
                     <p className="text-xs text-muted-foreground text-center py-4">Nenhuma parcela</p>
                   ) : cInsts.map((inst: any) => {
@@ -2101,6 +1905,8 @@ const ClienteDetalhe = () => {
           })}
         </div>
       )}</section>
+        </div>
+      </div>
 
 
 
