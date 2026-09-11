@@ -293,6 +293,7 @@ const Login = () => {
       </div>
 
       <div className="absolute left-[5%] top-1/2 z-10 hidden max-w-[390px] -translate-y-1/2 lg:block">
+        <img src="/credinho-mascot-card.png" alt="" aria-hidden="true" className="pointer-events-none absolute -bottom-36 -right-44 h-72 w-48 object-contain opacity-35 drop-shadow-[0_18px_30px_rgba(56,189,248,.2)] animate-mascot-float" />
         <div className="mb-5 h-0.5 w-10 bg-sky-400" />
         <p className="mb-6 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-300/70">Gest&atilde;o de empr&eacute;stimos</p>
         <h2 className="font-display text-4xl font-extrabold leading-[1.08] tracking-tight text-white xl:text-5xl">Cr&eacute;dito hoje,<br />mais <span className="text-sky-400">oportunidades</span><br />amanh&atilde;.</h2>
