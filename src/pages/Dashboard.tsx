@@ -43,9 +43,9 @@ const Dashboard = () => {
   const { data, isLoading, isFetching, dataUpdatedAt, error: dashError, refetch: refetchDash } = useQuery({
     queryKey: ["dashboard-data", user?.id],
     queryFn: async () => {
-      // SÃ³ as colunas que as mÃ©tricas usam. Antes vinha `select("*")` das ~1.700
-      // parcelas e de todos os contratos, com anexos e observaÃ§Ãµes que a tela nem
-      // abre â€” payload grande Ã  toa, e no celular isso pesa.
+      // Só as colunas que as métricas usam. Antes vinha `select("*")` das ~1.700
+      // parcelas e de todos os contratos, com anexos e observações que a tela nem
+      // abre — payload grande à toa, e no celular isso pesa.
       const [contracts, installments, clients, goals, profits] = await Promise.all([
         fetchAll((f, t) => supabase.from("contracts")
           .select("id, capital, total_interest, num_installments, status, created_at, client_id, clients(name, cpf_cnpj)")
@@ -65,11 +65,11 @@ const Dashboard = () => {
     enabled: !!user,
   });
 
-  // O cÃ¡lculo mora em lib/dashboardMetrics para poder ser testado. Ficando aqui
-  // dentro, o filtro errado de inadimplÃªncia passou meses sem ninguÃ©m notar.
+  // O cálculo mora em lib/dashboardMetrics para poder ser testado. Ficando aqui
+  // dentro, o filtro errado de inadimplência passou meses sem ninguém notar.
   const metrics = useMemo(() => (data ? computeDashboardMetrics(data as any) : null), [data]);
 
-  // âš ï¸ IMPORTANTE: todos os hooks antes de qualquer early return
+  // ⚠️ IMPORTANTE: todos os hooks antes de qualquer early return
   const deltaReceived = useMemo(() => {
     if (!data) return undefined;
     const now = new Date();
@@ -82,11 +82,11 @@ const Dashboard = () => {
     return ((cur - prev) / prev) * 100;
   }, [data]);
 
-  // Estava lÃ¡ embaixo, DEPOIS dos dois returns antecipados â€” exatamente o que o
-  // aviso acima proÃ­be. `usePlan` usa `useMemo`: enquanto o painel carregava o
-  // componente saÃ­a no return do esqueleto e esse hook nÃ£o rodava; quando os
+  // Estava lá embaixo, DEPOIS dos dois returns antecipados — exatamente o que o
+  // aviso acima proíbe. `usePlan` usa `useMemo`: enquanto o painel carregava o
+  // componente saía no return do esqueleto e esse hook não rodava; quando os
   // dados chegavam ele passava a rodar, o React via mais hooks do que no render
-  // anterior e derrubava a tela (erro #310, "Algo deu errado"). O painel Ã© a
+  // anterior e derrubava a tela (erro #310, "Algo deu errado"). O painel é a
   // primeira tela de todo mundo depois do login.
   const { hasAutomations } = usePlan();
 
@@ -109,7 +109,7 @@ const Dashboard = () => {
           {[1, 2, 3, 4].map((i) => <div key={i} className="h-36 skeleton-shimmer" />)}
         </div>
         <div className="h-72 skeleton-shimmer rounded-3xl" />
-        <span className="sr-only">Carregandoâ€¦</span>
+        <span className="sr-only">Carregando…</span>
       </div>
     );
   }
@@ -120,21 +120,21 @@ const Dashboard = () => {
   const greeting = hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite";
   const timeStr = currentTime.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
   const dateStr = currentTime.toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" });
-  const firstName = profile?.name?.split(" ")[0] || "UsuÃ¡rio";
+  const firstName = profile?.name?.split(" ")[0] || "Usuário";
 
   const quickActions = [
     { label: "Novo cliente",    icon: Users,    path: "/clientes/novo", iconColor: "text-primary" },
-    { label: "Nova cobranÃ§a",   icon: Receipt,  path: "/cobrancas",     iconColor: "text-success" },
+    { label: "Nova cobrança",   icon: Receipt,  path: "/cobrancas",     iconColor: "text-success" },
     { label: "Ver carteira",    icon: Wallet,   path: "/carteira",      iconColor: "text-foreground" },
     ...(hasAutomations
       ? [{ label: "Agente IA", icon: Bot, path: "/agente-ia", iconColor: "text-foreground" }]
-      : [{ label: "RelatÃ³rios", icon: Receipt, path: "/relatorios", iconColor: "text-foreground" }]),
+      : [{ label: "Relatórios", icon: Receipt, path: "/relatorios", iconColor: "text-foreground" }]),
   ];
 
   const urgencyCards = [
-    { count: metrics.overdueCount, label: "Parcelas atrasadas", sub: "Necessitam atenÃ§Ã£o imediata", icon: AlertCircle, tone: "danger",  path: "/cobrancas" },
-    { count: metrics.vencendoHoje, label: "Vencendo hoje",      sub: "CobranÃ§as do dia",             icon: Calendar,    tone: "warning", path: "/cobrancas" },
-    { count: metrics.proximos7,    label: "PrÃ³ximos 7 dias",    sub: "Vencimentos da semana",        icon: Clock,       tone: "info",    path: "/cobrancas" },
+    { count: metrics.overdueCount, label: "Parcelas atrasadas", sub: "Necessitam atenção imediata", icon: AlertCircle, tone: "danger",  path: "/cobrancas" },
+    { count: metrics.vencendoHoje, label: "Vencendo hoje",      sub: "Cobranças do dia",             icon: Calendar,    tone: "warning", path: "/cobrancas" },
+    { count: metrics.proximos7,    label: "Próximos 7 dias",    sub: "Vencimentos da semana",        icon: Clock,       tone: "info",    path: "/cobrancas" },
   ];
 
   const toneMap: Record<string, { text: string; bg: string; border: string }> = {
@@ -145,7 +145,7 @@ const Dashboard = () => {
 
   return (
     <div className="relative space-y-5 md:space-y-6 pb-8 max-w-[1400px] mx-auto animate-fade-in">
-      {/* â”€â”€â”€ HERO â€” saudaÃ§Ã£o + aÃ§Ãµes principais â”€â”€â”€ */}
+      {/* ─── HERO — saudação + ações principais ─── */}
       <section className="relative isolate overflow-hidden rounded-2xl border border-amber-200/[.16] bg-[#0b0c0f] bg-cover bg-center p-5 shadow-[0_22px_60px_-32px_rgba(234,179,8,.28)] md:p-7" style={{ backgroundImage: "linear-gradient(90deg,rgba(8,9,12,.98) 0%,rgba(8,9,12,.88) 48%,rgba(8,9,12,.38)), url('/credmais-hero-cinematic-v2.webp')" }}>
         <div className="pointer-events-none absolute -right-16 -top-24 -z-10 h-72 w-72 rounded-full border-[24px] border-white/[.06]" />
         <div className="pointer-events-none absolute right-20 top-10 -z-10 h-2 w-2 rounded-full bg-orange-300 shadow-[0_0_18px_6px_rgba(251,146,60,.65)]" />
@@ -156,7 +156,7 @@ const Dashboard = () => {
                 <span className="status-dot status-dot-success" />
                 Ao vivo
               </span>
-              <span className="opacity-30">Â·</span>
+              <span className="opacity-30">·</span>
               <span>{timeStr}</span>
             </div>
             <h1 className="text-3xl font-bold leading-tight tracking-tight text-white sm:text-4xl">
@@ -171,7 +171,7 @@ const Dashboard = () => {
               onClick={() => refetchDash()}
               disabled={isFetching}
               className="flex items-center gap-2 rounded-xl border border-white/[.16] bg-white/[.08] px-3.5 py-2 text-xs font-semibold text-white transition hover:bg-white/[.14] disabled:opacity-60"
-              title={dataUpdatedAt ? `Atualizado Ã s ${new Date(dataUpdatedAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}` : "Atualizar painel"}
+              title={dataUpdatedAt ? `Atualizado às ${new Date(dataUpdatedAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}` : "Atualizar painel"}
             >
               <RefreshCw size={13} className={isFetching ? "animate-spin" : ""} />
               {isFetching ? "Atualizando" : "Atualizar"}
@@ -215,19 +215,19 @@ const Dashboard = () => {
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-[13px] md:text-sm font-semibold text-foreground leading-tight break-words">{a.label}</p>
-                <p className="text-[9px] md:text-[10px] text-muted-foreground uppercase tracking-wider mt-0.5">Abrir â†’</p>
+                <p className="text-[9px] md:text-[10px] text-muted-foreground uppercase tracking-wider mt-0.5">Abrir →</p>
               </div>
             </button>
           ))}
         </div>
       </section>
 
-      {/* â”€â”€â”€ Daily AI Briefing â”€â”€â”€ */}
+      {/* ─── Daily AI Briefing ─── */}
       <DailyBriefing />
 
       <PendingCenter overdueCount={metrics.overdueCount} />
 
-      {/* â”€â”€â”€ Narrativa Executiva â”€â”€â”€ */}
+      {/* ─── Narrativa Executiva ─── */}
       <NarrativeHero
         userName={profile?.name}
         capitalOnStreet={metrics.capitalNaRua}
@@ -246,15 +246,15 @@ const Dashboard = () => {
       />
 
 
-      {/* â”€â”€â”€ KPIs financeiros â”€â”€â”€ */}
+      {/* ─── KPIs financeiros ─── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 md:gap-4">
-        <BentoKPI label="Capital na Rua" value={`R$ ${fmt(metrics.capitalNaRua)}`} explanation="Soma do capital de todos os contratos que ainda estÃ£o ativos ou em atraso. Ã‰ o dinheiro que estÃ¡ trabalhando por vocÃª." hint={`${metrics.contratosAtivos} contrato${metrics.contratosAtivos === 1 ? "" : "s"} ativo${metrics.contratosAtivos === 1 ? "" : "s"}`} icon={Landmark} tone="primary" onClick={() => navigate("/carteira")} />
-        <BentoKPI label="Total Recebido" value={`R$ ${fmt(metrics.totalReceived)}`} explanation="Tudo que jÃ¡ entrou no caixa vindo das parcelas pagas â€” capital + juros." hint="Somando todas as parcelas quitadas" icon={Wallet} tone="success" delta={deltaReceived} positiveIsGood onClick={() => navigate("/analises")} />
-        <BentoKPI label="Lucro Gerado" value={`R$ ${fmt(metrics.totalProfitAmount)}`} explanation="Parte de juros dos pagamentos recebidos â€” o que sobra depois de devolver o capital emprestado." hint={`ROI de ${metrics.roi.toFixed(1)}% sobre o capital`} icon={TrendingUp} tone="primary" onClick={() => navigate("/analises")} />
-        <BentoKPI label="Em Atraso" value={`R$ ${fmt(metrics.totalOverdueAmount)}`} explanation="Parcelas cujo vencimento jÃ¡ passou e continuam pendentes. Priorize a cobranÃ§a para nÃ£o virar prejuÃ­zo." hint={`${metrics.taxaInadimplencia.toFixed(1)}% de inadimplÃªncia`} icon={AlertCircle} tone={metrics.totalOverdueAmount > 0 ? "danger" : "muted"} onClick={() => navigate("/cobrancas")} />
+        <BentoKPI label="Capital na Rua" value={`R$ ${fmt(metrics.capitalNaRua)}`} explanation="Soma do capital de todos os contratos que ainda estão ativos ou em atraso. É o dinheiro que está trabalhando por você." hint={`${metrics.contratosAtivos} contrato${metrics.contratosAtivos === 1 ? "" : "s"} ativo${metrics.contratosAtivos === 1 ? "" : "s"}`} icon={Landmark} tone="primary" onClick={() => navigate("/carteira")} />
+        <BentoKPI label="Total Recebido" value={`R$ ${fmt(metrics.totalReceived)}`} explanation="Tudo que já entrou no caixa vindo das parcelas pagas — capital + juros." hint="Somando todas as parcelas quitadas" icon={Wallet} tone="success" delta={deltaReceived} positiveIsGood onClick={() => navigate("/analises")} />
+        <BentoKPI label="Lucro Gerado" value={`R$ ${fmt(metrics.totalProfitAmount)}`} explanation="Parte de juros dos pagamentos recebidos — o que sobra depois de devolver o capital emprestado." hint={`ROI de ${metrics.roi.toFixed(1)}% sobre o capital`} icon={TrendingUp} tone="primary" onClick={() => navigate("/analises")} />
+        <BentoKPI label="Em Atraso" value={`R$ ${fmt(metrics.totalOverdueAmount)}`} explanation="Parcelas cujo vencimento já passou e continuam pendentes. Priorize a cobrança para não virar prejuízo." hint={`${metrics.taxaInadimplencia.toFixed(1)}% de inadimplência`} icon={AlertCircle} tone={metrics.totalOverdueAmount > 0 ? "danger" : "muted"} onClick={() => navigate("/cobrancas")} />
       </div>
 
-      {/* â”€â”€â”€ Urgency Cards â”€â”€â”€ */}
+      {/* ─── Urgency Cards ─── */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         {urgencyCards.map((c, i) => {
           const active = c.count > 0;
@@ -284,19 +284,19 @@ const Dashboard = () => {
         })}
       </div>
 
-      {/* â”€â”€â”€ Indicadores Executivos â”€â”€â”€ */}
+      {/* ─── Indicadores Executivos ─── */}
       <ExecutiveKPIs contracts={data.contracts} installments={data.installments} />
 
 
-      {/* â”€â”€â”€ Tabs: VisÃ£o Geral / AnÃ¡lises / Listas â”€â”€â”€ */}
+      {/* ─── Tabs: Visão Geral / Análises / Listas ─── */}
       <Tabs defaultValue="overview" className="w-full">
         <TabsList className="grid w-full grid-cols-3 rounded-xl border border-border/30 bg-card/50 p-1 md:inline-flex md:w-auto">
-          <TabsTrigger value="overview" className="rounded-lg text-xs font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">VisÃ£o geral</TabsTrigger>
-          <TabsTrigger value="analytics" className="rounded-lg text-xs font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">AnÃ¡lises</TabsTrigger>
+          <TabsTrigger value="overview" className="rounded-lg text-xs font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Visão geral</TabsTrigger>
+          <TabsTrigger value="analytics" className="rounded-lg text-xs font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Análises</TabsTrigger>
           <TabsTrigger value="lists" className="rounded-lg text-xs font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Listas</TabsTrigger>
         </TabsList>
 
-        {/* â”€â”€â”€ TAB: VisÃ£o geral â”€â”€â”€ */}
+        {/* ─── TAB: Visão geral ─── */}
         <TabsContent value="overview" className="space-y-5 mt-5">
           {/* Quick Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 md:gap-3">
@@ -333,7 +333,7 @@ const Dashboard = () => {
                   </div>
                   <div>
                     <h2 className="text-sm font-bold text-foreground">Atividade semanal</h2>
-                    <p className="text-[10px] text-muted-foreground">Pagamentos recebidos nos Ãºltimos 7 dias</p>
+                    <p className="text-[10px] text-muted-foreground">Pagamentos recebidos nos últimos 7 dias</p>
                   </div>
                 </div>
               </div>
@@ -396,22 +396,22 @@ const Dashboard = () => {
                 <p className="text-sm font-semibold text-foreground">Defina sua primeira meta</p>
                 <p className="text-xs text-muted-foreground mt-1 mb-4">Acompanhe seu progresso mensal</p>
                 <button onClick={() => navigate("/ferramentas/metas")} className="text-xs font-semibold text-primary hover:underline">
-                  Criar meta â†’
+                  Criar meta →
                 </button>
               </div>
             )}
           </div>
         </TabsContent>
 
-        {/* â”€â”€â”€ TAB: AnÃ¡lises â”€â”€â”€ */}
+        {/* ─── TAB: Análises ─── */}
         <TabsContent value="analytics" className="space-y-5 mt-5">
           <PeriodComparison installments={data?.installments || []} />
-          <Suspense fallback={<div className="h-72 skeleton-shimmer rounded-2xl" aria-label="Carregando grÃ¡ficos" />}>
+          <Suspense fallback={<div className="h-72 skeleton-shimmer rounded-2xl" aria-label="Carregando gráficos" />}>
             <DashboardCharts contracts={metrics.contracts} installments={data?.installments || []} profits={data?.profits || []} />
           </Suspense>
         </TabsContent>
 
-        {/* â”€â”€â”€ TAB: Listas â”€â”€â”€ */}
+        {/* ─── TAB: Listas ─── */}
         <TabsContent value="lists" className="mt-5">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {/* Overdue List */}
@@ -493,9 +493,9 @@ const Dashboard = () => {
                           <ArrowUpRight size={15} className="text-success" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold text-foreground truncate">{contract?.clients?.name || "â€”"}</p>
+                          <p className="text-sm font-semibold text-foreground truncate">{contract?.clients?.name || "—"}</p>
                           <p className="text-xs text-muted-foreground">
-                            Parcela {item.installment_number} Â· {item.paid_at ? formatBR(item.paid_at) : "â€”"}
+                            Parcela {item.installment_number} · {item.paid_at ? formatBR(item.paid_at) : "—"}
                           </p>
                         </div>
                         <span className="text-sm font-bold text-success whitespace-nowrap tabular-nums">
