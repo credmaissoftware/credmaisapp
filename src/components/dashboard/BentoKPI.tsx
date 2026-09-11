@@ -1,6 +1,7 @@
 import { TrendingUp, TrendingDown, Info } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
 
 export type BentoTone = "primary" | "success" | "danger" | "warning" | "info" | "muted";
 
@@ -97,7 +98,7 @@ export default function BentoKPI({
   }[size];
 
   return (
-    <button
+    <motion.button
       type="button"
       disabled={!clickable}
       onClick={onClick}
@@ -109,6 +110,9 @@ export default function BentoKPI({
         !clickable && "cursor-default",
         className
       )}
+      whileHover={clickable ? { y: -4, scale: 1.01 } : undefined}
+      whileTap={clickable ? { scale: 0.985 } : undefined}
+      transition={{ type: "spring", stiffness: 320, damping: 24 }}
     >
       {/* faixa gradient */}
       <div
@@ -117,6 +121,7 @@ export default function BentoKPI({
           t.grad
         )}
       />
+      <div className={cn("pointer-events-none absolute -right-10 -top-12 h-28 w-28 rounded-full bg-gradient-to-br blur-2xl opacity-25 transition-opacity duration-300 group-hover:opacity-55", t.grad)} />
       <div className="relative z-10 flex flex-col justify-between h-full gap-3">
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-1.5 min-w-0">
@@ -176,6 +181,6 @@ export default function BentoKPI({
           </div>
         )}
       </div>
-    </button>
+    </motion.button>
   );
 }
