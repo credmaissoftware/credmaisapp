@@ -8,7 +8,7 @@
  * neutral blacks, warm ivory highlights and restrained translucent surfaces.
  */
 
-/* App shell 2026 — monochrome financial workspace with restrained glass. */
+/* App shell 2026 â€” monochrome financial workspace with restrained glass. */
 @layer components {
   .app-shell {
     background:
@@ -86,8 +86,36 @@
 }
 
 @layer base {
+  /* CredMais Studio visual foundation: graphite surfaces + warm gold actions. */
+  .dark {
+    --background: 225 12% 5%;
+    --foreground: 40 20% 96%;
+    --card: 225 11% 8%;
+    --card-foreground: 40 20% 96%;
+    --popover: 225 12% 7%;
+    --popover-foreground: 40 20% 96%;
+    --primary: 39 94% 55%;
+    --primary-foreground: 30 20% 7%;
+    --primary-glow: 43 100% 68%;
+    --secondary: 225 9% 13%;
+    --secondary-foreground: 40 20% 92%;
+    --muted: 225 9% 13%;
+    --muted-foreground: 220 8% 62%;
+    --accent: 39 94% 55%;
+    --accent-foreground: 30 20% 7%;
+    --border: 220 10% 19%;
+    --input: 225 10% 14%;
+    --ring: 39 94% 55%;
+    --gradient-gold: linear-gradient(135deg, hsl(38 94% 50%), hsl(47 100% 68%));
+    --gradient-button: linear-gradient(135deg, hsl(38 94% 50%), hsl(45 100% 62%));
+    --gradient-card: linear-gradient(145deg, hsl(225 11% 10% / .96), hsl(225 12% 6% / .98));
+    --gradient-glass: linear-gradient(145deg, hsl(0 0% 100% / .06), hsl(0 0% 100% / .015));
+    --gradient-mesh: radial-gradient(at 80% 0%, hsl(39 94% 55% / .055), transparent 35%), linear-gradient(180deg, hsl(225 12% 5%), hsl(225 12% 4%));
+    --shadow-action: 0 12px 30px -10px hsl(39 94% 45% / .4), 0 2px 6px hsl(39 94% 45% / .2);
+  }
+
   :root {
-    /* Navy Trust — paper light mode, refinado para autoridade financeira */
+    /* Navy Trust â€” paper light mode, refinado para autoridade financeira */
     --background: 220 100% 98%;
     --foreground: 226 82% 13%;
 
@@ -161,7 +189,7 @@
 
 
   .dark {
-    /* Midnight Indigo — refined */
+    /* Midnight Indigo â€” refined */
     --background: 228 85% 5%;
     --foreground: 225 100% 98%;
 
@@ -213,7 +241,7 @@
     --info: 199 92% 62%;
     --info-foreground: 0 0% 100%;
 
-    /* Vivid action tokens — dark */
+    /* Vivid action tokens â€” dark */
     --primary-vivid: 212 100% 47%;
     --success-vivid: 152 76% 52%;
     --warning-vivid: 32 96% 60%;
@@ -247,7 +275,7 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
-  /* background-attachment: fixed causa jank e às vezes trava scroll em mobile.
+  /* background-attachment: fixed causa jank e Ã s vezes trava scroll em mobile.
      Em telas de toque, trocamos por scroll normal. */
   @media (max-width: 1024px), (hover: none) {
     body { background-attachment: scroll; }
@@ -288,7 +316,7 @@
   }
 
 
-  /* Respeitar preferência de movimento reduzido */
+  /* Respeitar preferÃªncia de movimento reduzido */
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
       animation-duration: 0.01ms !important;
@@ -298,7 +326,7 @@
     }
   }
 
-  /* Alvos de toque mínimos WCAG (44x44) em mobile */
+  /* Alvos de toque mÃ­nimos WCAG (44x44) em mobile */
   @media (max-width: 640px) {
     button, a[role="button"], [role="button"] {
       min-height: 40px;
@@ -316,7 +344,7 @@
       touch-action: pan-y;
     }
 
-    /* Evita zoom automático em inputs no iOS quando fontsize<16px */
+    /* Evita zoom automÃ¡tico em inputs no iOS quando fontsize<16px */
     input, textarea, select {
       font-size: 16px !important;
     }
@@ -393,7 +421,7 @@
     @apply transition-colors duration-200;
   }
 
-  /* Glassmorphism — refined */
+  /* Glassmorphism â€” refined */
   .glass {
     background: var(--gradient-glass);
     border: 1px solid hsl(var(--border) / 0.4);
@@ -415,7 +443,7 @@
     -webkit-backdrop-filter: saturate(160%) blur(20px);
   }
 
-  /* Refined surface card — primary content container */
+  /* Refined surface card â€” primary content container */
   .surface-card {
     background: hsl(var(--card));
     border: 1px solid hsl(var(--border) / 0.6);
@@ -475,7 +503,7 @@
     border-color: hsl(var(--primary) / 0.2);
   }
 
-  /* Accent glow card — lightweight */
+  /* Accent glow card â€” lightweight */
   .glow-card {
     background: var(--gradient-card);
     border: 1px solid hsl(var(--border) / 0.4);
@@ -559,7 +587,7 @@
     100% { background-position: -200% 0; }
   }
 
-  /* Staggered fade-in — fast */
+  /* Staggered fade-in â€” fast */
   .stagger-fade-in > * {
     animation: fadeInUp 0.2s ease-out both;
   }
@@ -606,7 +634,7 @@
     border-color: hsl(var(--ring) / 0.5);
   }
 
-  /* Card shine — disabled for performance */
+  /* Card shine â€” disabled for performance */
   .card-shine {}
 
   /* Skeleton shimmer */
@@ -635,7 +663,7 @@
   .no-scrollbar::-webkit-scrollbar { display: none; }
 
 
-  /* Page transition — disabled for instant feel */
+  /* Page transition â€” disabled for instant feel */
   .page-enter {}
 
   /* Badge pulse */
@@ -876,7 +904,7 @@
     @apply relative overflow-hidden;
   }
   .swipe-hint::after {
-    content: '← deslize';
+    content: 'â† deslize';
     @apply absolute right-2 top-1/2 -translate-y-1/2 text-[9px] text-muted-foreground/40 font-medium;
     animation: swipeHint 3s ease-in-out infinite;
   }
@@ -979,7 +1007,7 @@
     @apply text-headline text-base text-foreground;
   }
 
-  /* Premium button — primary CTA */
+  /* Premium button â€” primary CTA */
   .btn-premium {
     @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-2xl text-sm font-semibold text-primary-foreground transition-all duration-200 active:scale-[0.97];
     background: var(--gradient-button);
@@ -1086,7 +1114,7 @@ div[style*="Edit with Lovable"],
   }
 }
 
-/* ───── Impressão isolada do contrato ───── */
+/* â”€â”€â”€â”€â”€ ImpressÃ£o isolada do contrato â”€â”€â”€â”€â”€ */
 @media print {
   @page { margin: 18mm 14mm; size: A4; }
   body * { visibility: hidden !important; }
@@ -1104,7 +1132,7 @@ div[style*="Edit with Lovable"],
   }
 }
 
-/* ═══════════════ PORTAL DO CLIENTE — Fintech Premium ═══════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• PORTAL DO CLIENTE â€” Fintech Premium â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 @layer components {
   /* Aurora animada de fundo (contida no wrapper .portal-shell) */
   .portal-shell {
@@ -1156,7 +1184,7 @@ div[style*="Edit with Lovable"],
     z-index: 1;
   }
 
-  /* Cartão premium com borda gradiente */
+  /* CartÃ£o premium com borda gradiente */
   .portal-card {
     position: relative;
     background: linear-gradient(180deg, hsl(226 75% 15% / 0.88), hsl(228 82% 7% / 0.90));
@@ -1184,7 +1212,7 @@ div[style*="Edit with Lovable"],
     pointer-events: none;
   }
 
-  /* Cartão do bento */
+  /* CartÃ£o do bento */
   .bento-tile {
     position: relative;
     background: linear-gradient(180deg, hsl(226 70% 17% / 0.72), hsl(228 78% 8% / 0.76));
@@ -1235,7 +1263,7 @@ div[style*="Edit with Lovable"],
     background: hsl(226 72% 13%);
   }
 
-  /* Botão premium */
+  /* BotÃ£o premium */
   .portal-btn-primary {
     position: relative;
     background: linear-gradient(135deg, var(--portal-primary, #0877FF), color-mix(in srgb, var(--portal-primary, #0877FF) 65%, #168BFF));
@@ -1266,7 +1294,7 @@ div[style*="Edit with Lovable"],
   .portal-chip.warn { border-color: hsl(38 92% 60% / 0.35); background: hsl(38 92% 50% / 0.12); color: hsl(38 92% 78%); }
   .portal-chip.ok   { border-color: hsl(152 65% 55% / 0.35); background: hsl(152 65% 42% / 0.12); color: hsl(152 65% 72%); }
 
-  /* Animação de pulso do escudo */
+  /* AnimaÃ§Ã£o de pulso do escudo */
   @keyframes shieldPulse {
     0%,100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--portal-primary, #0877FF) 50%, transparent); }
     50%     { box-shadow: 0 0 0 18px transparent; }
@@ -1275,7 +1303,7 @@ div[style*="Edit with Lovable"],
 }
 
 @layer components {
-  /* Checkbox refinado — reusável */
+  /* Checkbox refinado â€” reusÃ¡vel */
   .check-premium {
     appearance: none;
     -webkit-appearance: none;
@@ -1343,7 +1371,7 @@ div[style*="Edit with Lovable"],
   80% { transform: rotate(-4deg); }
 }
 
-/* ═══════════════ Responsividade Global — utilidades e defesas ═══════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• Responsividade Global â€” utilidades e defesas â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 @layer utilities {
   /* Defesa contra overflow em filhos flex/grid (evita textos empurrando layout) */
   .min-w-0-all > * { min-width: 0; }
@@ -1374,7 +1402,7 @@ div[style*="Edit with Lovable"],
   .h-scroll::-webkit-scrollbar { display: none; }
   .h-scroll { scrollbar-width: none; }
 
-  /* Números tabulares que não quebram linha (comum em valores R$) */
+  /* NÃºmeros tabulares que nÃ£o quebram linha (comum em valores R$) */
   .num-nowrap { font-variant-numeric: tabular-nums; white-space: nowrap; }
 
   /* Truncamento seguro para nomes longos em cards/linhas */
@@ -1385,11 +1413,11 @@ div[style*="Edit with Lovable"],
     overflow: hidden;
   }
 
-  /* Tipografia fluida para KPIs (não estoura em telas estreitas) */
+  /* Tipografia fluida para KPIs (nÃ£o estoura em telas estreitas) */
   .kpi-value { font-size: clamp(1.125rem, 2.4vw + 0.6rem, 1.75rem); font-weight: 800; line-height: 1.1; }
   .kpi-value-lg { font-size: clamp(1.375rem, 3vw + 0.7rem, 2.25rem); font-weight: 800; line-height: 1.05; }
 
-  /* Toolbar flexível (wrap em telas estreitas, alinhado desktop) */
+  /* Toolbar flexÃ­vel (wrap em telas estreitas, alinhado desktop) */
   .toolbar-flex {
     display: flex;
     flex-wrap: wrap;
@@ -1398,7 +1426,7 @@ div[style*="Edit with Lovable"],
   }
   .toolbar-flex > .toolbar-grow { flex: 1 1 220px; min-width: 0; }
 
-  /* Cards e seções nunca menores que o container */
+  /* Cards e seÃ§Ãµes nunca menores que o container */
   .safe-card { max-width: 100%; min-width: 0; }
 }
 
@@ -1422,7 +1450,7 @@ div[style*="Edit with Lovable"],
     grid-template-columns: minmax(0, 1fr);
   }
 
-  /* Filhos de grids/flex não podem impor sua largura intrínseca ao container. */
+  /* Filhos de grids/flex nÃ£o podem impor sua largura intrÃ­nseca ao container. */
   .grid > *,
   [role="dialog"] > * {
     min-width: 0;
@@ -1434,20 +1462,20 @@ div[style*="Edit with Lovable"],
   .payment-mode-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
-/* Tablets — melhor uso do espaço horizontal */
+/* Tablets â€” melhor uso do espaÃ§o horizontal */
 @media (min-width: 641px) and (max-width: 1024px) {
   /* Deixa modais um pouco maiores mas com ar */
   [role="dialog"] { max-width: min(680px, calc(100vw - 3rem)) !important; }
 }
 
-/* ═══════════════ Mídia fluida e defesas universais ═══════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• MÃ­dia fluida e defesas universais â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 @layer base {
-  /* Nenhuma imagem/vídeo/svg/canvas pode estourar seu container */
+  /* Nenhuma imagem/vÃ­deo/svg/canvas pode estourar seu container */
   img, video, canvas, svg, iframe, embed, object {
     max-width: 100%;
     height: auto;
   }
-  /* SVGs decorativos com dimensões fixas devem manter razão */
+  /* SVGs decorativos com dimensÃµes fixas devem manter razÃ£o */
   svg { height: auto; }
 
   /* Strings longas (emails, IDs, URLs) quebram sem estourar */
@@ -1456,28 +1484,28 @@ div[style*="Edit with Lovable"],
     word-break: break-word;
   }
 
-  /* Inputs/selects/textarea sem zoom automático no iOS e largura fluida */
+  /* Inputs/selects/textarea sem zoom automÃ¡tico no iOS e largura fluida */
   input, select, textarea {
     max-width: 100%;
     font-size: max(16px, 0.95rem);
   }
 }
 
-/* Área de toque confortável no mobile para controles interativos */
+/* Ãrea de toque confortÃ¡vel no mobile para controles interativos */
 @media (max-width: 640px) {
   input:not([type="checkbox"]):not([type="radio"]),
   select,
   textarea {
     min-height: 44px;
   }
-  /* Botões-ícone (sem texto) mantêm alvo 44x44 */
+  /* BotÃµes-Ã­cone (sem texto) mantÃªm alvo 44x44 */
   button[aria-label]:not(:has(span)):not(:has(> :not(svg))) {
     min-width: 44px;
     min-height: 44px;
   }
 }
 
-/* Desktop wide (≥1440px) — respiro extra no container principal */
+/* Desktop wide (â‰¥1440px) â€” respiro extra no container principal */
 @media (min-width: 1440px) {
   main { padding-left: max(2rem, env(safe-area-inset-left)); padding-right: max(2rem, env(safe-area-inset-right)); }
 }
@@ -1485,8 +1513,8 @@ div[style*="Edit with Lovable"],
 
 
 /* ============================================================
-   LANDING — usa o mesmo tema do app (Navy Trust / Midnight Indigo).
-   Nenhum token é sobrescrito: herda :root e .dark.
+   LANDING â€” usa o mesmo tema do app (Navy Trust / Midnight Indigo).
+   Nenhum token Ã© sobrescrito: herda :root e .dark.
    ============================================================ */
 .landing {
   background: hsl(var(--background));
@@ -1529,7 +1557,7 @@ div[style*="Edit with Lovable"],
   background-size: 30px 30px;
 }
 
-/* ============ Landing "Obsidian & Gold" — tema próprio do site público ============ */
+/* ============ Landing "Obsidian & Gold" â€” tema prÃ³prio do site pÃºblico ============ */
 .landing {
   --background: 226 40% 5%;
   --foreground: 225 100% 98%;
@@ -1589,7 +1617,7 @@ div[style*="Edit with Lovable"],
 }
 
 
-/* ── Vexon landing (ported template) ───────────────────────────── */
+/* â”€â”€ Vexon landing (ported template) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .vexon {
   cursor: none;
 }
@@ -1607,7 +1635,7 @@ div[style*="Edit with Lovable"],
   to { transform: translateX(-50%); }
 }
 
-/* Topbar intermediária: o atalho só aparece quando a busca tem largura completa. */
+/* Topbar intermediÃ¡ria: o atalho sÃ³ aparece quando a busca tem largura completa. */
 @media (max-width: 1279px) {
   [data-tour="topbar-search"] kbd { display: none; }
 }
@@ -1880,7 +1908,39 @@ div[style*="Edit with Lovable"],
   .collection-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .collection-preview-actions { grid-template-columns: 1fr 1fr 42px; }
 }
-/* Versão de recuperação do CDN: 2026-09-01 */
+/* VersÃ£o de recuperaÃ§Ã£o do CDN: 2026-09-01 */
 :root {
   --credmais-build-recovery: 1;
+}
+
+/* Studio theme: shared visual language for every authenticated screen. */
+.dark {
+  --background: 225 12% 5%;
+  --foreground: 40 20% 96%;
+  --card: 225 11% 8%;
+  --card-foreground: 40 20% 96%;
+  --popover: 225 12% 7%;
+  --popover-foreground: 40 20% 96%;
+  --primary: 39 94% 55%;
+  --primary-foreground: 30 20% 7%;
+  --primary-glow: 43 100% 68%;
+  --secondary: 225 9% 13%;
+  --secondary-foreground: 40 20% 92%;
+  --muted: 225 9% 13%;
+  --muted-foreground: 220 8% 62%;
+  --accent: 39 94% 55%;
+  --accent-foreground: 30 20% 7%;
+  --border: 220 10% 19%;
+  --input: 225 10% 14%;
+  --ring: 39 94% 55%;
+  --gradient-gold: linear-gradient(135deg, hsl(38 94% 50%), hsl(47 100% 68%));
+  --gradient-button: linear-gradient(135deg, hsl(38 94% 50%), hsl(45 100% 62%));
+  --gradient-card: linear-gradient(145deg, hsl(225 11% 10% / .96), hsl(225 12% 6% / .98));
+  --gradient-glass: linear-gradient(145deg, hsl(0 0% 100% / .06), hsl(0 0% 100% / .015));
+  --gradient-mesh: radial-gradient(at 80% 0%, hsl(39 94% 55% / .055), transparent 35%), linear-gradient(180deg, hsl(225 12% 5%), hsl(225 12% 4%));
+  --shadow-action: 0 12px 30px -10px hsl(39 94% 45% / .4), 0 2px 6px hsl(39 94% 45% / .2);
+}
+
+.dark .app-shell {
+  background: radial-gradient(800px 480px at 82% -8%, hsl(39 94% 55% / .06), transparent 58%), hsl(225 12% 5%);
 }
