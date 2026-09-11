@@ -81,13 +81,13 @@ const LandingHero = () => {
           <div className="lg:col-span-5" data-hero-panel>
             <div className="relative rounded-[2rem] overflow-hidden border border-border">
               <img
-                src={defaultLogo}
-                alt="Símbolo CredMais C+"
-                width={1280}
-                height={960}
-                className="w-full h-[300px] sm:h-[400px] lg:h-[460px] object-cover"
+                src="/credinho-mascot-card.png"
+                alt="Mascote Credinho apresentando a plataforma"
+                width={1024}
+                height={1536}
+                className="mx-auto h-[300px] sm:h-[400px] lg:h-[460px] w-auto object-contain drop-shadow-[0_24px_38px_rgba(56,189,248,.22)]"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-background via-background/25 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-background via-background/15 to-transparent pointer-events-none" />
               <img
                 src={defaultLogo}
                 alt=""
