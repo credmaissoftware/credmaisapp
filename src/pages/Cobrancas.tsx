@@ -267,7 +267,7 @@ const Cobrancas = () => {
     id: string,
     paidValue?: number,
     feeDiscount = 0,
-    options?: { mode: "payment" | "interest_only"; nextDueDate?: string },
+    options?: { mode: "payment" | "interest_only" | "settle"; nextDueDate?: string },
   ) => {
     const inst = installments.find((i: any) => i.id === id);
     if (!inst) return;
@@ -292,6 +292,23 @@ const Cobrancas = () => {
         title: "✓ Juros recebidos e vencimento renovado",
         description: `Recebido R$ ${fmt(Number(data?.amount || paidValue || 0))}. Novo vencimento: ${formatBR(options.nextDueDate)}.`,
       });
+      return;
+    }
+    if (options?.mode === "settle") {
+      const { error } = await (supabase as any).rpc("settle_percentage_installment", {
+        _installment_id: id,
+        _method: "pix",
+      });
+      if (error) {
+        toast({ title: "Erro ao quitar contrato", description: error.message, variant: "destructive" });
+        throw error;
+      }
+      setConfirmPayId(null);
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ["cobrancas-installments"] }),
+        qc.invalidateQueries({ queryKey: ["dashboard-data"] }),
+      ]);
+      toast({ title: "✓ Contrato quitado", description: "Capital e juros foram registrados separadamente." });
       return;
     }
     const { withFees, base } = computeLateFeeBreakdown(inst);
