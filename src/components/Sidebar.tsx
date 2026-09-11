@@ -197,7 +197,7 @@ const Sidebar = ({ collapsed = false, onToggleCollapse }: SidebarProps) => {
           group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium
           transition-all duration-200 ease-out will-change-transform
           ${active
-            ? "text-[#fff8e7] bg-gradient-to-r from-[#b7791f] via-[#eab84b] to-[#b7791f] shadow-[0_8px_20px_rgba(234,184,75,.22)]"
+            ? "text-white bg-gradient-to-r from-[#075985] via-[#38bdf8] to-[#075985] shadow-[0_8px_20px_rgba(56,189,248,.22)]"
             : "text-slate-300/75 hover:text-white hover:bg-white/[.07]"
           }
           ${collapsed ? "justify-center px-2" : ""}
@@ -349,7 +349,7 @@ const Sidebar = ({ collapsed = false, onToggleCollapse }: SidebarProps) => {
           </button>
           <button
             onClick={() => navigate("/clientes/novo")}
-            className="w-full flex items-center justify-center gap-1.5 h-9 rounded-lg bg-gradient-to-r from-[#b7791f] via-[#eab84b] to-[#b7791f] text-[#211707] text-[12px] font-bold hover:brightness-110 transition-colors shadow-md shadow-amber-950/30"
+            className="w-full flex items-center justify-center gap-1.5 h-9 rounded-lg bg-gradient-to-r from-[#075985] via-[#38bdf8] to-[#075985] text-white text-[12px] font-bold hover:brightness-110 transition-colors shadow-md shadow-sky-950/30"
           >
             <Plus size={13} /> Novo cliente
           </button>
