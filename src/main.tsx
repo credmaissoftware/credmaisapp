@@ -2,6 +2,7 @@ import { createRoot } from "react-dom/client";
 import "./index.css";
 import "./credinho.css";
 import "./glass-overrides.css";
+import "./workspace-overrides.css";
 import "./menu-icons.css";
 
 // Identifica esta publicação e garante um novo arquivo de entrada quando o CDN
