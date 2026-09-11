@@ -1,4 +1,5 @@
 import "@/components/cliente-detalhe/client-profile.css";
+import "@/components/cliente-detalhe/client-reference.css";
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -30,7 +31,7 @@ import {
   Calendar, Receipt, Activity, Search, X, Percent, Wallet, Printer, Camera,
   Wrench, Repeat, PhoneCall, StickyNote,
   Info, UploadCloud, File as FileIcon, ImageIcon, ShieldCheck, Sparkles, ChevronRight, MoreHorizontal,
-  ChevronDown, Layers3,
+  ChevronDown, Layers3, Building2, CreditCard, BarChart3, CircleDollarSign, Eye,
 } from "lucide-react";
 import EmptyState from "@/components/EmptyState";
 import ErrorState from "@/components/feedback/ErrorState";
@@ -47,6 +48,9 @@ import { buildPendingSchedule, createContractAtomically } from "@/lib/contractPe
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { getPreferredPhone, resolveClientPhones } from "@/lib/phone";
 
+const moneyLike = (value: number) => `R$ ${Number(value || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+const InfoCell = ({ icon: Icon, label, value, tone = "blue" }: { icon: any; label: string; value: string; tone?: string }) => <div className="reference-info-cell"><span className={`reference-info-icon ${tone}`}><Icon size={15}/></span><span><small>{label}</small><strong>{value}</strong></span></div>;
+const StatCell = ({ icon: Icon, value, label, tone = "blue" }: { icon: any; value: string; label: string; tone?: string }) => <div className="reference-stat-cell"><span className={`reference-info-icon ${tone}`}><Icon size={14}/></span><span><strong>{value}</strong><small>{label}</small></span></div>;
 
 
 const ClienteDetalhe = () => {
@@ -1424,6 +1428,31 @@ const ClienteDetalhe = () => {
           {label:'Total recebido',value:kpis.totalPaid,detail:`${kpis.paidInst.length} parcelas pagas`,Icon:CheckCircle},
           {label:'Lucro recebido',value:kpis.totalProfit,detail:'Resultado dos recebimentos',Icon:TrendingUp},
         ].map(metric => <article key={metric.label} className={metric.featured ? 'is-featured' : ''}><div className="client-profile-metric-label"><span>{metric.label}</span><metric.Icon size={17} /></div><p><span>R$</span> {fmt(metric.value)}</p><small>{metric.detail}</small></article>)}
+      </section>
+
+      <nav className="client-profile-action-strip" aria-label="Ações rápidas do cliente">
+        <button onClick={() => { const phone = getPhone(); if (phone) window.open(`https://wa.me/${phone}`, '_blank', 'noopener,noreferrer'); }}><span className="action-icon whatsapp"><MessageSquare size={20}/></span><span><strong>WhatsApp</strong><small>Enviar mensagem</small></span></button>
+        <button onClick={() => { const phone = getPreferredPhone(client); if (phone) window.open(`tel:${phone.replace(/\D/g,'')}`, '_self'); }} disabled={!getPreferredPhone(client)}><span className="action-icon phone"><Phone size={20}/></span><span><strong>Ligar</strong><small>Fazer ligação</small></span></button>
+        <button onClick={() => { if (client.email) window.open(`mailto:${client.email}`, '_self'); }} disabled={!client.email}><span className="action-icon mail"><Mail size={20}/></span><span><strong>E-mail</strong><small>Enviar e-mail</small></span></button>
+        <button onClick={sendPortalLink}><span className="action-icon portal"><Send size={20}/></span><span><strong>Portal</strong><small>Acessar portal</small></span></button>
+        <button onClick={() => navigate(`/clientes/novo?clientId=${id}`)}><span className="action-icon loan"><FileText size={20}/></span><span><strong>Empréstimo</strong><small>Novo empréstimo</small></span></button>
+        <button onClick={() => setShowMoreActions(true)}><span className="action-icon tools"><Wrench size={20}/></span><span><strong>Mais ações</strong><small>Outras opções</small></span></button>
+        <button onClick={startEdit}><span className="action-icon edit"><Edit size={20}/></span><span><strong>Editar</strong><small>Editar cliente</small></span></button>
+      </nav>
+
+      <nav className="client-profile-tab-strip" aria-label="Seções da ficha">
+        <a className="is-active" href="#resumo"><Wallet size={15}/> Visão geral</a><a href="#sec-contratos"><FileText size={15}/> Empréstimos <b>{contracts.length}</b></a><a href="#resumo"><CreditCard size={15}/> Pagamentos <b>{kpis.paidInst.length}</b></a><a href="#info-cliente"><Info size={15}/> Informações</a><a href="#estatisticas"><BarChart3 size={15}/> Estatísticas</a><a href="#historico"><Clock size={15}/> Histórico</a><a href="#documentos"><FileIcon size={15}/> Documentos</a>
+      </nav>
+
+      <section id="resumo" className="client-profile-reference-layout" aria-label="Visão geral do cliente">
+        <article className="reference-card reference-summary-card">
+          <div className="reference-card-heading"><div><span className="client-profile-eyebrow">RESUMO FINANCEIRO</span><h2>Visão geral dos valores</h2></div><button className="reference-select">Últimos 6 meses <ChevronDown size={14}/></button></div>
+          <div className="reference-chart" aria-label="Evolução dos recebimentos"><div className="chart-y"><span>R$ 300</span><span>R$ 200</span><span>R$ 100</span><span>R$ 0</span></div><div className="chart-area"><div className="chart-grid-lines"><i/><i/><i/><i/></div><svg viewBox="0 0 620 170" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="clientChartFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stopColor="hsl(var(--primary))" stopOpacity=".32"/><stop offset="1" stopColor="hsl(var(--primary))" stopOpacity="0"/></linearGradient></defs><path d="M0 143 C72 136 110 155 172 140 S278 143 338 84 S428 111 492 104 S570 110 620 107 L620 170 L0 170 Z" fill="url(#clientChartFill)"/><path d="M0 143 C72 136 110 155 172 140 S278 143 338 84 S428 111 492 104 S570 110 620 107" fill="none" stroke="hsl(var(--primary))" strokeWidth="2.5" vectorEffect="non-scaling-stroke"/></svg><div className="chart-x"><span>ABR</span><span>MAI</span><span>JUN</span><span>JUL</span><span>AGO</span><span>SET</span></div></div></div>
+          <div className="reference-summary-legend"><span><i className="dot green"/> {moneyLike(kpis.totalPaid)}<small>Total recebido</small></span><span><i className="dot gold"/> {moneyLike(kpis.totalCapital)}<small>Total emprestado</small></span><span><i className="dot blue"/> {moneyLike(kpis.totalProfit)}<small>Lucro líquido</small></span></div>
+        </article>
+        <article id="info-cliente" className="reference-card reference-info-card"><div className="reference-card-heading"><div><span className="client-profile-eyebrow">CADASTRO</span><h2>Informações do cliente</h2></div><button className="reference-select" onClick={startEdit}><Edit size={14}/> Editar</button></div><div className="reference-info-grid"><InfoCell icon={Phone} label="Telefone" value={getPreferredPhone(client) || 'Adicionar'} /><InfoCell icon={MessageSquare} label="WhatsApp" value={getPhone() || 'Adicionar'} tone="green"/><InfoCell icon={Mail} label="E-mail" value={client.email || 'Adicionar'} tone="gold"/><InfoCell icon={User} label="CPF/CNPJ" value={client.cpf_cnpj || 'Adicionar'} tone="violet"/><InfoCell icon={MapPin} label="Endereço" value={address?.street ? `${address.street}${address.number ? `, ${address.number}` : ''}` : 'Adicionar'} tone="red"/><InfoCell icon={Building2} label="Cidade" value={address?.city || 'Adicionar'} tone="blue"/></div><div className="reference-info-footer"><InfoCell icon={Calendar} label="Cliente desde" value={clientSince} tone="gold"/><InfoCell icon={Clock} label="Última atividade" value="Hoje" tone="slate"/></div></article>
+        <article id="estatisticas" className="reference-card reference-stats-card"><div className="reference-card-heading"><div><span className="client-profile-eyebrow">PERFORMANCE</span><h2>Estatísticas</h2></div><button className="reference-select">Ver mais <ChevronRight size={14}/></button></div><div className="reference-stat-grid"><StatCell icon={FileText} value={String(contracts.length)} label="Contratos"/><StatCell icon={CheckCircle} value={`${kpis.paidInst.length}/${installments.length || 0}`} label="Parcelas pagas" tone="green"/><StatCell icon={Clock} value={`${kpis.overdueInst.length ? Math.round((kpis.overdueInst.length / Math.max(1, installments.length)) * 100) : 0}%`} label="Taxa de atraso" tone="red"/><StatCell icon={CircleDollarSign} value={moneyLike(kpis.ticketMedio)} label="Ticket médio" tone="gold"/></div><div className="reference-donut-row"><div className="reference-donut" style={{'--progress':`${Math.round((kpis.paidInst.length / Math.max(1, installments.length)) * 100)}%`} as React.CSSProperties}><strong>{Math.round((kpis.paidInst.length / Math.max(1, installments.length)) * 100)}%</strong><small>Taxa de pagamento</small></div><div className="reference-key"><span><i className="dot green"/>Pagas <b>{kpis.paidInst.length}</b></span><span><i className="dot gold"/>Em aberto <b>{kpis.pendingInst.length}</b></span><span><i className="dot red"/>Atrasadas <b>{kpis.overdueInst.length}</b></span><span><i className="dot slate"/>Total <b>{installments.length}</b></span></div></div></article>
+        <article className="reference-card reference-loans-card"><div className="reference-card-heading"><div><span className="client-profile-eyebrow">HISTÓRICO</span><h2>Últimos empréstimos</h2><p>Histórico de empréstimos do cliente</p></div><button className="client-profile-button is-primary" onClick={() => navigate(`/clientes/novo?clientId=${id}`)}><Plus size={15}/> Novo empréstimo</button></div><div className="reference-table-wrap"><table className="reference-loans-table"><thead><tr><th>#</th><th>Valor</th><th>Parcelas</th><th>Início</th><th>Vencimento</th><th>Status</th><th>Lucro</th><th>Ações</th></tr></thead><tbody>{contracts.slice(0,5).map((c:any)=>{const ci=installments.filter((i:any)=>i.contract_id===c.id);const paid=ci.filter((i:any)=>i.status==='paid').length;const late=ci.filter((i:any)=>i.status==='overdue').length;const last=ci[ci.length-1];return <tr key={c.id}><td className="font-mono">#{String(c.id).slice(0,6).toUpperCase()}</td><td><strong>{moneyLike(c.capital)}</strong></td><td>{paid}/{ci.length} parcelas</td><td>{formatBR(c.start_date)}</td><td>{last?.due_date?formatBR(last.due_date):'—'}</td><td><span className={`reference-status ${late?'late':paid===ci.length?'paid':'open'}`}><i/>{late?`${late} em atraso`:paid===ci.length?'Quitado':'Em andamento'}</span></td><td className="reference-profit">+{moneyLike(Number(c.total_interest || 0))}</td><td><div className="reference-row-actions"><button onClick={()=>setExpandedContracts(prev=>{const next=new Set(prev);if(next.has(c.id))next.delete(c.id);else next.add(c.id);return next})} aria-label="Visualizar contrato"><Eye size={15}/></button><button onClick={()=>openEditContract(c)} aria-label="Editar contrato"><Edit size={15}/></button><button onClick={()=>setShowMoreActions(true)} aria-label="Mais ações"><MoreHorizontal size={15}/></button></div></td></tr>})}</tbody></table></div></article>
       </section>
 
       {/* ===== MODALS ===== */}

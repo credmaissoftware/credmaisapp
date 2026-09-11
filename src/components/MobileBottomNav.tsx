@@ -5,7 +5,7 @@ import {
   Calculator, Target, CheckSquare, StickyNote, Table, Database,
   QrCode, ClipboardList, Shield, Settings, Crown, Info,
   UserCheck, FileText, X, Sparkles, MessageCircle,
-  Plus, UserPlus, Wallet as WalletIcon,
+  Plus, UserPlus, Wallet as WalletIcon, Smartphone,
 } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -42,6 +42,9 @@ const mobileIconColor: Record<string, string> = {
   "/suporte": "text-pink-400",
   "/chat": "text-emerald-400",
 };
+const mobileIconTone: Record<string, string> = {
+  "/hoje": "amber", "/dashboard": "blue", "/clientes": "orange", "/cobrancas": "rose", "/carteira": "emerald", "/comercial": "indigo", "/analises": "violet", "/relatorios": "sky", "/cobradores": "lime", "/lucros": "green", "/gastos": "red", "/chat": "cyan", "/qrcode": "blue", "/configuracoes": "slate", "/suporte": "pink", "/admin": "amber",
+};
 
 const mainTabs = [
   { label: "Hoje", icon: Sparkles, path: "/hoje" },
@@ -73,6 +76,7 @@ const moreGroups = [
     title: "Financeiro",
     items: [
       { label: "Carteira", icon: WalletIcon, path: "/carteira" },
+      { label: "Comercial", icon: Smartphone, path: "/comercial" },
       { label: "Lucros", icon: TrendingUp, path: "/lucros" },
       { label: "Gastos", icon: DollarSign, path: "/gastos" },
     ],
@@ -204,7 +208,7 @@ const MobileBottomNav = () => {
                                 }
                               `}
                             >
-                              <item.icon size={22} strokeWidth={active ? 2.5 : 2} />
+                              <span className={`mobile-app-icon mobile-app-icon-${mobileIconTone[item.path] || "slate"}`}><item.icon size={20} strokeWidth={active ? 2.5 : 2} /></span>
                               <span
                                 className={`text-[10px] font-semibold leading-tight text-center ${
                                   active ? "text-primary" : "text-muted-foreground"
@@ -295,11 +299,11 @@ const MobileBottomNav = () => {
 
                 <div
                   className={`
-                    p-1.5 rounded-xl transition-all duration-200
-                    ${active ? "bg-primary/15 scale-105" : ""}
+                    p-1 rounded-xl transition-all duration-200
+                    ${active ? "scale-105" : ""}
                   `}
                 >
-                  <tab.icon size={22} strokeWidth={active ? 2.5 : 2} />
+                  <span className={`mobile-app-icon mobile-app-icon-${mobileIconTone[tab.path] || "slate"}`}><tab.icon size={20} strokeWidth={active ? 2.5 : 2} /></span>
                 </div>
                 <span
                   className={`text-[10px] font-semibold leading-none ${

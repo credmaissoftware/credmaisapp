@@ -9,7 +9,7 @@ import {
   Crown, ClipboardList, Sparkles, Settings, Bot, QrCode,
   UserCheck, Shield, Cog, LogOut, User, LifeBuoy, MessageCircle,
   AlertTriangle, ChevronLeft, Plus, Search, Archive, Landmark,
-  Activity, Terminal,
+  Activity, Terminal, Smartphone,
 } from "lucide-react";
 import AppModeSwitcher from "@/components/AppModeSwitcher";
 import { useAppMode } from "@/contexts/AppModeContext";
@@ -38,6 +38,16 @@ interface MenuSection {
   defaultOpen?: boolean;
 }
 
+const menuIconTone: Record<string, string> = {
+  "/hoje": "amber", "/dashboard": "blue", "/analises": "violet", "/clientes": "orange",
+  "/cobrancas": "rose", "/investidores": "teal", "/carteira": "emerald", "/comercial": "indigo",
+  "/lucros": "green", "/gastos": "red", "/relatorios": "sky", "/historico-financeiro": "slate",
+  "/comunicacao": "purple", "/comunicacao/inbox": "pink", "/chat": "cyan", "/cobradores": "lime",
+  "/qrcode": "blue", "/ferramentas/simulador": "violet", "/ferramentas/metas": "amber", "/ferramentas/tarefas": "green",
+  "/ferramentas/anotacoes": "yellow", "/ferramentas/planilha": "cyan", "/puxada-dados": "slate", "/configuracoes": "slate",
+  "/suporte": "pink", "/auditoria": "red", "/admin": "amber",
+};
+
 const sections: MenuSection[] = [
   {
     title: "Início",
@@ -54,6 +64,7 @@ const sections: MenuSection[] = [
       { label: "Cobranças", icon: Receipt, path: "/cobrancas" },
       { label: "Investidores", icon: Landmark, path: "/investidores" },
       { label: "Carteira", icon: Wallet, path: "/carteira" },
+      { label: "Comercial", icon: Smartphone, path: "/comercial" },
     ],
   },
   {
@@ -203,8 +214,8 @@ const Sidebar = ({ collapsed = false, onToggleCollapse }: SidebarProps) => {
           ${collapsed ? "justify-center px-2" : ""}
         `}
       >
-        <div className={`relative shrink-0 transition-colors duration-200 ${active ? "text-[#201a10]" : "text-slate-400 group-hover:text-white"}`}>
-          <Icon size={19} strokeWidth={active ? 2.4 : 1.9} />
+        <div className={`menu-app-icon menu-app-icon-${menuIconTone[item.path] || "slate"} ${active ? "is-active" : ""}`}>
+          <Icon size={16} strokeWidth={active ? 2.5 : 2.1} />
           {item.highlight && !active && !collapsed && (
             <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_6px_hsl(45_95%_55%/0.8)]" />
           )}
