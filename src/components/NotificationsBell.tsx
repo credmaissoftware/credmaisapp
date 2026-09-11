@@ -246,7 +246,7 @@ const NotificationsBell = () => {
           <div
             className={`${
               isMobile
-                ? "fixed top-14 right-3 left-3"
+                ? "fixed top-[6.75rem] right-3 left-3"
                 : "absolute right-0 top-12 w-[420px]"
             } max-h-[calc(100vh-5rem)] flex flex-col bg-card border border-border/60 rounded-2xl shadow-2xl shadow-black/40 z-50 overflow-hidden animate-scale-in`}
           >

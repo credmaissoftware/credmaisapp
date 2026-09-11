@@ -2,10 +2,16 @@
 @media (max-width: 767px) {
   html, body { min-height: 100%; overscroll-behavior-y: none; }
   body { -webkit-tap-highlight-color: transparent; }
+  .app-shell, .app-workspace, .app-content { width: 100%; min-width: 0; }
   .app-shell { min-height: 100svh; padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px); }
   .app-topbar { padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px); }
-  .app-topbar > div { min-height: 60px; height: 60px; }
+  .app-topbar > div { min-height: 60px; height: 60px; min-width: 0; }
+  .app-topbar-actions { min-width: 0; }
+  .app-topbar-actions > * { flex: 0 0 auto; }
+  .mobile-mode-switcher { padding: 0 .125rem !important; }
+  .mobile-mode-switcher button { width: 36px; height: 36px; }
   .app-content { scroll-padding-top: 68px; }
+  .app-content > * { min-width: 0; max-width: 100%; }
   .app-content > .credinho-banner { margin-bottom: 1rem; }
 
   .mobile-bottom-nav {
@@ -32,6 +38,17 @@
 
   /* Full-height sheets feel native on a phone while remaining centered on desktop. */
   [role="dialog"] > :where(.fixed, .relative) { max-height: calc(100svh - 1rem); }
+}
+
+/* Very narrow phones: preserve a single readable line in the top bar and
+   the top bar and stack dense two-column cards instead of squeezing labels. */
+@media (max-width: 380px) {
+  .app-topbar > div { padding-inline: .5rem !important; gap: .125rem !important; }
+  .app-topbar-actions { gap: 0 !important; }
+  .app-language-switcher { display: none; }
+  .app-content :where(.grid.grid-cols-2, .grid.grid-cols-3, .grid.grid-cols-4) {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
 }
 
 @media (min-width: 768px) {

@@ -211,7 +211,7 @@ const TopBar = ({ onSearchClick, onQuickPayment }: TopBarProps) => {
       )}
 
       {/* Action buttons */}
-      <div className="flex items-center gap-1 shrink-0 pl-1 ml-1 border-l border-border/30">
+      <div className="app-topbar-actions flex items-center gap-1 shrink-0 pl-1 ml-1 border-l border-border/30">
         {/* No celular não existe menu lateral, então o seletor de modo vem para cá */}
         {isMobile && <AppModeSwitcher collapsed />}
 
@@ -233,7 +233,9 @@ const TopBar = ({ onSearchClick, onQuickPayment }: TopBarProps) => {
           </span>
         </button>
 
-        <LanguageSwitcher />
+        <span className="app-language-switcher">
+          <LanguageSwitcher />
+        </span>
         <NotificationsBell />
 
         {!isMobile && <UserMenu profile={profile} theme={theme} toggleTheme={toggleTheme} onSignOut={handleSignOut} navigate={navigate} isAdmin={isPlatformAdmin} />}

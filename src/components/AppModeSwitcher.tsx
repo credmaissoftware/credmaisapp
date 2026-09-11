@@ -27,7 +27,7 @@ const AppModeSwitcher = ({ collapsed = false }: { collapsed?: boolean }) => {
     const other = mode === "platform" ? options[1] : options[0];
     const OtherIcon = other.icon;
     return (
-      <div className="px-2 pt-3">
+      <div className="mobile-mode-switcher px-2 pt-3">
         <button
           onClick={() => go(other.value)}
           title={`Ir para ${other.label}`}

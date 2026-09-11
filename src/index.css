@@ -1428,6 +1428,11 @@ div[style*="Edit with Lovable"],
 
   /* Cards e seções nunca menores que o container */
   .safe-card { max-width: 100%; min-width: 0; }
+
+  /* Flex/grid descendants must be allowed to shrink on tablets and phones. */
+  .app-workspace, .app-content,
+  .app-content :where(.flex, .grid) { min-width: 0; }
+  .app-content :where(.flex > *, .grid > *) { min-width: 0; }
 }
 
 /* Defesas no viewport pequeno (mobile) */
