@@ -27,7 +27,7 @@ interface MenuItem {
   badge?: number;
   highlight?: boolean;
   module?: ModuleKey;
-  /** DisponÃ­vel somente no plano Completo (R$299) */
+  /** Disponível somente no plano Completo (R$299) */
   pro?: boolean;
 }
 
@@ -40,18 +40,18 @@ interface MenuSection {
 
 const sections: MenuSection[] = [
   {
-    title: "InÃ­cio",
+    title: "Início",
     items: [
       { label: "Hoje", icon: Sparkles, path: "/hoje", highlight: true },
       { label: "Painel", icon: LayoutDashboard, path: "/dashboard" },
-      { label: "AnÃ¡lises", icon: BarChart3, path: "/analises", module: "analises" },
+      { label: "Análises", icon: BarChart3, path: "/analises", module: "analises" },
     ],
   },
   {
-    title: "OperaÃ§Ã£o",
+    title: "Operação",
     items: [
       { label: "Clientes", icon: Users, path: "/clientes" },
-      { label: "CobranÃ§as", icon: Receipt, path: "/cobrancas" },
+      { label: "Cobranças", icon: Receipt, path: "/cobrancas" },
       { label: "Investidores", icon: Landmark, path: "/investidores" },
       { label: "Carteira", icon: Wallet, path: "/carteira" },
     ],
@@ -61,12 +61,12 @@ const sections: MenuSection[] = [
     items: [
       { label: "Lucros", icon: TrendingUp, path: "/lucros", module: "lucros" },
       { label: "Gastos", icon: DollarSign, path: "/gastos", module: "gastos" },
-      { label: "RelatÃ³rios", icon: FileText, path: "/relatorios", module: "relatorios" },
-      { label: "HistÃ³rico financeiro", icon: Archive, path: "/historico-financeiro" },
+      { label: "Relatórios", icon: FileText, path: "/relatorios", module: "relatorios" },
+      { label: "Histórico financeiro", icon: Archive, path: "/historico-financeiro" },
     ],
   },
   {
-    title: "ComunicaÃ§Ã£o & AutomaÃ§Ãµes",
+    title: "Comunicação & Automações",
     collapsible: true,
     defaultOpen: true,
     items: [
@@ -85,7 +85,7 @@ const sections: MenuSection[] = [
       { label: "Simulador", icon: Calculator, path: "/ferramentas/simulador", module: "simulador" },
       { label: "Metas", icon: Target, path: "/ferramentas/metas", module: "metas" },
       { label: "Tarefas", icon: CheckSquare, path: "/ferramentas/tarefas", module: "tarefas" },
-      { label: "AnotaÃ§Ãµes", icon: StickyNote, path: "/ferramentas/anotacoes", module: "anotacoes" },
+      { label: "Anotações", icon: StickyNote, path: "/ferramentas/anotacoes", module: "anotacoes" },
       { label: "Planilha", icon: Table, path: "/ferramentas/planilha", module: "planilha" },
       { label: "Consulta CPF/CNPJ", icon: Database, path: "/puxada-dados", module: "puxada_dados" },
     ],
@@ -95,7 +95,7 @@ const sections: MenuSection[] = [
     collapsible: true,
     defaultOpen: false,
     items: [
-      { label: "ConfiguraÃ§Ãµes", icon: Settings, path: "/configuracoes" },
+      { label: "Configurações", icon: Settings, path: "/configuracoes" },
       { label: "Suporte", icon: LifeBuoy, path: "/suporte" },
       { label: "Auditoria", icon: Shield, path: "/auditoria" },
       { label: "Admin", icon: Crown, path: "/admin" },
@@ -106,26 +106,26 @@ const sections: MenuSection[] = [
 
 /**
  * Menu do painel do dono do app. Em modo "plataforma" ele SUBSTITUI o menu de
- * operaÃ§Ã£o por completo â€” nenhuma tela de credor (clientes, contratos,
- * cobranÃ§as) aparece aqui.
+ * operação por completo — nenhuma tela de credor (clientes, contratos,
+ * cobranças) aparece aqui.
  */
 const platformSections: MenuSection[] = [
   {
     title: "Plataforma",
     items: [
-      { label: "UsuÃ¡rios & Assinaturas", icon: Users, path: "/admin" },
+      { label: "Usuários & Assinaturas", icon: Users, path: "/admin" },
       { label: "Suporte", icon: LifeBuoy, path: "/admin?secao=support" },
-      { label: "AutomaÃ§Ãµes", icon: Activity, path: "/admin?secao=automations" },
+      { label: "Automações", icon: Activity, path: "/admin?secao=automations" },
       { label: "Logs do sistema", icon: Terminal, path: "/admin?secao=logs" },
-      { label: "ManutenÃ§Ã£o & Controle", icon: Cog, path: "/admin?secao=settings" },
+      { label: "Manutenção & Controle", icon: Cog, path: "/admin?secao=settings" },
     ],
   },
   {
-    title: "DiagnÃ³stico",
+    title: "Diagnóstico",
     items: [
       { label: "Auditoria do bot", icon: Bot, path: "/admin/bot-audit" },
       { label: "Trilha de auditoria", icon: Shield, path: "/auditoria" },
-      { label: "HistÃ³rico", icon: Archive, path: "/historico" },
+      { label: "Histórico", icon: Archive, path: "/historico" },
     ],
   },
   {
@@ -156,7 +156,7 @@ const Sidebar = ({ collapsed = false, onToggleCollapse }: SidebarProps) => {
     sections.map((s) => ({
       ...s,
       items: s.items.filter((i) => {
-        // Painel do dono do app e trilha de auditoria: mesma regra, uma fonte sÃ³.
+        // Painel do dono do app e trilha de auditoria: mesma regra, uma fonte só.
         if (["/admin", "/auditoria", "/historico"].includes(i.path)) return isPlatformAdmin;
         if (i.pro && !hasAutomations) return false;
         if (i.module && modules && modules[i.module] === false) return false;
@@ -164,11 +164,11 @@ const Sidebar = ({ collapsed = false, onToggleCollapse }: SidebarProps) => {
       }),
     })).filter(s => s.items.length > 0), [isPlatformAdmin, modules, hasAutomations]);
 
-  // Em modo plataforma o menu de operaÃ§Ã£o some por inteiro.
+  // Em modo plataforma o menu de operação some por inteiro.
   const visibleSections = mode === "platform" ? platformSections : operationSections;
 
-  // Itens do painel apontam para /admin?secao=x, entÃ£o a comparaÃ§Ã£o leva a query
-  // em conta â€” senÃ£o todos os itens do painel ficariam ativos ao mesmo tempo.
+  // Itens do painel apontam para /admin?secao=x, então a comparação leva a query
+  // em conta — senão todos os itens do painel ficariam ativos ao mesmo tempo.
   const isActive = (path: string) => {
     const [p, q] = path.split("?");
     const samePath = location.pathname === p || location.pathname.startsWith(p + "/");
@@ -323,7 +323,7 @@ const Sidebar = ({ collapsed = false, onToggleCollapse }: SidebarProps) => {
         )}
       </div>
 
-      {/* BotÃ£o colapsar */}
+      {/* Botão colapsar */}
       <button
         onClick={onToggleCollapse}
         className="absolute -right-3 top-14 w-7 h-7 rounded-full bg-zinc-950 border border-white/15 shadow-xl flex items-center justify-center text-zinc-400 hover:text-white hover:border-white/35 transition-colors z-10"
@@ -336,7 +336,7 @@ const Sidebar = ({ collapsed = false, onToggleCollapse }: SidebarProps) => {
 
       <AppModeSwitcher collapsed={collapsed} />
 
-      {/* Busca rÃ¡pida + AÃ§Ã£o rÃ¡pida (sÃ³ no app de operaÃ§Ã£o) */}
+      {/* Busca rápida + Ação rápida (só no app de operação) */}
       {mode !== "platform" && !collapsed && (
         <div className="px-3 pt-3 pb-2 space-y-1.5">
           <button
@@ -345,7 +345,7 @@ const Sidebar = ({ collapsed = false, onToggleCollapse }: SidebarProps) => {
           >
             <Search size={13} />
             <span className="flex-1 text-left">Buscar...</span>
-            <kbd className="hidden lg:inline text-[9px] font-mono px-1.5 py-0.5 rounded bg-muted/50 border border-border/30">âŒ˜K</kbd>
+            <kbd className="hidden lg:inline text-[9px] font-mono px-1.5 py-0.5 rounded bg-muted/50 border border-border/30">⌘K</kbd>
           </button>
           <button
             onClick={() => navigate("/clientes/novo")}
@@ -360,7 +360,7 @@ const Sidebar = ({ collapsed = false, onToggleCollapse }: SidebarProps) => {
         <div className="px-2 pt-3 pb-1 flex flex-col gap-1.5">
           <button
             onClick={openGlobalSearch}
-            title="Buscar (âŒ˜K)"
+            title="Buscar (⌘K)"
             className="w-full h-9 rounded-lg bg-accent/30 hover:bg-accent/50 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
           >
             <Search size={15} />
@@ -375,7 +375,7 @@ const Sidebar = ({ collapsed = false, onToggleCollapse }: SidebarProps) => {
         </div>
       )}
 
-      {/* NavegaÃ§Ã£o */}
+      {/* Navegação */}
       <nav
         className="flex-1 overflow-y-auto px-2 py-2 scrollbar-none"
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
@@ -383,7 +383,7 @@ const Sidebar = ({ collapsed = false, onToggleCollapse }: SidebarProps) => {
         {visibleSections.map((section, idx) => renderSection(section, idx))}
       </nav>
 
-      {/* Footer do usuÃ¡rio */}
+      {/* Footer do usuário */}
       <div className={`shrink-0 border-t border-border/10 p-2.5 bg-background/20 ${collapsed ? "flex flex-col items-center gap-2" : ""}`}>
         {!collapsed ? (
           <div className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-accent/30 transition-colors group">
@@ -399,7 +399,7 @@ const Sidebar = ({ collapsed = false, onToggleCollapse }: SidebarProps) => {
             </div>
             <div className="flex-1 min-w-0 cursor-pointer" onClick={() => navigate("/perfil")}>
               <p className="text-[12px] font-semibold text-foreground truncate leading-tight">
-                {profile?.name || "UsuÃ¡rio"}
+                {profile?.name || "Usuário"}
               </p>
               <p className="text-[10px] text-muted-foreground/50 truncate">{profile?.email || ""}</p>
             </div>
