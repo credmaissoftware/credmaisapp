@@ -35,8 +35,8 @@ const METHODS = [
 export default function PagamentoModal(p: Props) {
   const [discountPercent, setDiscountPercent] = useState(0);
   const automaticNextDue = nextInterestDueDate(p.inst.due_date, p.frequency);
-  const canPayInterestOnly = String(p.frequency || p.inst.contracts?.frequency || "").toLowerCase() === "monthly"
-    && Number(p.inst.contracts?.num_installments || 1) <= 1;
+  const renewableMode = ["percentage", "interest_only"].includes(String(p.inst.contracts?.loan_mode || "").toLowerCase());
+  const canPayInterestOnly = renewableMode && ["daily", "weekly", "biweekly", "monthly"].includes(String(p.frequency || p.inst.contracts?.frequency || "").toLowerCase());
   const [renewInterest, setRenewInterest] = useState(false);
   const [nextDueDate, setNextDueDate] = useState(automaticNextDue);
   const discountableFee = calculateFeeDiscount(p.remainingDue, Number(p.feeTotal || 0), 0).discountable;
