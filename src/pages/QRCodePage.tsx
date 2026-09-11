@@ -13,8 +13,12 @@ import {
   Sparkles,
   ArrowUpRight,
   Users,
+  Settings2,
+  ShieldCheck,
+  Zap,
 } from "lucide-react";
 import { toast } from "sonner";
+import "@/qrcode-overrides.css";
 
 type Preset = {
   key: string;
@@ -133,9 +137,9 @@ const QRCodePage = () => {
   const activePreset = presets.find((p) => `${baseUrl}${p.path}` === activeUrl);
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6 pb-12">
+    <div className="qr-studio-page max-w-6xl mx-auto space-y-6 pb-12">
       {/* Hero */}
-      <div className="relative overflow-hidden rounded-3xl border border-border/60 bg-gradient-to-br from-primary/15 via-card to-card p-6 sm:p-8 animate-fade-in">
+      <div className="qr-studio-hero relative overflow-hidden rounded-3xl border border-border/60 bg-gradient-to-br from-primary/15 via-card to-card p-6 sm:p-8 animate-fade-in">
         <div className="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-primary/20 blur-3xl pointer-events-none" />
         <div className="absolute -bottom-16 -left-10 w-64 h-64 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
         <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -163,11 +167,27 @@ const QRCodePage = () => {
         </div>
       </div>
 
+      <div className="qr-studio-summary" aria-label="Resumo do QR Studio">
+        <button type="button" className="qr-summary-card qr-summary-card--gold" onClick={() => setUrl(`${baseUrl}${presets[0].path}`)}>
+          <span className="qr-summary-icon"><Zap size={16} /></span>
+          <span><strong>{presets.length}</strong><small>portais prontos</small></span>
+          <ArrowUpRight size={15} className="qr-summary-arrow" />
+        </button>
+        <div className="qr-summary-card">
+          <span className="qr-summary-icon"><Settings2 size={16} /></span>
+          <span><strong>{size}px</strong><small>tamanho de saída</small></span>
+        </div>
+        <div className="qr-summary-card qr-summary-card--green">
+          <span className="qr-summary-icon"><ShieldCheck size={16} /></span>
+          <span><strong>{activeUrl ? "Pronto" : "Aguardando"}</strong><small>{activeUrl ? "link validado" : "selecione um destino"}</small></span>
+        </div>
+      </div>
+
       <div className="grid lg:grid-cols-5 gap-6">
         {/* Left column: presets + custom */}
         <div className="lg:col-span-3 space-y-6">
           {/* Presets */}
-          <section className="space-y-3">
+          <section className="qr-panel qr-presets space-y-3">
             <div className="flex items-center justify-between">
               <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
                 Links Rápidos
@@ -222,7 +242,7 @@ const QRCodePage = () => {
           </section>
 
           {/* Custom URL */}
-          <section className="space-y-3">
+          <section className="qr-panel qr-custom space-y-3">
             <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
               URL Personalizada
             </p>
@@ -291,11 +311,23 @@ const QRCodePage = () => {
               </div>
             </div>
           </section>
+
+          <section className="qr-howto rounded-2xl border border-border/60 p-4 sm:p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="qr-howto-mark"><Check size={14} /></div>
+              <p className="text-xs font-bold text-foreground">Um QR pronto para cada momento</p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div><span>01</span><p>Escolha o portal</p><small>Use um atalho pronto</small></div>
+              <div><span>02</span><p>Personalize</p><small>Defina tamanho e contraste</small></div>
+              <div><span>03</span><p>Compartilhe</p><small>Baixe ou envie direto</small></div>
+            </div>
+          </section>
         </div>
 
         {/* Right column: QR result */}
         <div className="lg:col-span-2">
-          <div className="lg:sticky lg:top-6 rounded-3xl border border-border bg-card overflow-hidden">
+          <div className="qr-result-panel lg:sticky lg:top-6 rounded-3xl border border-border bg-card overflow-hidden">
             {activeUrl ? (
               <>
                 {/* QR preview */}
