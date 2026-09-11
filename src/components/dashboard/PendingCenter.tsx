@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { AlertCircle, ArrowRight, FileCheck2, FileSignature, Headphones, Inbox } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { motion } from "framer-motion";
 
 type PendingItem = {
   label: string;
@@ -65,14 +66,14 @@ const PendingCenter = ({ overdueCount }: { overdueCount: number }) => {
       </div>
       <div className="grid grid-cols-1 divide-y divide-border/20 sm:grid-cols-2 sm:divide-y-0 lg:grid-cols-5">
         {items.map((item) => (
-          <button key={item.label} onClick={() => navigate(item.path)} className="group flex items-center gap-3 p-4 text-left transition-colors hover:bg-muted/30 lg:border-r lg:border-border/20 lg:last:border-r-0">
+          <motion.button key={item.label} onClick={() => navigate(item.path)} whileHover={{ y: -2, backgroundColor: "rgba(255,255,255,.045)" }} transition={{ type: "spring", stiffness: 340, damping: 26 }} className="group flex items-center gap-3 p-4 text-left transition-colors lg:border-r lg:border-border/20 lg:last:border-r-0">
             <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${item.tone}`}><item.icon size={16} /></span>
             <span className="min-w-0 flex-1">
               <span className="flex items-center gap-1 text-xs font-semibold text-foreground"><strong className="text-base tabular-nums">{isLoading ? "—" : item.count}</strong> {item.label}</span>
               <span className="block truncate text-[10px] text-muted-foreground">{item.description}</span>
             </span>
             <ArrowRight size={13} className="shrink-0 text-muted-foreground/40 transition-transform group-hover:translate-x-0.5" />
-          </button>
+          </motion.button>
         ))}
       </div>
     </section>
