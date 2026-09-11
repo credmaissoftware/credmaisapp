@@ -146,7 +146,7 @@ const Dashboard = () => {
   return (
     <div className="relative space-y-5 md:space-y-6 pb-8 max-w-[1400px] mx-auto animate-fade-in">
       {/* ─── HERO — saudação + ações principais ─── */}
-      <section className="relative isolate overflow-hidden rounded-2xl border border-amber-200/[.16] bg-[#0b0c0f] bg-cover bg-center p-5 shadow-[0_22px_60px_-32px_rgba(234,179,8,.28)] md:p-7" style={{ backgroundImage: "linear-gradient(90deg,rgba(8,9,12,.98) 0%,rgba(8,9,12,.88) 48%,rgba(8,9,12,.38)), url('/credmais-hero-cinematic-v2.webp')" }}>
+      <section className="relative isolate overflow-hidden rounded-2xl border border-sky-200/[.16] bg-[#0b0c0f] bg-cover bg-center p-5 shadow-[0_22px_60px_-32px_rgba(56,189,248,.28)] md:p-7" style={{ backgroundImage: "linear-gradient(90deg,rgba(8,9,12,.98) 0%,rgba(8,9,12,.88) 48%,rgba(8,9,12,.38)), url('/credmais-hero-cinematic-v2.webp')" }}>
         <div className="pointer-events-none absolute -right-16 -top-24 -z-10 h-72 w-72 rounded-full border-[24px] border-white/[.06]" />
         <div className="pointer-events-none absolute right-20 top-10 -z-10 h-2 w-2 rounded-full bg-orange-300 shadow-[0_0_18px_6px_rgba(251,146,60,.65)]" />
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
@@ -193,7 +193,7 @@ const Dashboard = () => {
             </button>
             <button
               onClick={() => navigate("/clientes/novo")}
-              className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#b7791f] via-[#eab84b] to-[#b7791f] px-4 py-2 text-xs font-bold text-[#211707] shadow-lg shadow-amber-950/20 transition-colors hover:brightness-110"
+              className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#075985] via-[#38bdf8] to-[#075985] px-4 py-2 text-xs font-bold text-white shadow-lg shadow-sky-950/20 transition-colors hover:brightness-110"
             >
               <Plus size={14} strokeWidth={2.5} />
               Novo
