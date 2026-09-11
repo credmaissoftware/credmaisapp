@@ -24,6 +24,8 @@ const PayModal = ({ inst, fee, alreadyPaid, remaining, daysLate, onCancel, onCon
   const [saving, setSaving] = useState(false);
   const automaticNextDue = nextInterestDueDate(inst.due_date, inst.contracts?.frequency);
   const [nextDueDate, setNextDueDate] = useState(automaticNextDue);
+  const canPayInterestOnly = String(inst.contracts?.frequency || "").toLowerCase() === "monthly"
+    && Number(inst.contracts?.num_installments || 1) <= 1;
 
   const value = useMemo(() => {
     const n = Number(String(raw).replace(/\./g, "").replace(",", "."));
@@ -147,14 +149,14 @@ const PayModal = ({ inst, fee, alreadyPaid, remaining, daysLate, onCancel, onCon
             Quitar total
           </button>
           
-          <button
+          {canPayInterestOnly && <button
             onClick={() => setMode("interest_only")}
             className={`min-w-0 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-sm ${
               mode === "interest_only" ? "bg-amber-500 text-white border-amber-600" : "border border-border text-muted-foreground hover:bg-accent"
             }`}
           >
             Pagar só juros
-          </button>
+          </button>}
 
           <button
             onClick={() => setMode("partial")}
@@ -202,7 +204,7 @@ const PayModal = ({ inst, fee, alreadyPaid, remaining, daysLate, onCancel, onCon
           </div>
         )}
 
-        {mode === "interest_only" && (
+        {canPayInterestOnly && mode === "interest_only" && (
           <div className="p-3 rounded-xl bg-warning/10 border border-warning/20 space-y-3">
             <p className="text-xs text-warning-foreground leading-relaxed">
               <strong>Renovação por juros:</strong> recebe <strong>R$ {fmt(totalInterestOnly)}</strong>, mantém o capital
