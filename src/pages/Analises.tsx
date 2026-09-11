@@ -20,6 +20,7 @@ import ErrorState from "@/components/feedback/ErrorState";
 
 import AnaliseNarrative from "@/components/dashboard/AnaliseNarrative";
 import { fetchAll } from "@/lib/fetchAll";
+import "@/analises-overrides.css";
 
 type DetailColumn = { label: string; key: string; align?: "left" | "right"; format?: (v: any, row: any) => string };
 type DetailPayload = {
@@ -593,7 +594,7 @@ const Analises = () => {
   const heroUp = heroDelta >= 0;
 
   return (
-    <div className="space-y-5 sm:space-y-6 pb-8">
+    <div className="analysis-page space-y-5 sm:space-y-6 pb-8">
       {/* HERO Premium */}
       <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-card/65 p-4 sm:p-6 animate-fade-in shadow-[0_18px_50px_-40px_rgba(0,0,0,.9)] backdrop-blur-xl">
         <div className="absolute -top-24 -right-16 w-64 h-64 rounded-full bg-primary/[.07] blur-3xl pointer-events-none" />
@@ -637,6 +638,14 @@ const Analises = () => {
           </div>
         </div>
       </div>
+
+      <section className="analysis-overview-grid" aria-label="Resumo executivo">
+        <button className="analysis-overview-card is-received" onClick={() => setDetail(m.details.totalReceived)}><span className="analysis-overview-icon"><Wallet size={17}/></span><span><small>Recebido no período</small><strong>{fmtBRL(m.totalReceived)}</strong><em>{m.paidCount} parcelas pagas</em></span></button>
+        <button className="analysis-overview-card is-lent" onClick={() => setDetail(m.details.totalLent)}><span className="analysis-overview-icon"><HandCoins size={17}/></span><span><small>Emprestado no período</small><strong>{fmtBRL(m.totalLent)}</strong><em>{m.newContracts} novos contratos</em></span></button>
+        <button className="analysis-overview-card is-risk" onClick={() => setDetail(m.details.overdue)}><span className="analysis-overview-icon"><AlertTriangle size={17}/></span><span><small>Em atraso agora</small><strong>{fmtBRL(m.overdueAmount)}</strong><em>{m.overdueClients} clientes afetados</em></span></button>
+        <button className="analysis-overview-card is-active" onClick={() => setDetail(m.details.capitalAtivo)}><span className="analysis-overview-icon"><TrendingUp size={17}/></span><span><small>Capital ativo</small><strong>{fmtBRL(m.capitalAtivo)}</strong><em>{m.activeCount} contratos ativos</em></span></button>
+      </section>
+      <section className="analysis-reading-card"><div><span className="analysis-kicker">Leitura rápida</span><h2>O que merece atenção</h2></div><div className="analysis-reading-grid"><span><AlertTriangle size={16}/><b>{fmtPct(m.inadRate)}</b><small>taxa de inadimplência</small></span><span><PiggyBank size={16}/><b>{fmtBRL(m.lucroPeriodo)}</b><small>juros realizados</small></span><span><Clock size={16}/><b>{fmtBRL(m.forecastAmount)}</b><small>previsto em 30 dias</small></span></div></section>
 
       <Tabs defaultValue="classic" className="w-full">
         <TabsContent value="classic" className="space-y-7">
