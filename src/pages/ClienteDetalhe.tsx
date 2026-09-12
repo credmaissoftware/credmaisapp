@@ -580,7 +580,14 @@ const ClienteDetalhe = () => {
       next.add(contractId);
       return next;
     });
-    window.setTimeout(() => scrollToSection(`contract-${contractId}`), 0);
+    // Aguarda o cartão expandido ser renderizado e garante que ele fique visível.
+    window.setTimeout(() => {
+      const target = document.getElementById(`contract-${contractId}`);
+      if (!target) return;
+      target.setAttribute("tabindex", "-1");
+      target.scrollIntoView({ behavior: "auto", block: "center" });
+      (target as HTMLElement).focus({ preventScroll: true });
+    }, 120);
   };
 
   const handleSaveContract = async () => {
