@@ -1,5 +1,6 @@
 import "@/components/cliente-detalhe/client-profile.css";
 import "@/components/cliente-detalhe/client-reference.css";
+import "@/components/cliente-detalhe/client-tabs.css";
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -65,6 +66,7 @@ const ClienteDetalhe = () => {
   const [contractSearch, setContractSearch] = useState("");
   const [docsOpen, setDocsOpen] = useState(false);
   const [histOpen, setHistOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState("overview");
 
   const [expandedContracts, setExpandedContracts] = useState<Set<string>>(new Set());
   const toggleContract = (cid: string) => setExpandedContracts(prev => {
@@ -572,6 +574,11 @@ const ClienteDetalhe = () => {
 
   const scrollToSection = (sectionId: string) => {
     document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  const goToSection = (key: string, sectionId: string) => {
+    setActiveSection(key);
+    scrollToSection(sectionId);
   };
 
   const focusContract = (contractId: string) => {
@@ -1461,13 +1468,13 @@ const ClienteDetalhe = () => {
       </nav>
 
       <nav className="client-profile-tab-strip" aria-label="Seções da ficha">
-        <button type="button" className="is-active" onClick={() => scrollToSection("resumo")}><Wallet size={15}/> Visão geral</button>
-        <button type="button" onClick={() => scrollToSection("sec-contratos")}><FileText size={15}/> Empréstimos <b>{contracts.length}</b></button>
-        <button type="button" onClick={() => scrollToSection("sec-contratos")}><CreditCard size={15}/> Pagamentos <b>{kpis.paidInst.length}</b></button>
-        <button type="button" onClick={() => scrollToSection("info-cliente")}><Info size={15}/> Informações</button>
-        <button type="button" onClick={() => scrollToSection("estatisticas")}><BarChart3 size={15}/> Estatísticas</button>
-        <button type="button" onClick={() => setHistOpen(true)}><Clock size={15}/> Histórico</button>
-        <button type="button" onClick={() => setDocsOpen(true)}><FileIcon size={15}/> Documentos</button>
+        <button type="button" className={`tab-overview ${activeSection === "overview" ? "is-active" : ""}`} aria-current={activeSection === "overview" ? "page" : undefined} title="Resumo financeiro, cadastro e indicadores" onClick={() => goToSection("overview", "resumo")}><Wallet size={15}/> <span>Visão geral<small>Resumo</small></span></button>
+        <button type="button" className={`tab-loans ${activeSection === "loans" ? "is-active" : ""}`} aria-current={activeSection === "loans" ? "page" : undefined} title="Ver contratos e parcelas do cliente" onClick={() => goToSection("loans", "sec-contratos")}><FileText size={15}/> <span>Empréstimos<small>Contratos</small></span> <b>{contracts.length}</b></button>
+        <button type="button" className={`tab-payments ${activeSection === "payments" ? "is-active" : ""}`} aria-current={activeSection === "payments" ? "page" : undefined} title="Acompanhar parcelas pagas, abertas e atrasadas" onClick={() => goToSection("payments", "sec-contratos")}><CreditCard size={15}/> <span>Pagamentos<small>Parcelas</small></span> <b>{kpis.paidInst.length}</b></button>
+        <button type="button" className={`tab-info ${activeSection === "info" ? "is-active" : ""}`} aria-current={activeSection === "info" ? "page" : undefined} title="Consultar dados cadastrais do cliente" onClick={() => goToSection("info", "info-cliente")}><Info size={15}/> <span>Informações<small>Cadastro</small></span></button>
+        <button type="button" className={`tab-stats ${activeSection === "stats" ? "is-active" : ""}`} aria-current={activeSection === "stats" ? "page" : undefined} title="Analisar desempenho e taxa de pagamento" onClick={() => goToSection("stats", "estatisticas")}><BarChart3 size={15}/> <span>Estatísticas<small>Desempenho</small></span></button>
+        <button type="button" className={`tab-history ${activeSection === "history" ? "is-active" : ""}`} aria-current={activeSection === "history" ? "page" : undefined} title="Ver atividades e movimentações" onClick={() => { setActiveSection("history"); setHistOpen(true); }}><Clock size={15}/> <span>Histórico<small>Atividades</small></span></button>
+        <button type="button" className={`tab-docs ${activeSection === "docs" ? "is-active" : ""}`} aria-current={activeSection === "docs" ? "page" : undefined} title="Consultar documentos e anexos" onClick={() => { setActiveSection("docs"); setDocsOpen(true); }}><FileIcon size={15}/> <span>Documentos<small>Anexos</small></span></button>
       </nav>
 
       <section id="resumo" className="client-profile-reference-layout" aria-label="Visão geral do cliente">

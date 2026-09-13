@@ -1,0 +1,46 @@
+.client-profile-tab-strip {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 8px;
+  padding: 8px;
+  margin-bottom: 20px;
+  overflow-x: auto;
+  border: 1px solid hsl(0 0% 100% / .1);
+  border-radius: 16px;
+  background: hsl(0 0% 100% / .035);
+  scrollbar-width: none;
+}
+
+.client-profile-tab-strip::-webkit-scrollbar { display: none; }
+
+.client-profile-tab-strip button {
+  display: flex;
+  min-width: 118px;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 12px;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  color: hsl(var(--muted-foreground));
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: background .2s ease, border-color .2s ease, color .2s ease, transform .2s ease;
+}
+
+.client-profile-tab-strip button:hover { transform: translateY(-1px); color: hsl(var(--foreground)); background: hsl(0 0% 100% / .06); }
+.client-profile-tab-strip button:focus-visible { outline: 2px solid hsl(var(--primary)); outline-offset: 2px; }
+.client-profile-tab-strip button.is-active { color: hsl(var(--foreground)); border-color: hsl(var(--primary) / .45); background: linear-gradient(135deg, hsl(var(--primary) / .2), hsl(var(--primary) / .06)); box-shadow: 0 8px 20px -14px hsl(var(--primary)); }
+.client-profile-tab-strip button svg { flex: none; color: hsl(var(--primary)); }
+.client-profile-tab-strip button.tab-payments svg { color: #21d88a; }
+.client-profile-tab-strip button.tab-info svg { color: #4eb8ff; }
+.client-profile-tab-strip button.tab-stats svg { color: #bd8aff; }
+.client-profile-tab-strip button.tab-history svg { color: #f7b52f; }
+.client-profile-tab-strip button.tab-docs svg { color: #ff8d68; }
+.client-profile-tab-strip button span { display: grid; gap: 2px; min-width: 0; }
+.client-profile-tab-strip button span small { color: hsl(var(--muted-foreground)); font-size: 9px; font-weight: 400; }
+.client-profile-tab-strip button b { display: grid; min-width: 20px; height: 20px; place-items: center; margin-left: auto; border-radius: 999px; color: hsl(var(--foreground)); background: hsl(0 0% 100% / .1); font-size: 9px; }
+.client-profile-tab-strip button.is-active b { color: hsl(var(--primary-foreground)); background: hsl(var(--primary)); }
+
+@media (max-width: 900px) { .client-profile-tab-strip { grid-template-columns: repeat(7, minmax(132px, 1fr)); } }
+@media (prefers-reduced-motion: reduce) { .client-profile-tab-strip button { transition: none; } }
