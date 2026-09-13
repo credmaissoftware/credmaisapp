@@ -354,6 +354,11 @@
       opacity: 1 !important;
     }
 
+    /* background-attachment: fixed pode congelar a rolagem no Chrome Android. */
+    .bg-fixed {
+      background-attachment: scroll !important;
+    }
+
     /* Evita zoom automático em inputs no iOS quando fontsize<16px */
     input, textarea, select {
       font-size: 16px !important;

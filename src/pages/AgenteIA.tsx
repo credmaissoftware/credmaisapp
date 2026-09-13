@@ -1506,7 +1506,7 @@ const AgenteIA = () => {
 
       {/* ========== MENSAGENS TAB ========== */}
       {tab === "mensagens" && (
-        <div className="rounded-2xl border border-border bg-card flex flex-col" style={{ height: "calc(100vh - 280px)" }}>
+        <div className="rounded-2xl border border-border bg-card flex flex-col min-h-[360px] h-[calc(100dvh-280px)] lg:h-[calc(100vh-280px)]">
           {whatsappStatus !== "connected" ? (
             <div className="flex-1 flex items-center justify-center text-center p-6">
               <div className="space-y-3">
@@ -2096,7 +2096,7 @@ const AgenteIA = () => {
             ))}
           </div>
 
-          <div className="rounded-2xl border border-border bg-card flex flex-col" style={{ height: "calc(100vh - 400px)", minHeight: "420px" }}>
+        <div className="rounded-2xl border border-border bg-card flex flex-col min-h-[360px] h-[calc(100dvh-400px)] lg:h-[calc(100vh-400px)] lg:min-h-[420px]">
             <div className="px-4 py-2.5 border-b border-border flex items-center justify-between">
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <CredinhoAvatar size={28} /><span>Credinho · IA conectada · {messages.filter(m => m.role === "user").length} pergunta{messages.filter(m => m.role === "user").length !== 1 ? "s" : ""}</span>
