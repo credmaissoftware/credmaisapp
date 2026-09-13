@@ -11,6 +11,11 @@ export const LOAN_MODES: { v: LoanMode; label: string; desc: string; Icon: any }
 ];
 
 export const fmt = (v: number) => v.toLocaleString("pt-BR", { minimumFractionDigits: 2 });
-export const FREQ: Record<string, string> = { daily: "Diário", weekly: "Semanal", biweekly: "Quinzenal", monthly: "Mensal", custom: "Custom" };
-export const DAILY_MODES: Record<string, string> = { "mon-fri": "Seg-Sex", "mon-sat": "Seg-Sáb", "mon-sun": "Todos os dias" };
+export const FREQ: Record<string, string> = { daily: "Diário", weekly: "Semanal", biweekly: "Quinzenal", monthly: "Mensal", custom: "Personalizado" };
+export const DAILY_MODES: Record<string, string> = { "mon-fri": "Seg → Sex", "mon-sat": "Seg → Sáb", "mon-sun": "Todos os dias" };
+export const formatFrequency = (value?: string | null) => {
+  const raw = String(value || "monthly");
+  if (raw.startsWith("daily_")) return `Diário · ${DAILY_MODES[raw.slice(6)] || raw.slice(6)}`;
+  return FREQ[raw] || raw;
+};
 export const INPUT = "w-full px-3 py-2.5 rounded-lg bg-card border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring";

@@ -16,7 +16,7 @@ import EditParcelaModal from "@/components/cliente-detalhe/modals/EditParcelaMod
 import PagamentoModal from "@/components/cliente-detalhe/modals/PagamentoModal";
 import PagamentoDistribuidoModal from "@/components/cliente-detalhe/modals/PagamentoDistribuidoModal";
 import RenegociarModal, { type RenegotiationPayload } from "@/components/cliente-detalhe/modals/RenegociarModal";
-import { LOAN_MODES, fmt, FREQ, INPUT } from "@/components/cliente-detalhe/constants";
+import { LOAN_MODES, fmt, FREQ, formatFrequency, INPUT } from "@/components/cliente-detalhe/constants";
 import { interestOnlyAmount } from "@/lib/interestOnly";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
@@ -67,6 +67,7 @@ const ClienteDetalhe = () => {
   const [docsOpen, setDocsOpen] = useState(false);
   const [histOpen, setHistOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("overview");
+  const [sectionDialog, setSectionDialog] = useState<"loans" | "payments" | "info" | "stats" | null>(null);
 
   const [expandedContracts, setExpandedContracts] = useState<Set<string>>(new Set());
   const toggleContract = (cid: string) => setExpandedContracts(prev => {
@@ -1121,9 +1122,9 @@ const ClienteDetalhe = () => {
       body: [
         ["Capital emprestado", `R$ ${fmt(Number(c.capital))}`],
         ["Modalidade", LOAN_MODE_LABEL[(c.loan_mode || "installments") as LoanMode] || c.loan_mode],
-        ["Frequência", FREQ[c.frequency] || c.frequency],
+        ["Frequência", formatFrequency(c.frequency)],
         ["Parcelas", `${c.num_installments}x R$ ${fmt(Number(c.installment_amount))}`],
-        ["Taxa contratada", `${Number(c.interest_rate || 0)}% por ${String(FREQ[c.frequency] || c.frequency || "período").toLowerCase()}`],
+        ["Taxa contratada", `${Number(c.interest_rate || 0)}% por ${formatFrequency(c.frequency).toLowerCase()}`],
         ["Custo financeiro total", `R$ ${fmt(Number(c.total_interest || Math.max(0, totalContract - Number(c.capital))))}`],
         ["Total a pagar", `R$ ${fmt(totalContract)}`],
         ["Encargo diário por atraso", `${Number(c.daily_interest_percent || 0)}%`],
@@ -1388,7 +1389,7 @@ const ClienteDetalhe = () => {
     const rows = installments.filter((row: any) => row.contract_id === contract.id);
     const settled = rows.length > 0 && rows.every((row: any) => row.status === "paid");
     const matchesStatus = contractFilter === "all" || (contractFilter === "settled" ? settled : !settled && ["active", "overdue"].includes(contract.status));
-    const searchable = [fmt(Number(contract.capital)), formatBR(contract.start_date), FREQ[contract.frequency] || contract.frequency, LOAN_MODE_LABEL[contract.loan_mode as LoanMode] || contract.loan_mode].join(" ").toLocaleLowerCase("pt-BR");
+    const searchable = [fmt(Number(contract.capital)), formatBR(contract.start_date), formatFrequency(contract.frequency), LOAN_MODE_LABEL[contract.loan_mode as LoanMode] || contract.loan_mode].join(" ").toLocaleLowerCase("pt-BR");
     return matchesStatus && searchable.includes(contractSearch.trim().toLocaleLowerCase("pt-BR"));
   });
 
@@ -1468,14 +1469,24 @@ const ClienteDetalhe = () => {
       </nav>
 
       <nav className="client-profile-tab-strip" aria-label="Seções da ficha">
-        <button type="button" className={`tab-overview ${activeSection === "overview" ? "is-active" : ""}`} aria-current={activeSection === "overview" ? "page" : undefined} title="Resumo financeiro, cadastro e indicadores" onClick={() => goToSection("overview", "resumo")}><Wallet size={15}/> <span>Visão geral<small>Resumo</small></span></button>
-        <button type="button" className={`tab-loans ${activeSection === "loans" ? "is-active" : ""}`} aria-current={activeSection === "loans" ? "page" : undefined} title="Ver contratos e parcelas do cliente" onClick={() => goToSection("loans", "sec-contratos")}><FileText size={15}/> <span>Empréstimos<small>Contratos</small></span> <b>{contracts.length}</b></button>
-        <button type="button" className={`tab-payments ${activeSection === "payments" ? "is-active" : ""}`} aria-current={activeSection === "payments" ? "page" : undefined} title="Acompanhar parcelas pagas, abertas e atrasadas" onClick={() => goToSection("payments", "sec-contratos")}><CreditCard size={15}/> <span>Pagamentos<small>Parcelas</small></span> <b>{kpis.paidInst.length}</b></button>
-        <button type="button" className={`tab-info ${activeSection === "info" ? "is-active" : ""}`} aria-current={activeSection === "info" ? "page" : undefined} title="Consultar dados cadastrais do cliente" onClick={() => goToSection("info", "info-cliente")}><Info size={15}/> <span>Informações<small>Cadastro</small></span></button>
-        <button type="button" className={`tab-stats ${activeSection === "stats" ? "is-active" : ""}`} aria-current={activeSection === "stats" ? "page" : undefined} title="Analisar desempenho e taxa de pagamento" onClick={() => goToSection("stats", "estatisticas")}><BarChart3 size={15}/> <span>Estatísticas<small>Desempenho</small></span></button>
+        <button type="button" className={`tab-overview ${activeSection === "overview" ? "is-active" : ""}`} aria-current={activeSection === "overview" ? "page" : undefined} title="Resumo financeiro, cadastro e indicadores" onClick={() => { setActiveSection("overview"); setSectionDialog(null); }}><Wallet size={15}/> <span>Visão geral<small>Resumo</small></span></button>
+        <button type="button" className={`tab-loans ${activeSection === "loans" ? "is-active" : ""}`} aria-current={activeSection === "loans" ? "page" : undefined} title="Ver contratos e parcelas do cliente" onClick={() => { setActiveSection("loans"); setSectionDialog("loans"); }}><FileText size={15}/> <span>Empréstimos<small>Contratos</small></span> <b>{contracts.length}</b></button>
+        <button type="button" className={`tab-payments ${activeSection === "payments" ? "is-active" : ""}`} aria-current={activeSection === "payments" ? "page" : undefined} title="Acompanhar parcelas pagas, abertas e atrasadas" onClick={() => { setActiveSection("payments"); setSectionDialog("payments"); }}><CreditCard size={15}/> <span>Pagamentos<small>Parcelas</small></span> <b>{kpis.paidInst.length}</b></button>
+        <button type="button" className={`tab-info ${activeSection === "info" ? "is-active" : ""}`} aria-current={activeSection === "info" ? "page" : undefined} title="Consultar dados cadastrais do cliente" onClick={() => { setActiveSection("info"); setSectionDialog("info"); }}><Info size={15}/> <span>Informações<small>Cadastro</small></span></button>
+        <button type="button" className={`tab-stats ${activeSection === "stats" ? "is-active" : ""}`} aria-current={activeSection === "stats" ? "page" : undefined} title="Analisar desempenho e taxa de pagamento" onClick={() => { setActiveSection("stats"); setSectionDialog("stats"); }}><BarChart3 size={15}/> <span>Estatísticas<small>Desempenho</small></span></button>
         <button type="button" className={`tab-history ${activeSection === "history" ? "is-active" : ""}`} aria-current={activeSection === "history" ? "page" : undefined} title="Ver atividades e movimentações" onClick={() => { setActiveSection("history"); setHistOpen(true); }}><Clock size={15}/> <span>Histórico<small>Atividades</small></span></button>
         <button type="button" className={`tab-docs ${activeSection === "docs" ? "is-active" : ""}`} aria-current={activeSection === "docs" ? "page" : undefined} title="Consultar documentos e anexos" onClick={() => { setActiveSection("docs"); setDocsOpen(true); }}><FileIcon size={15}/> <span>Documentos<small>Anexos</small></span></button>
       </nav>
+
+      <Dialog open={sectionDialog !== null} onOpenChange={(open) => !open && setSectionDialog(null)}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>{sectionDialog === "loans" ? "Empréstimos e contratos" : sectionDialog === "payments" ? "Pagamentos e parcelas" : sectionDialog === "info" ? "Informações do cliente" : "Estatísticas do cliente"}</DialogTitle></DialogHeader>
+          {sectionDialog === "loans" && <div className="space-y-3">{contracts.map((c: any) => <div key={c.id} className="rounded-xl border border-border/60 bg-muted/20 p-3"><div className="flex items-center justify-between gap-3"><strong>R$ {fmt(Number(c.capital))}</strong><Badge variant="outline">{c.status === "active" ? "Em andamento" : "Encerrado"}</Badge></div><p className="mt-1 text-xs text-muted-foreground">{c.num_installments} parcelas · {formatFrequency(c.frequency)} · início {formatBR(c.start_date)}</p></div>)}</div>}
+          {sectionDialog === "payments" && <div className="space-y-2">{installments.map((i: any, index: number) => <div key={i.id || index} className="flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-muted/20 p-3"><div><strong>Parcela {index + 1}</strong><p className="text-xs text-muted-foreground">Vencimento {formatBR(i.due_date)}</p></div><Badge variant="outline">{i.status === "paid" ? "Paga" : i.status === "overdue" ? "Em atraso" : "Em aberto"}</Badge></div>)}</div>}
+          {sectionDialog === "info" && <div className="grid gap-3 sm:grid-cols-2">{[["Telefone", getPreferredPhone(client) || "Não informado"], ["E-mail", client.email || "Não informado"], ["CPF/CNPJ", client.cpf_cnpj || "Não informado"], ["Endereço", address?.street || "Não informado"]].map(([label, value]) => <div key={label} className="rounded-xl border border-border/60 p-3"><small>{label}</small><strong className="mt-1 block">{value}</strong></div>)}</div>}
+          {sectionDialog === "stats" && <div className="grid gap-3 sm:grid-cols-2">{[["Contratos", contracts.length], ["Parcelas pagas", `${kpis.paidInst.length}/${installments.length}`], ["Taxa de atraso", `${installments.length ? Math.round((kpis.overdueInst.length / installments.length) * 100) : 0}%`], ["Ticket médio", `R$ ${fmt(kpis.ticketMedio)}`]].map(([label, value]) => <div key={String(label)} className="rounded-xl border border-border/60 p-3"><small>{label}</small><strong className="mt-1 block text-lg">{value}</strong></div>)}</div>}
+        </DialogContent>
+      </Dialog>
 
       <section id="resumo" className="client-profile-reference-layout" aria-label="Visão geral do cliente">
         <article className="reference-card reference-summary-card">
@@ -1785,7 +1796,7 @@ const ClienteDetalhe = () => {
                     <div className="mt-1.5 flex items-center gap-1.5 text-[11px] text-muted-foreground flex-wrap">
                       <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-muted/40 text-foreground/80 font-semibold tabular-nums">{c.num_installments}× R$ {fmt(Number(c.installment_amount))}</span>
                       <span className="opacity-40">·</span>
-                      <span>{FREQ[c.frequency] || c.frequency}</span>
+                      <span>{formatFrequency(c.frequency)}</span>
                       <span className="opacity-40">·</span>
                       <span className="tabular-nums">{formatBR(c.start_date)}</span>
                     </div>
@@ -1989,7 +2000,7 @@ const ClienteDetalhe = () => {
         contracts.forEach((c: any) => events.push({
           id: `c-${c.id}`, date: c.created_at, type: "contract",
           title: `Contrato criado · R$ ${fmt(Number(c.capital))}`,
-          subtitle: `${c.num_installments}x · ${FREQ[c.frequency] || c.frequency}`,
+          subtitle: `${c.num_installments}x · ${formatFrequency(c.frequency)}`,
           icon: FileText, color: "text-primary", bg: "bg-primary/10",
         }));
         // Pagamentos (parcelas pagas)

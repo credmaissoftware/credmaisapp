@@ -1,6 +1,7 @@
 import { loadPdfLib } from "@/utils/pdfLib";
 import { formatBR } from "@/lib/dateUtils";
 import { portalInstallmentAmount } from "@/lib/portalAmounts";
+import { formatFrequency } from "@/components/cliente-detalhe/constants";
 
 export const generatePortalReceiptPdf = async (client: any, installment: any, company: any) => {
   const { jsPDF, autoTable } = await loadPdfLib();
@@ -138,7 +139,7 @@ export const generatePortalStatementPdf = async (client: any, contracts: any[], 
     doc.setFont("helvetica", "bold");
     doc.setFontSize(11);
     doc.setTextColor(15, 23, 42);
-    doc.text(`Contrato ${idx + 1}  ·  ${fmt(Number(c.capital))}  ·  ${c.num_installments}x  ·  ${c.frequency || ""}`, 20, cursorY);
+    doc.text(`Contrato ${idx + 1}  ·  ${fmt(Number(c.capital))}  ·  ${c.num_installments}x  ·  ${formatFrequency(c.frequency)}`, 20, cursorY);
     cursorY += 3;
 
     const rows = (c.installments || []).map((i: any) => [

@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { accumulatedPaymentTotal, portalInstallmentAmount } from "@/lib/portalAmounts";
 import defaultLogo from "@/assets/credmais-mark.svg";
+import { formatFrequency } from "@/components/cliente-detalhe/constants";
 
 const TOKEN_KEY = "cobrador-token";
 
@@ -547,9 +548,7 @@ const CobradorExterno = () => {
                                   </p>
                                   {inst.contracts?.frequency && (
                                     <span className="text-[10px] text-muted-foreground bg-accent/30 px-1.5 py-0.5 rounded">
-                                      {inst.contracts.frequency === "monthly" ? "Mensal" :
-                                       inst.contracts.frequency === "weekly" ? "Semanal" :
-                                       inst.contracts.frequency === "biweekly" ? "Quinzenal" : inst.contracts.frequency}
+                                      {formatFrequency(inst.contracts.frequency)}
                                     </span>
                                   )}
                                   {isPaid && inst.payment_method && (

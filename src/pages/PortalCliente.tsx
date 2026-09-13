@@ -14,6 +14,7 @@ import { generatePortalStatementPdf } from "@/utils/portalPdf";
 import { isPortalLoginBlocked, recordPortalLoginAttempt, performFullPortalLogout } from "@/lib/portalSession";
 import defaultLogo from "@/assets/credmais-mark.svg";
 import { isValidCPF, onlyDigits } from "@/lib/cpfCnpj";
+import { formatFrequency } from "@/components/cliente-detalhe/constants";
 
 type PortalInstallment = {
   id: string;
@@ -871,7 +872,7 @@ const PortalCliente = () => {
                             Contrato {contract.id.slice(0, 8).toUpperCase()}
                           </p>
                           <span className="portal-chip">
-                            {contract.frequency === "monthly" ? "Mensal" : contract.frequency === "weekly" ? "Semanal" : contract.frequency === "daily" ? "Diário" : contract.frequency}
+                            {formatFrequency(contract.frequency)}
                           </span>
                         </div>
                         <p className="mt-1 flex items-center gap-1 text-xs text-white/50">
