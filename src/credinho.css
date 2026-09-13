@@ -95,6 +95,21 @@ html:not(.dark) { --background: 40 30% 97%; --foreground: 30 12% 12%; --muted-fo
 .portal-input { background: #151412; }
 .portal-input:focus { background: #201d18; }
 .portal-btn-primary { background: linear-gradient(135deg,var(--portal-primary,#f5bd59),color-mix(in srgb,var(--portal-primary,#f5bd59) 85%,#fff)); }
+.portal-toolbar { border-bottom: 1px solid rgba(255,255,255,.08); padding-bottom: 18px; }
+.portal-section-heading { border-top: 1px solid rgba(255,255,255,.08); padding-top: 18px; }
+.portal-section-heading [role="tab"] { min-height: 40px; }
+.portal-section-heading [role="tab"]:focus-visible,
+.portal-toolbar button:focus-visible,
+.portal-shell a:focus-visible,
+.portal-shell button:focus-visible { outline: 2px solid var(--portal-primary,#f5bd59); outline-offset: 3px; }
+@media (max-width: 639px) {
+  .portal-content { padding-left: 12px; padding-right: 12px; }
+  .portal-toolbar { align-items: stretch; }
+  .portal-toolbar > div:last-child { justify-content: space-between; }
+  .portal-toolbar > div:last-child > * { flex: 1 1 auto; justify-content: center; }
+  .portal-section-heading [role="tab"] { flex: 1 1 30%; justify-content: center; padding-left: 10px; padding-right: 10px; }
+  .bento-tile { padding: 1rem; }
+}
 @keyframes credinho-enter { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes credinho-progress { 0% { transform: translateX(-100%); } 100% { transform: translateX(325%); } }
 @media (max-width: 1023px) {

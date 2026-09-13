@@ -550,9 +550,10 @@ const PortalCliente = () => {
                       autoComplete="off"
                       maxLength={14}
                       aria-invalid={!!cpfError}
-                      aria-describedby={cpfError ? "cpf-error" : undefined}
+                      aria-describedby={cpfError ? "cpf-error" : "cpf-hint"}
                       className={`portal-input w-full rounded-2xl px-5 py-5 text-center font-mono text-2xl tracking-wider ${cpfError ? "border-red-500/60 focus:border-red-500" : ""}`}
                     />
+                    {!cpfError && <p id="cpf-hint" className="ml-1 text-xs text-white/45">Digite os 11 números do CPF cadastrado com o credor.</p>}
                     {cpfError && (
                       <p id="cpf-error" className="ml-1 flex items-center gap-1.5 text-xs text-red-400">
                         <AlertTriangle size={12} /> {cpfError}
@@ -614,7 +615,7 @@ const PortalCliente = () => {
           /* ═══════════ ÁREA LOGADA — BENTO GRID ═══════════ */
           <section className="w-full space-y-6">
             {/* Header */}
-            <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <header className="portal-toolbar flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div className="flex items-center gap-4">
                 {logoUrl ? (
                   <img src={logoUrl} alt="Logotipo" width={56} height={56} className="h-14 w-14 shrink-0 rounded-2xl border border-primary/25 object-cover" />
@@ -626,6 +627,7 @@ const PortalCliente = () => {
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/50">Bem-vindo(a)</p>
                   <h2 className="font-heading text-3xl font-bold tracking-tight text-white md:text-4xl">{firstName}</h2>
+                  {portalData.branding?.portal_welcome_message && <p className="mt-1 max-w-xl text-sm text-white/55">{portalData.branding.portal_welcome_message}</p>}
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -791,7 +793,12 @@ const PortalCliente = () => {
             </div>
 
             {/* Filtro de parcelas */}
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="portal-section-heading flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/50">Acompanhe seus pagamentos</p>
+                <p className="mt-1 text-sm text-white/55">Selecione uma categoria para abrir os detalhes da parcela.</p>
+              </div>
+              <div className="flex flex-wrap items-center gap-2" role="tablist" aria-label="Filtro de parcelas">
               {[
                 { key: "open" as Tab, label: "Em aberto", count: summary.openCount, icon: Clock },
                 { key: "overdue" as Tab, label: "Atrasadas", count: summary.overdueCount, icon: AlertTriangle },
@@ -802,6 +809,10 @@ const PortalCliente = () => {
                   <button
                     key={t.key}
                     onClick={() => setTab(t.key)}
+                    role="tab"
+                    aria-selected={active}
+                    aria-controls="portal-installments"
+                    title={`Mostrar parcelas: ${t.label.toLowerCase()}`}
                     className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-all ${
                       active
                         ? "bg-gradient-to-r from-primary to-info text-white shadow-lg shadow-primary/30"
@@ -814,10 +825,11 @@ const PortalCliente = () => {
                   </button>
                 );
               })}
+              </div>
             </div>
 
             {/* Lista de parcelas */}
-            <div className="space-y-3">
+            <div id="portal-installments" className="space-y-3" role="tabpanel" aria-label={`Parcelas ${tab === "open" ? "em aberto" : tab === "overdue" ? "atrasadas" : "pagas"}`}>
               {filtered.length === 0 ? (
                 <div className="bento-tile flex flex-col items-center gap-3 p-10 text-center text-white/60">
                   <CheckCircle2 size={40} className="text-success" />
@@ -855,6 +867,7 @@ const PortalCliente = () => {
                         daily_interest_percent: contract.daily_interest_percent,
                         max_interest_cap_percent: contract.max_interest_cap_percent,
                       } as PortalInstallment)}
+                      aria-label={`${installment.status === "paid" ? "Ver pagamento" : "Abrir detalhes e pagar"} a parcela ${installment.installment_number} do contrato ${contract.id.slice(0, 8).toUpperCase()}`}
                       className="bento-tile group flex w-full items-center gap-4 text-left"
                     >
                       <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-sm font-black ${
