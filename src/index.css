@@ -329,7 +329,8 @@
   /* Alvos de toque mínimos WCAG (44x44) em mobile */
   @media (max-width: 640px) {
     button, a[role="button"], [role="button"] {
-      min-height: 40px;
+      min-height: 44px;
+      touch-action: manipulation;
     }
     /* Remove tap highlight cinza do iOS/Android para look nativo */
     a, button, [role="button"] {
@@ -342,6 +343,15 @@
     body {
       overscroll-behavior-y: auto;
       touch-action: pan-y;
+    }
+
+    /* Ações que dependiam de hover ficam acessíveis no toque.
+       No Chrome mobile não existe hover persistente, então opacity-0
+       tornava editar/excluir/mais ações praticamente impossíveis de descobrir. */
+    .app-content button.opacity-0,
+    .app-content a.opacity-0,
+    .app-content [role="button"].opacity-0 {
+      opacity: 1 !important;
     }
 
     /* Evita zoom automático em inputs no iOS quando fontsize<16px */
